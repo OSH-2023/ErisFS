@@ -4,16 +4,17 @@
  * @Author: Tyrion Huu
  * @Date: 2023-05-18 15:14:16
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-05-19 17:19:17
+ * @LastEditTime: 2023-05-24 09:50:24
  */
 #ifndef __EFS_FILE_H__
 #define __EFS_FILE_H__
 
-#include <efs.h>
-#include <efs_fs.h>
+#include "efs.h"
+#include "efs_fs.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C" 
+{
 #endif
 
 /* file descriptor */
@@ -41,7 +42,6 @@ struct efs_file_ops
     int (* flush)    (struct efs_file * fd);
     int (* lseek)    (struct efs_file * fd, off_t offset);
     // int (*getdents) (struct efs_file * fd, struct dirent * dirp, uint32_t count);
-
     // int (*poll)     (struct efs_file *fd, struct rt_pollreq *req);
 };
 
