@@ -10,7 +10,7 @@
 struct efs_fdtable
 {
     uint32_t maxfd;
-    struct efs_fd **fds;    /* efs_file.h/efs_fd */
+    struct efs_file **fds;    /* efs_file.h/efs_fd */
     int used;               /* NEW! for check if full*/
 };
 
@@ -27,15 +27,19 @@ void efs_fm_unlock(void);
 /* FD APIs */
 // int fd_slot_expand(struct efs_fdtable *fdt, int fd);
 // int fd_slot_alloc(struct efs_fdtable *fdt, int startfd);
-// int fd_alloc(struct efs_fdtable *fdt, int startfd);
 int fd_new(void);
-//int fdt_fd_new(struct efs_fdtable *fdt);
-struct efs_fd *fd_get(int fd_num);
-// struct efs_fd *fdt_fd_get(struct efs_fdtable* fdt, int fd);
-int fd_get_fd_index(struct efs_fd *file);
-// int fd_get_fd_index(struct efs_fd *file);
+int fdt_fd_new(struct efs_fdtable *fdt);
+int fd_creat(struct efs_fdtable *fdt, int startfd);
+
+struct efs_file *fd_get(int fd_num);
+struct efs_file *fdt_fd_get(struct efs_fdtable* fdt, int fd);
+
+int get_fd_index(struct efs_file *fd);
+int fdt_get_fd_index(struct efs_fdtable *fdt, struct efs_file *fd);
+
 void fd_release(int fd);
-// void fdt_fd_release(struct efs_fdtable* fdt, int fd)
-void fd_init(struct efs_fd *fd);
+void fdt_fd_release(struct efs_fdtable* fdt, int fd);
+
+void fd_init(struct efs_file *fd);
 
 struct efs_fdtable *efs_fdtable_get(void);
