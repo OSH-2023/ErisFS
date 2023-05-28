@@ -4,6 +4,11 @@
 extern "C" {
 #endif
 
+#define ERIS_EOK 0
+#define EFS_FILESYSTEM_TYPES_MAX 4
+#define EFS_FILESYSTEMS_MAX 4
+#define ERIS_ERROR 1
+
 /* Pre-declaration */
 struct efs_filesystem;
 struct efs_file;
@@ -64,6 +69,12 @@ struct efs_mount_tbl
     /*用户数据*/
     const void   *data;
 };
+
+/* extern variable */
+extern const struct efs_filesystem_ops *filesystem_operation_table[];
+extern struct efs_filesystem filesystem_table[];
+extern const struct efs_mount_tbl mount_table[];
+extern char working_directory[];
 
 /* 注册文件系统 将文件系统注册到DFS框架中
 ** 参数：ops 文件系统操作方法
