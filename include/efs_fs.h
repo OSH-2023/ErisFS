@@ -8,6 +8,9 @@ extern "C" {
 #define EFS_FILESYSTEM_TYPES_MAX 4
 #define EFS_FILESYSTEMS_MAX 4
 #define ERIS_ERROR 1
+//来自efs_file 中efs_file_open函数，暂定为0x200000，留待后续对接
+#define O_DIRECTORY 0x200000
+#define ERIS_DEVICE_OFLAG_RDWR 0x003    /* open the device in read-and_write mode */
 
 /* Pre-declaration */
 struct efs_filesystem;
@@ -99,7 +102,7 @@ const char *efs_filesystem_get_mounted_path(struct eris_device *device);
 **  part	返回的分区表结构。
 **  buf	存储分区表的缓冲区。
 **  pindex	要获取的分区表的索引。
-** 返回值：RT_EOK 成功；-RT_ERROR 失败
+** 返回值：ERIS_EOK 成功；-ERIS_ERROR 失败
 */
 int efs_filesystem_get_partition(struct efs_partition *part, uint8_t *buf, uint32_t pindex);
 
