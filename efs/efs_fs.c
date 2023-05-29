@@ -61,7 +61,7 @@ struct efs_filesystem *efs_filesystem_lookup(const char *path)
 
     prefixlen = 0;
 
-    RT_ASSERT(path);    // TODO
+    RT_ASSERT(path);    // TODO RT_ASSRT
 
     /* lock filesystem */
     efs_lock();
@@ -175,7 +175,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         /* which is a non-device filesystem mount */
         dev_id = NULL;
     }
-    else if ((dev_id = rt_device_find(device_name)) == NULL)    // TODO
+    else if ((dev_id = rt_device_find(device_name)) == NULL)    // TODO rt_device_find
     {
         /* no this device */
         //rt_set_errno(-ENODEV);errno change
@@ -210,7 +210,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     }
 
     /* make full path for special file */
-    fullpath = efs_normalize_path(NULL, path);  // TODO
+    fullpath = efs_normalize_path(NULL, path);  // TODO dfs_normalize_path
     if (fullpath == NULL) /* not an abstract path */
     {
         //rt_set_errno(-ENOTDIR); errno change
@@ -224,14 +224,14 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         struct efs_file fd;
 
         fd_init(&fd);
-        if (efs_file_open(&fd, fullpath, O_RDONLY | O_DIRECTORY) < 0)   // TODO
+        if (efs_file_open(&fd, fullpath, O_RDONLY | O_DIRECTORY) < 0)   // TODO dfs_file_open
         {
             rt_free(fullpath);
             //rt_set_errno(-ENOTDIR); errno change
             printf("The path does not exist ");
             return -1;
         }
-        efs_file_close(&fd);    // TODO
+        efs_file_close(&fd);    // TODO dfs_file_close
     }
 
     /* check whether the file system mounted or not  in the filesystem table
@@ -273,12 +273,12 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     /* open device, but do not check the status of device */
     if (dev_id != NULL)
     {
-        if (eris_device_open(fs->dev_id,    // TODO
+        if (eris_device_open(fs->dev_id,    // TODO rt_device_open
                                 ERIS_DEVICE_OFLAG_RDWR) != ERIS_EOK)
         {
             /* The underlying device has error, clear the entry. */
             efs_lock();
-            rt_memset(fs, 0, sizeof(struct efs_filesystem));    // TODO
+            rt_memset(fs, 0, sizeof(struct efs_filesystem));    // TODO rt_memset
 
             goto err1;
         }
@@ -289,12 +289,12 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     {
         /* close device */
         if (dev_id != NULL)
-            rt_device_close(fs->dev_id);    // TODO
+            rt_device_close(fs->dev_id);    // TODO rt_device_close
 
         /* mount failed */
         efs_lock();
         /* clear filesystem table entry */
-        rt_memset(fs, 0, sizeof(struct efs_filesystem));
+        rt_memset(fs, 0, sizeof(struct efs_filesystem)); // TODO
 
         goto err1;
     }
@@ -303,7 +303,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
 
 err1:
     efs_unlock();
-    rt_free(fullpath);  // TODO
+    rt_free(fullpath);  // TODO rt_free
 
     return -1;
 }
