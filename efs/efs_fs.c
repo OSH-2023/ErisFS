@@ -4,7 +4,7 @@
 ** 对所有的rt_kprintf 修改为 printf
 ** -EIO 修改为 -ERIS_ERROR
 ** 删去INIT_ENV_EXPORT(efs_mount_table); 未知其作用
-** 
+** 修改所有RT_ASSERT函数为if判断后printf报错后退出
 */
 
 //TODO 其他所使用的其他函数
@@ -54,6 +54,7 @@ int efs_register(const struct efs_filesystem_ops *ops)
     return ret;
 }
 
+// DONE
 struct efs_filesystem *efs_filesystem_lookup(const char *path)
 {
     struct efs_filesystem *iter;
@@ -62,7 +63,10 @@ struct efs_filesystem *efs_filesystem_lookup(const char *path)
 
     prefixlen = 0;
 
-    RT_ASSERT(path);    // TODO RT_ASSRT
+    if (!path) {
+        printf("The path is NULL.");
+        return NULL;
+    }
 
     /* lock filesystem */
     efs_lock();
@@ -117,6 +121,7 @@ const char *efs_filesystem_get_mounted_path(struct eris_device *device)
     return path;
 }
 
+// DONE
 int efs_filesystem_get_partition(struct efs_partition *part, uint8_t *buf, uint32_t pindex)
 {
 #define DPT_ADDRESS     0x1be       /* device partition offset in Boot Sector */
@@ -125,8 +130,14 @@ int efs_filesystem_get_partition(struct efs_partition *part, uint8_t *buf, uint3
     uint8_t *dpt;
     uint8_t type;
 
-    RT_ASSERT(part != NULL);    // TODO
-    RT_ASSERT(buf != NULL);     // TODO
+    if(!part) {
+        printf("The path is NULL.");
+        return -ERIS_ERROR;
+    }
+    if(!buf) {
+        printf("The buffer is NULL.");
+        return -ERIS_ERROR;
+    }
 
     dpt = buf + DPT_ADDRESS + pindex * DPT_ITEM_SIZE;
 
@@ -279,7 +290,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         {
             /* The underlying device has error, clear the entry. */
             efs_lock();
-            rt_memset(fs, 0, sizeof(struct efs_filesystem));    // TODO rt_memset
+            memset(fs, 0, sizeof(struct efs_filesystem));
 
             goto err1;
         }
@@ -295,7 +306,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         /* mount failed */
         efs_lock();
         /* clear filesystem table entry */
-        rt_memset(fs, 0, sizeof(struct efs_filesystem)); // TODO
+        memset(fs, 0, sizeof(struct efs_filesystem));
 
         goto err1;
     }
@@ -304,7 +315,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
 
 err1:
     efs_unlock();
-    rt_free(fullpath);  // TODO rt_free
+    free(fullpath);
 
     return -1;
 }
@@ -349,19 +360,19 @@ int efs_unmount(const char *specialfile)
         rt_device_close(fs->dev_id);    // TODO
 
     if (fs->path != NULL)
-        rt_free(fs->path);  // TODO
+        free(fs->path);
 
     /* clear this filesystem table entry */
-    rt_memset(fs, 0, sizeof(struct efs_filesystem)); // TODO
+    memset(fs, 0, sizeof(struct efs_filesystem));
 
     efs_unlock();
-    rt_free(fullpath);  // TODO
+    free(fullpath);
 
     return 0;
 
 err1:
     efs_unlock();
-    rt_free(fullpath);  // TODO
+    free(fullpath);
 
     return -1;
 }
@@ -527,10 +538,10 @@ int efs_unmount_device(eris_device_t dev)
         rt_device_close(fs->dev_id);    // TODO
 
     if (fs->path != NULL)
-        rt_free(fs->path);  // TODO
+        free(fs->path);
 
     /* clear this filesystem table entry */
-    rt_memset(fs, 0, sizeof(struct efs_filesystem));    // TODO
+    memset(fs, 0, sizeof(struct efs_filesystem));
 
     efs_unlock();
 
