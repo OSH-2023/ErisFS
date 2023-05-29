@@ -7,6 +7,8 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#define EFS_PATH_MAX 256
+
 struct efs_fdtable
 {
     uint32_t maxfd;

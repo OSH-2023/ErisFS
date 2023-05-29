@@ -1,8 +1,5 @@
-#include "efs_device.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <efs_device.h>
+// struct statfs from where?
 
 #define ERIS_EOK 0
 #define EFS_FILESYSTEM_TYPES_MAX 4
@@ -72,12 +69,6 @@ struct efs_mount_tbl
     /*用户数据*/
     const void   *data;
 };
-
-/* extern variable */
-extern const struct efs_filesystem_ops *filesystem_operation_table[];
-extern struct efs_filesystem filesystem_table[];
-extern const struct efs_mount_tbl mount_table[];
-extern char working_directory[];
 
 /* 注册文件系统 将文件系统注册到DFS框架中
 ** 参数：ops 文件系统操作方法
@@ -150,8 +141,4 @@ int efs_mount_device(eris_device_t dev);
 ** 返回值：0 成功，-1 失败。
 */
 int efs_unmount_device(eris_device_t dev);
-
-#ifdef __cplusplus
-}
-#endif
 

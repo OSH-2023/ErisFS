@@ -1,16 +1,3 @@
-/*
- * Copyright (c) 2006-2021, RT-Thread Development Team
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Change Logs:
- * Date           Author       Notes
- * 2005-02-22     Bernard      The first version.
- * 2011-12-08     Bernard      Merges rename patch from iamcacy.
- * 2015-05-27     Bernard      Fix the fd clear issue.
- * 2019-01-24     Bernard      Remove file repeatedly open check.
- */
-
 #include <efs.h>
 #include <efs_file.h>
 #include <efs_private.h>

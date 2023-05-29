@@ -9,13 +9,9 @@
 #ifndef __EFS_FILE_H__
 #define __EFS_FILE_H__
 
-#include "efs.h"
-#include "efs_fs.h"
+#include <efs.h>
+#include <efs_fs.h>
 
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
 
 /* file descriptor */
 #define EFS_FD_MAGIC     0xfdfd
@@ -150,9 +146,5 @@ int efs_file_write(struct efs_file * fd, const void * buf, size_t len);
 // #define RT_FIOFTRUNCATE  0x52540000U
 // #define RT_FIOGETADDR    0x52540001U
 // #define RT_FIOMMAP2      0x52540002U
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -1,11 +1,19 @@
-#include "FreeRTOS.h"
-#include "task.h"
+#include <FreeRTOS.h>
+#include <semphr.h>
 
 #include <efs.h>
 #include <efs_file.h>
 #include <efs_fs.h>
 #include <efs_posix.h>
+
+struct efs_filesystem_ops *filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX];
+struct efs_filesystem filesystem_table[EFS_FILESYSTEMS_MAX];
 static struct efs_fdtable _fdtab;
+char working_directory[EFS_PATH_MAX] = {"/"};
+
+
+static SemaphoreHandle_t xEfsMutex;
+static SemaphoreHandle_t xEfsFileMutex;
 
 /* get a new fd_num */
 int fd_new(void) {
@@ -14,10 +22,11 @@ int fd_new(void) {
 }
 
 /* get a new fd_num from specific fdt */
+/* fdt: the efs file descriptor table */
+/* fd_num: the number of fd */
 int fdt_fd_new(struct efs_fdtable *fdt) {
-    /* fdt: the efs file descriptor table */
-    /* fd_num: the number of fd */
-    efs_fd_lock();
+
+    efs_file_lock();
 
     int fd_num;
     fd_num = fd_alloc(fdt, 0);;
@@ -25,16 +34,16 @@ int fdt_fd_new(struct efs_fdtable *fdt) {
         printf("[efs.c] fdt_fd_new is failed! Couldn't found an empty fd entry!\n");
     }
 
-    efs_fd_unlock();
+    efs_file_unlock();
     return fd_num;
     
 }
 
 /* create a new fd and return its fd_num */
+/* fdt: the efs file descriptor table */
+/* fd_num: the number of fd */
+/* fd: struct efs_fd */
 int fd_creat(struct efs_fdtable *fdt, int start_fd_num) {
-    /* fdt: the efs file descriptor table */
-    /* fd_num: the number of fd */
-    /* fd: struct efs_fd */
 
     int fd_num;
 
@@ -69,11 +78,13 @@ int fd_creat(struct efs_fdtable *fdt, int start_fd_num) {
     
 }
 
+/* get efs_file corresponding to fd */
 struct efs_file *fd_get(int fd) {
     struct efs_fdtable *fdt = efs_fdtable_get();
     return fdt_fd_get(fdt, fd);
 }
 
+/* get efs_file corresponding to fd in specific fdt */
 struct efs_file *fdt_fd_get(struct efs_fdtable* fdt, int fd) {
     if(fd < 0 || fd >= (int)fdt->maxfd) {
         printf("[efs.c] fdt_fd_get is failed! fd_num is illegal!\n");
@@ -97,12 +108,13 @@ struct efs_file *fdt_fd_get(struct efs_fdtable* fdt, int fd) {
 
 }
 
-
+/* get efs_file's fd */
 int get_fd_index(struct efs_file *fd) {
     struct efs_fdtable *fdt = efs_fdtable_get();
     return fdt_get_fd_index(fdt, fd);
 }
 
+/* get efs_file's fd in specific fdt */
 int fdt_get_fd_index(struct efs_fdtable *fdt, struct efs_file *fd) {
     if(fd == NULL) {
         printf("[efs.c] fdt_get_fd_index is failed! fd is NULL!\n");
@@ -124,11 +136,13 @@ int fdt_get_fd_index(struct efs_fdtable *fdt, struct efs_file *fd) {
     return -1;
 }
 
+/* release fd */
 void fd_release(int fd) {
     struct efs_fdtable *fdt = efs_fdtable_get();
     return fdt_fd_release(fdt, fd);
 }
 
+/* release fd in specific fdt */
 void fdt_fd_release(struct efs_fdtable* fdt, int fd) {
     if(fd < 0 || fd >= (int)fdt->maxfd) {
         printf("[efs.c] fdt_fd_release is failed! fd_num is illegal!\n");
@@ -161,6 +175,7 @@ void fdt_fd_release(struct efs_fdtable* fdt, int fd) {
 
 }
 
+/* init efs_file */
 void fd_init(struct efs_file *fd) {
     if(fd) {
         fd->flags = 0;
@@ -178,10 +193,58 @@ struct efs_fdtable *efs_fdtable_get(void) {
 }
 
 
+/* init efs */
+int efs_init(void) {
+    static BaseType_t init_ready = pdFALSE;
 
-int efs_init(void);
-char *efs_normalize_path(const char *directory, const char *filename);
-void efs_fd_lock(void);
-void efs_fd_unlock(void);
-void efs_fm_lock(void);
-void efs_fm_unlock(void);
+    if (init_ready) {
+        printf("efs already init!\n");
+        return 0;
+        
+    }
+    /* init vnode hash table */
+    efs_vnode_mgr_init();
+    /* init filesystem operation table */
+    memset((void *)filesystem_operation_table, 0, sizeof(filesystem_operation_table));
+    /* init filesystem table */
+    memset(filesystem_table, 0, sizeof(filesystem_table));
+    /* init fd table */
+    memset(&_fdtab, 0, sizeof(_fdtab));
+
+    /* init filesystem lock */
+    xEfsMutex = xSemaphoreCreateMutex();
+    if (xEfsMutex == NULL) {
+        printf("[efs.c] efs_init is failed! xEfsMutex create failed!\n");
+        return -1;
+    }
+    /* init fd lock */
+    xEfsFileMutex = xSemaphoreCreateMutex();
+    if (xEfsFileMutex == NULL) {
+        printf("[efs.c] efs_init is failed! xEfsFileMutex create failed!\n");
+        return -1;
+    }
+    init_ready = pdTRUE;
+    printf("efs inited.\n");
+    return 0;
+}
+
+// TODO
+char *efs_normalize_path(const char *directory, const char *filename) {
+    return "TODO";
+}
+
+void efs_lock(void) {
+    xSemaphoreTake( xEfsMutex, portMAX_DELAY );
+}
+
+void efs_unlock(void) {
+    xSemaphoreGive( xEfsMutex );
+}
+
+void efs_file_lock(void) {
+    xSemaphoreTake( xEfsFileMutex, portMAX_DELAY );
+}
+
+void efs_file_unlock(void) {
+    xSemaphoreGive( xEfsFileMutex );
+}

@@ -11,6 +11,7 @@
 
 #include <efs_fs.h>
 #include <efs_file.h>
+#include <efs_private.h>
 
 // DONE
 int efs_register(const struct efs_filesystem_ops *ops)
