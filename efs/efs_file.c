@@ -1,46 +1,46 @@
-#include <efs.h>
-#include <efs_file.h>
-#include <efs_private.h>
+#include "../include/efs.h"
+#include "../include/efs_file.h"
+#include "../include/efs_private.h"
 #include <unistd.h>
 
 #define EFS_FNODE_HASH_NR 128
 
 struct efs_vnode_mgr
 {
-    struct rt_mutex lock;
-    rt_list_t head[EFS_FNODE_HASH_NR];
+    struct mutex lock;  // need solving 
+    list_t head[EFS_FNODE_HASH_NR];
 };
 
 static struct efs_vnode_mgr efs_fm;
 
 void efs_fm_lock(void)
 {
-    rt_mutex_take(&efs_fm.lock, RT_WAITING_FOREVER);
+    mutex_take(&efs_fm.lock, WAITING_FOREVER);  // need solving 
 }
 
 void efs_fm_unlock(void)
 {
-    rt_mutex_release(&efs_fm.lock);
+    mutex_release(&efs_fm.lock);
 }
 
 void efs_vnode_mgr_init(void)
 {
     int i = 0;
 
-    rt_mutex_init(&efs_fm.lock, "efs_mgr", RT_IPC_FLAG_PRIO);
+    mutex_init(&efs_fm.lock, "efs_mgr", IPC_FLAG_PRIO); // need solving 
     for (i = 0; i < EFS_FNODE_HASH_NR; i++)
     {
-        rt_list_init(&efs_fm.head[i]);
+        list_init(&efs_fm.head[i]);
     }
 }
 
 /* BKDR Hash Function */
-static unsigned int bkdr_hash(const char *str)
+static unsigned int bkdr_hash(const char * str)
 {
     unsigned int seed = 131; // 31 131 1313 13131 131313 etc..
     unsigned int hash = 0;
 
-    while (*str)
+    while (* str)
     {
         hash = hash * seed + (*str++);
     }
@@ -48,11 +48,11 @@ static unsigned int bkdr_hash(const char *str)
     return (hash % EFS_FNODE_HASH_NR);
 }
 
-static struct efs_vnode *efs_vnode_find(const char *path, rt_list_t **hash_head)
+static struct efs_vnode * efs_vnode_find(const char * path, list_t ** hash_head)
 {
     struct efs_vnode *vnode = NULL;
     int hash = bkdr_hash(path);
-    rt_list_t *hh;
+    list_t * hh;
 
     hh = efs_fm.head[hash].next;
 
@@ -63,8 +63,8 @@ static struct efs_vnode *efs_vnode_find(const char *path, rt_list_t **hash_head)
 
     while (hh != &efs_fm.head[hash])
     {
-        vnode = rt_container_of(hh, struct efs_vnode, list);
-        if (rt_strcmp(path, vnode->fullpath) == 0)
+        vnode = container_of(hh, struct efs_vnode, list);   // need solving 
+        if (strcmp(path, vnode->fullpath) == 0)
         {
             /* found */
             return vnode;
@@ -86,9 +86,9 @@ static struct efs_vnode *efs_vnode_find(const char *path, rt_list_t **hash_head)
  *
  * @return 0 on file has been open successfully, -1 on open failed.
  */
-int efs_file_is_open(const char *pathname)
+int efs_file_is_open(const char * pathname)
 {
-    char *fullpath = NULL;
+    char * fullpath = NULL;
     struct efs_vnode *vnode = NULL;
     int ret = 0;
 
@@ -102,7 +102,7 @@ int efs_file_is_open(const char *pathname)
     }
     efs_fm_unlock();
 
-    rt_free(fullpath);
+    free(fullpath);
     return ret;
 }
 
@@ -116,23 +116,23 @@ int efs_file_is_open(const char *pathname)
  *
  * @return 0 on successful, -1 on failed.
  */
-int efs_file_open(struct efs_file *fd, const char *path, int flags)
+int efs_file_open(struct efs_file * fd, const char * path, int flags)
 {
-    struct efs_filesystem *fs;
-    char *fullpath;
+    struct efs_filesystem * fs;
+    char * fullpath;
     int result;
-    struct efs_vnode *vnode = NULL;
-    rt_list_t *hash_head;
+    struct efs_vnode * vnode = NULL;
+    list_t * hash_head;
 
     /* parameter check */
     if (fd == NULL)
-        return -EINVAL;
+        return -pdFREERTOS_ERRNO_EINVAL;
 
     /* make sure we have an absolute path */
     fullpath = efs_normalize_path(NULL, path);
     if (fullpath == NULL)
     {
-        return -ENOMEM;
+        return -pdFREERTOS_ERRNO_ENOMEM;
     }
 
     LOG_D("open file:%s", fullpath);
@@ -146,7 +146,7 @@ int efs_file_open(struct efs_file *fd, const char *path, int flags)
         fd->pos   = 0;
         fd->vnode = vnode;
         efs_fm_unlock();
-        rt_free(fullpath); /* release path */
+        free(fullpath); /* release path */
     }
     else
     {
@@ -155,16 +155,16 @@ int efs_file_open(struct efs_file *fd, const char *path, int flags)
         if (fs == NULL)
         {
             efs_fm_unlock();
-            rt_free(fullpath); /* release path */
-            return -ENOENT;
+            free(fullpath); /* release path */
+            return -pdFREERTOS_ERRNO_ENOENT;
         }
 
-        vnode = rt_calloc(1, sizeof(struct efs_vnode));
+        vnode = calloc(1, sizeof(struct efs_vnode));
         if (!vnode)
         {
             efs_fm_unlock();
-            rt_free(fullpath); /* release path */
-            return -ENOMEM;
+            free(fullpath); /* release path */
+            return -pdFREERTOS_ERRNO_ENOMEM;
         }
         vnode->ref_count = 1;
 
@@ -179,9 +179,9 @@ int efs_file_open(struct efs_file *fd, const char *path, int flags)
         if (!(fs->ops->flags & EFS_FS_FLAG_FULLPATH))
         {
             if (efs_subdir(fs->path, fullpath) == NULL)
-                vnode->path = rt_strdup("/");
+                vnode->path = strdup("/");
             else
-                vnode->path = rt_strdup(efs_subdir(fs->path, fullpath));
+                vnode->path = strdup(efs_subdir(fs->path, fullpath));
             LOG_D("Actual file path: %s", vnode->path);
         }
         else
@@ -197,19 +197,19 @@ int efs_file_open(struct efs_file *fd, const char *path, int flags)
             /* clear fd */
             if (vnode->path != vnode->fullpath)
             {
-                rt_free(vnode->fullpath);
+                free(vnode->fullpath);
             }
-            rt_free(vnode->path);
-            rt_free(vnode);
+            free(vnode->path);
+            free(vnode);
 
-            return -ENOSYS;
+            return -pdFREERTOS_ERRNO_EINTR;
         }
 
         fd->pos   = 0;
         fd->vnode = vnode;
 
         /* insert vnode to hash */
-        rt_list_insert_after(hash_head, &vnode->list);
+        list_inseafter(hash_head, &vnode->list);
     }
 
     fd->flags = flags;
@@ -220,15 +220,15 @@ int efs_file_open(struct efs_file *fd, const char *path, int flags)
         if (vnode->ref_count == 0)
         {
             /* remove from hash */
-            rt_list_remove(&vnode->list);
+            list_remove(&vnode->list);
             /* clear fd */
             if (vnode->path != vnode->fullpath)
             {
-                rt_free(vnode->fullpath);
+                free(vnode->fullpath);
             }
-            rt_free(vnode->path);
+            free(vnode->path);
             fd->vnode = NULL;
-            rt_free(vnode);
+            free(vnode);
         }
 
         efs_fm_unlock();
@@ -237,11 +237,11 @@ int efs_file_open(struct efs_file *fd, const char *path, int flags)
         return result;
     }
 
-    fd->flags |= EFS_F_OPEN;
+    fd->flags |= EFS_F_OPEN;    // need solving 
     if (flags & O_DIRECTORY)
     {
-        fd->vnode->type = FT_DIRECTORY;
-        fd->flags |= EFS_F_DIRECTORY;
+        fd->vnode->type = FT_DIRECTORY; // need solving 
+        fd->flags |= EFS_F_DIRECTORY;   // need solving 
     }
     efs_fm_unlock();
 
@@ -256,14 +256,14 @@ int efs_file_open(struct efs_file *fd, const char *path, int flags)
  *
  * @return 0 on successful, -1 on failed.
  */
-int efs_file_close(struct efs_file *fd)
+int efs_file_close(struct efs_file * fd)
 {
-    struct efs_vnode *vnode = NULL;
+    struct efs_vnode * vnode = NULL;
     int result = 0;
 
     if (fd == NULL)
     {
-        return -ENXIO;
+        return -pdFREERTOS_ERRNO_ENXIO;
     }
 
     if (fd->ref_count == 1)
@@ -274,7 +274,7 @@ int efs_file_close(struct efs_file *fd)
         if (vnode->ref_count <= 0)
         {
             efs_fm_unlock();
-            return -ENXIO;
+            return -pdFREERTOS_ERRNO_ENXIO;
         }
 
         if (vnode->fops->close != NULL)
@@ -292,64 +292,20 @@ int efs_file_close(struct efs_file *fd)
         if (vnode->ref_count == 1)
         {
             /* remove from hash */
-            rt_list_remove(&vnode->list);
+            list_remove(&vnode->list);
             fd->vnode = NULL;
 
             if (vnode->path != vnode->fullpath)
             {
-                rt_free(vnode->fullpath);
+                free(vnode->fullpath);
             }
-            rt_free(vnode->path);
-            rt_free(vnode);
+            free(vnode->path);
+            free(vnode);
         }
         efs_fm_unlock();
     }
 
     return result;
-}
-
-/**
- * this function will perform a io control on a file descriptor.
- *
- * @param fd the file descriptor.
- * @param cmd the command to send to file descriptor.
- * @param args the argument to send to file descriptor.
- *
- * @return 0 on successful, -1 on failed.
- */
-int efs_file_ioctl(struct efs_file *fd, int cmd, void *args)
-{
-    if (fd == NULL)
-    {
-        return -EINVAL;
-    }
-
-    /* regular file system fd */
-    if (fd->vnode->type == FT_REGULAR || fd->vnode->type == FT_DEVICE)
-    {
-        switch (cmd)
-        {
-        case F_GETFL:
-            return fd->flags; /* return flags */
-        case F_SETFL:
-            {
-                int flags = (int)(rt_base_t)args;
-                int mask  = O_NONBLOCK | O_APPEND;
-
-                flags &= mask;
-                fd->flags &= ~mask;
-                fd->flags |= flags;
-            }
-            return 0;
-        }
-    }
-
-    if (fd->vnode->fops->ioctl != NULL)
-    {
-        return fd->vnode->fops->ioctl(fd, cmd, args);
-    }
-
-    return -ENOSYS;
 }
 
 /**
@@ -362,23 +318,23 @@ int efs_file_ioctl(struct efs_file *fd, int cmd, void *args)
  *
  * @return the actual read data bytes or 0 on end of file or failed.
  */
-int efs_file_read(struct efs_file *fd, void *buf, size_t len)
+int efs_file_read(struct efs_file * fd, void * buf, size_t len)
 {
     int result = 0;
 
     if (fd == NULL)
     {
-        return -EINVAL;
+        return -pdFREERTOS_ERRNO_EINVAL;
     }
 
     if (fd->vnode->fops->read == NULL)
     {
-        return -ENOSYS;
+        return -pdFREERTOS_ERRNO_EINTR;
     }
 
     if ((result = fd->vnode->fops->read(fd, buf, len)) < 0)
     {
-        fd->flags |= EFS_F_EOF;
+        fd->flags |= EFS_F_EOF; // need solving 
     }
 
     return result;
@@ -393,17 +349,17 @@ int efs_file_read(struct efs_file *fd, void *buf, size_t len)
  *
  * @return the read dirent, others on failed.
  */
-int efs_file_getdents(struct efs_file *fd, struct dirent *dirp, size_t nbytes)
+int efs_file_getdents(struct efs_file * fd, struct dirent * dirp, size_t nbytes)
 {
     /* parameter check */
     if (fd == NULL)
     {
-        return -EINVAL;
+        return -pdFREERTOS_ERRNO_EINVAL;   
     }
 
-    if (fd->vnode->type != FT_DIRECTORY)
+    if (fd->vnode->type != FT_DIRECTORY)    // need solving 
     {
-        return -EINVAL;
+        return -pdFREERTOS_ERRNO_EINVAL;
     }
 
     if (fd->vnode->fops->getdents != NULL)
@@ -411,7 +367,7 @@ int efs_file_getdents(struct efs_file *fd, struct dirent *dirp, size_t nbytes)
         return fd->vnode->fops->getdents(fd, dirp, nbytes);
     }
 
-    return -ENOSYS;
+    return -pdFREERTOS_ERRNO_EINTR;
 }
 
 /**
@@ -421,30 +377,30 @@ int efs_file_getdents(struct efs_file *fd, struct dirent *dirp, size_t nbytes)
  *
  * @return 0 on successful, -1 on failed.
  */
-int efs_file_unlink(const char *path)
+int efs_file_unlink(const char * path)
 {
     int result;
-    char *fullpath;
-    struct efs_filesystem *fs;
+    char * fullpath;
+    struct efs_filesystem * fs;
 
     /* Make sure we have an absolute path */
     fullpath = efs_normalize_path(NULL, path);
     if (fullpath == NULL)
     {
-        return -EINVAL;
+        return -pdFREERTOS_ERRNO_EINVAL;
     }
 
     /* Check whether file is already open */
     if (efs_file_is_open(fullpath))
     {
-        result = -EBUSY;
+        result = -pdFREERTOS_ERRNO_EBUSY;
         goto __exit;
     }
 
     /* get filesystem */
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        result = -ENOENT;
+        result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
 
@@ -460,10 +416,10 @@ int efs_file_unlink(const char *path)
         else
             result = fs->ops->unlink(fs, fullpath);
     }
-    else result = -ENOSYS;
+    else result = -pdFREERTOS_ERRNO_EINTR;
 
 __exit:
-    rt_free(fullpath);
+    free(fullpath);
     return result;
 }
 
@@ -476,16 +432,16 @@ __exit:
  *
  * @return the actual written data length.
  */
-int efs_file_write(struct efs_file *fd, const void *buf, size_t len)
+int efs_file_write(struct efs_file * fd, const void * buf, size_t len)
 {
     if (fd == NULL)
     {
-        return -EINVAL;
+        return -pdFREERTOS_ERRNO_EINVAL;
     }
 
     if (fd->vnode->fops->write == NULL)
     {
-        return -ENOSYS;
+        return -pdFREERTOS_ERRNO_EINTR;
     }
 
     return fd->vnode->fops->write(fd, buf, len);
@@ -498,13 +454,13 @@ int efs_file_write(struct efs_file *fd, const void *buf, size_t len)
  *
  * @return 0 on successful, -1 on failed.
  */
-int efs_file_flush(struct efs_file *fd)
+int efs_file_flush(struct efs_file * fd)
 {
     if (fd == NULL)
-        return -EINVAL;
+        return -pdFREERTOS_ERRNO_EINVAL;
 
     if (fd->vnode->fops->flush == NULL)
-        return -ENOSYS;
+        return -pdFREERTOS_ERRNO_EINTR;
 
     return fd->vnode->fops->flush(fd);
 }
@@ -517,15 +473,15 @@ int efs_file_flush(struct efs_file *fd)
  *
  * @return the current position after seek.
  */
-int efs_file_lseek(struct efs_file *fd, off_t offset)
+int efs_file_lseek(struct efs_file * fd, off_t offset)
 {
     int result;
 
     if (fd == NULL)
-        return -EINVAL;
+        return -pdFREERTOS_ERRNO_EINVAL;
 
     if (fd->vnode->fops->lseek == NULL)
-        return -ENOSYS;
+        return -pdFREERTOS_ERRNO_EINTR;
 
     result = fd->vnode->fops->lseek(fd, offset);
 
@@ -544,10 +500,10 @@ int efs_file_lseek(struct efs_file *fd, off_t offset)
  *
  * @return 0 on successful, -1 on failed.
  */
-int efs_file_stat(const char *path, struct stat *buf)
+int efs_file_stat(const char * path, struct stat * buf)
 {
     int result;
-    char *fullpath;
+    char * fullpath;
     struct efs_filesystem *fs;
 
     fullpath = efs_normalize_path(NULL, path);
@@ -559,9 +515,9 @@ int efs_file_stat(const char *path, struct stat *buf)
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
         LOG_E("can't find mounted filesystem on this path:%s", fullpath);
-        rt_free(fullpath);
+        free(fullpath);
 
-        return -ENOENT;
+        return -pdFREERTOS_ERRNO_ENOENT;
     }
 
     if ((fullpath[0] == '/' && fullpath[1] == '\0') ||
@@ -578,28 +534,28 @@ int efs_file_stat(const char *path, struct stat *buf)
         buf->st_mtime   = 0;
 
         /* release full path */
-        rt_free(fullpath);
+        free(fullpath);
 
-        return RT_EOK;
+        return pdFREERTOS_ERRNO_NONE;
     }
     else
     {
         if (fs->ops->stat == NULL)
         {
-            rt_free(fullpath);
+            free(fullpath);
             LOG_E("the filesystem didn't implement this function");
 
-            return -ENOSYS;
+            return -pdFREERTOS_ERRNO_EINTR;
         }
 
         /* get the real file path and get file stat */
-        if (fs->ops->flags & EFS_FS_FLAG_FULLPATH)
+        if (fs->ops->flags & EFS_FS_FLAG_FULLPATH)  // need solving 
             result = fs->ops->stat(fs, fullpath, buf);
         else
             result = fs->ops->stat(fs, efs_subdir(fs->path, fullpath), buf);
     }
 
-    rt_free(fullpath);
+    free(fullpath);
 
     return result;
 }
@@ -612,11 +568,11 @@ int efs_file_stat(const char *path, struct stat *buf)
  *
  * @return 0 on successful, -1 on failed.
  */
-int efs_file_rename(const char *oldpath, const char *newpath)
+int efs_file_rename(const char * oldpath, const char * newpath)
 {
-    int result = RT_EOK;
-    struct efs_filesystem *olefs = NULL, *newfs = NULL;
-    char *oldfullpath = NULL, *newfullpath = NULL;
+    int result = pdFREERTOS_ERRNO_NONE;
+    struct efs_filesystem * olefs = NULL, * newfs = NULL;
+    char * oldfullpath = NULL, * newfullpath = NULL;
 
     newfullpath = NULL;
     oldfullpath = NULL;
@@ -624,20 +580,20 @@ int efs_file_rename(const char *oldpath, const char *newpath)
     oldfullpath = efs_normalize_path(NULL, oldpath);
     if (oldfullpath == NULL)
     {
-        result = -ENOENT;
+        result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
 
-    if (efs_file_is_open((const char *)oldfullpath))
+    if (efs_file_is_open((const char *) oldfullpath))
     {
-        result = -EBUSY;
+        result = -pdFREERTOS_ERRNO_EBUSY;
         goto __exit;
     }
 
     newfullpath = efs_normalize_path(NULL, newpath);
     if (newfullpath == NULL)
     {
-        result = -ENOENT;
+        result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
 
@@ -648,11 +604,11 @@ int efs_file_rename(const char *oldpath, const char *newpath)
     {
         if (olefs->ops->rename == NULL)
         {
-            result = -ENOSYS;
+            result = -pdFREERTOS_ERRNO_EINTR;
         }
         else
         {
-            if (olefs->ops->flags & EFS_FS_FLAG_FULLPATH)
+            if (olefs->ops->flags & EFS_FS_FLAG_FULLPATH)   // need solving 
                 result = olefs->ops->rename(olefs, oldfullpath, newfullpath);
             else
                 /* use sub directory to rename in file system */
@@ -663,419 +619,19 @@ int efs_file_rename(const char *oldpath, const char *newpath)
     }
     else
     {
-        result = -EXDEV;
+        result = -pdFREERTOS_ERRNO_EXDEV;
     }
 
 __exit:
     if (oldfullpath)
     {
-        rt_free(oldfullpath);
+        free(oldfullpath);
     }
     if (newfullpath)
     {
-        rt_free(newfullpath);
+        free(newfullpath);
     }
 
-    /* not at same file system, return EXDEV */
+    /* not at same file system, return pdFREERTOS_ERRNO_EXDEV */
     return result;
 }
-
-/**
- * this function is will cause the regular file referenced by fd
- * to be truncated to a size of precisely length bytes.
- *
- * @param fd the file descriptor.
- * @param length the length to be truncated.
- *
- * @return the status of truncated.
- */
-int efs_file_ftruncate(struct efs_file *fd, off_t length)
-{
-    int result;
-
-    /* fd is null or not a regular file system fd, or length is invalid */
-    if (fd == NULL || fd->vnode->type != FT_REGULAR || length < 0)
-        return -EINVAL;
-
-    if (fd->vnode->fops->ioctl == NULL)
-        return -ENOSYS;
-
-    result = fd->vnode->fops->ioctl(fd, RT_FIOFTRUNCATE, (void*)&length);
-
-    /* update current size */
-    if (result == 0)
-        fd->vnode->size = length;
-
-    return result;
-}
-
-int efs_file_mmap2(struct efs_file *fd, struct efs_mmap2_args *mmap2)
-{
-    int ret = 0;
-
-    if (fd && mmap2)
-    {
-        if (fd->vnode->type != FT_DEVICE || !fd->vnode->fops->ioctl)
-        {
-            rt_set_errno(EINVAL);
-        }
-        else if (fd->vnode->type == FT_DEVICE && fd->vnode->fops->ioctl)
-        {
-            ret = fd->vnode->fops->ioctl(fd, RT_FIOMMAP2, mmap2);
-            if (ret != 0)
-            {
-                ret = ret > 0? ret : -ret;
-                rt_set_errno(ret);
-            }
-        }
-    }
-
-    return ret;
-}
-
-#ifdef RT_USING_FINSH
-#include <finsh.h>
-
-void ls(const char *pathname)
-{
-    struct efs_file fd;
-    struct dirent dirent;
-    struct stat stat;
-    int length;
-    char *fullpath, *path;
-
-    fullpath = NULL;
-    if (pathname == NULL)
-    {
-#ifdef EFS_USING_WORKDIR
-        /* open current working directory */
-        path = rt_strdup(working_directory);
-#else
-        path = rt_strdup("/");
-#endif
-        if (path == NULL)
-            return ; /* out of memory */
-    }
-    else
-    {
-        path = (char *)pathname;
-    }
-
-    fd_init(&fd);
-    /* list directory */
-    if (efs_file_open(&fd, path, O_DIRECTORY) == 0)
-    {
-        rt_kprintf("Directory %s:\n", path);
-        do
-        {
-            rt_memset(&dirent, 0, sizeof(struct dirent));
-            length = efs_file_getdents(&fd, &dirent, sizeof(struct dirent));
-            if (length > 0)
-            {
-                rt_memset(&stat, 0, sizeof(struct stat));
-
-                /* build full path for each file */
-                fullpath = efs_normalize_path(path, dirent.d_name);
-                if (fullpath == NULL)
-                    break;
-
-                if (efs_file_stat(fullpath, &stat) == 0)
-                {
-                    rt_kprintf("%-20s", dirent.d_name);
-                    if (S_ISDIR(stat.st_mode))
-                    {
-                        rt_kprintf("%-25s\n", "<DIR>");
-                    }
-                    else
-                    {
-                        rt_kprintf("%-25lu\n", (unsigned long)stat.st_size);
-                    }
-                }
-                else
-                    rt_kprintf("BAD file: %s\n", dirent.d_name);
-                rt_free(fullpath);
-            }
-        }
-        while (length > 0);
-
-        efs_file_close(&fd);
-    }
-    else
-    {
-        rt_kprintf("No such directory\n");
-    }
-    if (pathname == NULL)
-        rt_free(path);
-}
-FINSH_FUNCTION_EXPORT(ls, list directory contents);
-
-void rm(const char *filename)
-{
-    if (efs_file_unlink(filename) < 0)
-    {
-        rt_kprintf("Delete %s failed\n", filename);
-    }
-}
-FINSH_FUNCTION_EXPORT(rm, remove files or directories);
-
-void cat(const char *filename)
-{
-    struct efs_file fd;
-    int length = 0;
-    char buffer[81];
-
-    fd_init(&fd);
-    if (efs_file_open(&fd, filename, O_RDONLY) < 0)
-    {
-        rt_kprintf("Open %s failed\n", filename);
-
-        return;
-    }
-
-    do
-    {
-        rt_memset(buffer, 0x0, sizeof(buffer));
-        length = efs_file_read(&fd, (void *)buffer, sizeof(buffer) - 1);
-        if (length > 0)
-        {
-            buffer[length] = '\0';
-            rt_device_t out_device = rt_console_get_device();
-            rt_device_write(out_device, 0, (void *)buffer, sizeof(buffer));
-        }
-    } while (length > 0);
-    rt_kprintf("\n");
-
-    efs_file_close(&fd);
-}
-FINSH_FUNCTION_EXPORT(cat, print file);
-
-#ifdef EFS_USING_POSIX
-#define BUF_SZ  4096
-static void copyfile(const char *src, const char *dst)
-{
-    struct efs_file fd;
-    struct efs_file src_fd;
-    rt_uint8_t *block_ptr;
-    rt_int32_t read_bytes;
-
-    block_ptr = (rt_uint8_t *)rt_malloc(BUF_SZ);
-    if (block_ptr == NULL)
-    {
-        rt_kprintf("out of memory\n");
-
-        return;
-    }
-
-    fd_init(&src_fd);
-    if (efs_file_open(&src_fd, src, O_RDONLY) < 0)
-    {
-        rt_free(block_ptr);
-        rt_kprintf("Read %s failed\n", src);
-
-        return;
-    }
-    fd_init(&fd);
-    if (efs_file_open(&fd, dst, O_WRONLY | O_CREAT) < 0)
-    {
-        rt_free(block_ptr);
-        efs_file_close(&src_fd);
-
-        rt_kprintf("Write %s failed\n", dst);
-
-        return;
-    }
-
-    do
-    {
-        read_bytes = efs_file_read(&src_fd, block_ptr, BUF_SZ);
-        if (read_bytes > 0)
-        {
-            int length;
-
-            length = efs_file_write(&fd, block_ptr, read_bytes);
-            if (length != read_bytes)
-            {
-                /* write failed. */
-                rt_kprintf("Write file data failed, errno=%d\n", length);
-                break;
-            }
-        }
-    }
-    while (read_bytes > 0);
-
-    efs_file_close(&src_fd);
-    efs_file_close(&fd);
-    rt_free(block_ptr);
-}
-
-extern int mkdir(const char *path, mode_t mode);
-static void copydir(const char *src, const char *dst)
-{
-    struct dirent dirent;
-    struct stat stat;
-    int length;
-    struct efs_file cpfd;
-    if (efs_file_open(&cpfd, src, O_DIRECTORY) < 0)
-    {
-        rt_kprintf("open %s failed\n", src);
-        return ;
-    }
-
-    do
-    {
-        rt_memset(&dirent, 0, sizeof(struct dirent));
-
-        length = efs_file_getdents(&cpfd, &dirent, sizeof(struct dirent));
-        if (length > 0)
-        {
-            char *src_entry_full = NULL;
-            char *dst_entry_full = NULL;
-
-            if (strcmp(dirent.d_name, "..") == 0 || strcmp(dirent.d_name, ".") == 0)
-                continue;
-
-            /* build full path for each file */
-            if ((src_entry_full = efs_normalize_path(src, dirent.d_name)) == NULL)
-            {
-                rt_kprintf("out of memory!\n");
-                break;
-            }
-            if ((dst_entry_full = efs_normalize_path(dst, dirent.d_name)) == NULL)
-            {
-                rt_kprintf("out of memory!\n");
-                rt_free(src_entry_full);
-                break;
-            }
-
-            rt_memset(&stat, 0, sizeof(struct stat));
-            if (efs_file_stat(src_entry_full, &stat) != 0)
-            {
-                rt_kprintf("open file: %s failed\n", dirent.d_name);
-                continue;
-            }
-
-            if (S_ISDIR(stat.st_mode))
-            {
-                mkdir(dst_entry_full, 0);
-                copydir(src_entry_full, dst_entry_full);
-            }
-            else
-            {
-                copyfile(src_entry_full, dst_entry_full);
-            }
-            rt_free(src_entry_full);
-            rt_free(dst_entry_full);
-        }
-    }
-    while (length > 0);
-
-    efs_file_close(&cpfd);
-}
-
-static const char *_get_path_lastname(const char *path)
-{
-    char *ptr;
-    if ((ptr = (char *)strrchr(path, '/')) == NULL)
-        return path;
-
-    /* skip the '/' then return */
-    return ++ptr;
-}
-
-void copy(const char *src, const char *dst)
-{
-#define FLAG_SRC_TYPE      0x03
-#define FLAG_SRC_IS_DIR    0x01
-#define FLAG_SRC_IS_FILE   0x02
-#define FLAG_SRC_NON_EXSIT 0x00
-
-#define FLAG_DST_TYPE      0x0C
-#define FLAG_DST_IS_DIR    0x04
-#define FLAG_DST_IS_FILE   0x08
-#define FLAG_DST_NON_EXSIT 0x00
-
-    struct stat stat;
-    uint32_t flag = 0;
-
-    /* check the staus of src and dst */
-    if (efs_file_stat(src, &stat) < 0)
-    {
-        rt_kprintf("copy failed, bad %s\n", src);
-        return;
-    }
-    if (S_ISDIR(stat.st_mode))
-        flag |= FLAG_SRC_IS_DIR;
-    else
-        flag |= FLAG_SRC_IS_FILE;
-
-    if (efs_file_stat(dst, &stat) < 0)
-    {
-        flag |= FLAG_DST_NON_EXSIT;
-    }
-    else
-    {
-        if (S_ISDIR(stat.st_mode))
-            flag |= FLAG_DST_IS_DIR;
-        else
-            flag |= FLAG_DST_IS_FILE;
-    }
-
-    //2. check status
-    if ((flag & FLAG_SRC_IS_DIR) && (flag & FLAG_DST_IS_FILE))
-    {
-        rt_kprintf("cp faild, cp dir to file is not permitted!\n");
-        return ;
-    }
-
-    //3. do copy
-    if (flag & FLAG_SRC_IS_FILE)
-    {
-        if (flag & FLAG_DST_IS_DIR)
-        {
-            char *fdst;
-            fdst = efs_normalize_path(dst, _get_path_lastname(src));
-            if (fdst == NULL)
-            {
-                rt_kprintf("out of memory\n");
-                return;
-            }
-            copyfile(src, fdst);
-            rt_free(fdst);
-        }
-        else
-        {
-            copyfile(src, dst);
-        }
-    }
-    else //flag & FLAG_SRC_IS_DIR
-    {
-        if (flag & FLAG_DST_IS_DIR)
-        {
-            char *fdst;
-            fdst = efs_normalize_path(dst, _get_path_lastname(src));
-            if (fdst == NULL)
-            {
-                rt_kprintf("out of memory\n");
-                return;
-            }
-            mkdir(fdst, 0);
-            copydir(src, fdst);
-            rt_free(fdst);
-        }
-        else if ((flag & FLAG_DST_TYPE) == FLAG_DST_NON_EXSIT)
-        {
-            mkdir(dst, 0);
-            copydir(src, dst);
-        }
-        else
-        {
-            copydir(src, dst);
-        }
-    }
-}
-FINSH_FUNCTION_EXPORT(copy, copy file or dir)
-#endif /* EFS_USING_POSIX */
-
-#endif /* RT_USING_FINSH */
-/**@}*/
-

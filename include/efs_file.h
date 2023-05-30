@@ -4,14 +4,13 @@
  * @Author: Tyrion Huu
  * @Date: 2023-05-18 15:14:16
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-05-24 09:50:24
+ * @LastEditTime: 2023-05-29 17:18:25
  */
 #ifndef __EFS_FILE_H__
 #define __EFS_FILE_H__
 
-#include <efs.h>
-#include <efs_fs.h>
-
+#include "efs.h"
+#include "efs_fs.h"
 
 /* file descriptor */
 #define EFS_FD_MAGIC     0xfdfd
@@ -21,8 +20,8 @@
  */
 struct list_node
 {
-    struct list_node *next;                          /**< point to next node. */
-    struct list_node *prev;                          /**< point to prev node. */
+    struct list_node * next;                          /**< point to next node. */
+    struct list_node * prev;                          /**< point to prev node. */
 };
 typedef struct list_node list_t;                  /**< Type for lists. */
 
@@ -37,8 +36,8 @@ struct efs_file_ops
     int (* write)    (struct efs_file * fd, const void * buf, size_t count);
     int (* flush)    (struct efs_file * fd);
     int (* lseek)    (struct efs_file * fd, off_t offset);
-    // int (*getdents) (struct efs_file * fd, struct dirent * dirp, uint32_t count);
-    // int (*poll)     (struct efs_file *fd, struct rt_pollreq *req);
+    int (* getdents) (struct efs_file * fd, struct dirent * dirp, uint32_t count);
+    // int (* poll)     (struct efs_file *fd, struct rt_pollreq *req);
 };
 
 struct efs_vnode
