@@ -9,7 +9,6 @@
 struct efs_filesystem_ops *filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX];
 struct efs_filesystem filesystem_table[EFS_FILESYSTEMS_MAX];
 static struct efs_fdtable _fdtab;
-char working_directory[EFS_PATH_MAX] = {"/"};
 
 
 static SemaphoreHandle_t xEfsMutex;
@@ -230,6 +229,7 @@ int efs_init(void) {
 
 // TODO
 char *efs_normalize_path(const char *directory, const char *filename) {
+
     return "TODO";
 }
 
