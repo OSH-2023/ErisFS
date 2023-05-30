@@ -1,33 +1,21 @@
 #include "../include/efs.h"
 #include "../include/efs_file.h"
 #include "../include/efs_private.h"
-#include <unistd.h>
 
 #define EFS_FNODE_HASH_NR 128
 
 struct efs_vnode_mgr
 {
-    struct mutex lock;  // need solving 
+    pthread_mutex_t lock;  // need solving 
     list_t head[EFS_FNODE_HASH_NR];
 };
 
 static struct efs_vnode_mgr efs_fm;
 
-void efs_fm_lock(void)
-{
-    mutex_take(&efs_fm.lock, WAITING_FOREVER);  // need solving 
-}
-
-void efs_fm_unlock(void)
-{
-    mutex_release(&efs_fm.lock);
-}
-
 void efs_vnode_mgr_init(void)
 {
     int i = 0;
-
-    mutex_init(&efs_fm.lock, "efs_mgr", IPC_FLAG_PRIO); // need solving 
+    pthread_mutex_init(&efs_fm.lock, NULL);  
     for (i = 0; i < EFS_FNODE_HASH_NR; i++)
     {
         list_init(&efs_fm.head[i]);
@@ -173,7 +161,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         vnode->fops  = fs->ops->fops;  /* set file ops */
 
         /* initialize the fd item */
-        vnode->type  = FT_REGULAR;
+        vnode->type  = FT_REGULAR; 
         vnode->flags = 0;
 
         if (!(fs->ops->flags & EFS_FS_FLAG_FULLPATH))
@@ -406,7 +394,7 @@ int efs_file_unlink(const char * path)
 
     if (fs->ops->unlink != NULL)
     {
-        if (!(fs->ops->flags & EFS_FS_FLAG_FULLPATH))
+        if (!(fs->ops->flags & EFS_FS_FLAG_FULLPATH))   // need solving 
         {
             if (efs_subdir(fs->path, fullpath) == NULL)
                 result = fs->ops->unlink(fs, "/");

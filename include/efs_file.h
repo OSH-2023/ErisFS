@@ -4,17 +4,26 @@
  * @Author: Tyrion Huu
  * @Date: 2023-05-18 15:14:16
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-05-29 17:18:25
+ * @LastEditTime: 2023-05-30 20:40:32
  */
 #ifndef __EFS_FILE_H__
 #define __EFS_FILE_H__
 
 #include "efs.h"
 #include "efs_fs.h"
+#include <unistd.h>
+#include <pthread.h>
 
 /* file descriptor */
 #define EFS_FD_MAGIC     0xfdfd
 
+/**
+ * rt_container_of - return the start address of struct type, while ptr is the
+ * member of struct type.
+ */
+#define rt_container_of(ptr, type, member) \
+    ((type *)((char *)(ptr) - (unsigned long)(&((type *)0)->member)))
+    
 /**
  * Double List structure
  */
