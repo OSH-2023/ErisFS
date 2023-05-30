@@ -1,5 +1,5 @@
 #include <efs_file.h>
-//#include <dfs_private.h> rthread中对应一些表 待替换
+#include <efs_private.h> //rthread中对应一些表 待替换
 #include <sys/errno.h>
 #include <efs.h>
 #include <efs_fs.h>
