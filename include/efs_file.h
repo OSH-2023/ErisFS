@@ -4,7 +4,7 @@
  * @Author: Tyrion Huu
  * @Date: 2023-05-18 15:14:16
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-05-30 20:40:32
+ * @LastEditTime: 2023-05-30 20:43:52
  */
 #ifndef __EFS_FILE_H__
 #define __EFS_FILE_H__
@@ -21,9 +21,10 @@
  * rt_container_of - return the start address of struct type, while ptr is the
  * member of struct type.
  */
-#define rt_container_of(ptr, type, member) \
-    ((type *)((char *)(ptr) - (unsigned long)(&((type *)0)->member)))
+#define container_of(ptr, type, member) \
+    ((type *) ((char *) (ptr) - (unsigned long) (&((type *)0)->member)))
     
+
 /**
  * Double List structure
  */
