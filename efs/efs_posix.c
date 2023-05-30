@@ -1,9 +1,10 @@
-#include <efs_file.h>
-//#include <dfs_private.h> rthread中对应一些表 待替换
+#include <stdio.h>
+#include <efs_private.h> rthread中对应一些表 待替换
 #include <sys/errno.h>
 #include <efs.h>
 #include <efs_fs.h>
 #include <efs_device.h>
+#include <efs_file.h>
 int open(const char *file, int flags, ...)
 {
     int fd, result;
