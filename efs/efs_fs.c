@@ -5,6 +5,9 @@
 ** -EIO 修改为 -ERIS_ERROR
 ** 删去INIT_ENV_EXPORT(efs_mount_table); 未知其作用
 ** 修改所有RT_ASSERT函数为if判断后printf报错后退出
+** 删除device_find等多设备管理的函数
+** 修改free为vPortFree，保留memset
+** 
 */
 
 //TODO 其他所使用的其他函数
@@ -187,14 +190,6 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         /* which is a non-device filesystem mount */
         dev_id = NULL;
     }
-    else if ((dev_id = rt_device_find(device_name)) == NULL)    // TODO rt_device_find
-    {
-        /* no this device */
-        //rt_set_errno(-ENODEV);errno change
-        printf("There is no this device");
-        return -1;
-    }
-
     /* find out the specific filesystem */
     efs_lock();
 
@@ -238,7 +233,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         fd_init(&fd);
         if (efs_file_open(&fd, fullpath, O_RDONLY | O_DIRECTORY) < 0)   // TODO dfs_file_open
         {
-            rt_free(fullpath);
+            vPortFree(fullpath);
             //rt_set_errno(-ENOTDIR); errno change
             printf("The path does not exist ");
             return -1;
@@ -282,26 +277,9 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     /* release filesystem_table lock */
     efs_unlock();
 
-    /* open device, but do not check the status of device */
-    if (dev_id != NULL)
-    {
-        if (eris_device_open(fs->dev_id,    // TODO rt_device_open
-                                ERIS_DEVICE_OFLAG_RDWR) != ERIS_EOK)
-        {
-            /* The underlying device has error, clear the entry. */
-            efs_lock();
-            memset(fs, 0, sizeof(struct efs_filesystem));
-
-            goto err1;
-        }
-    }
-
     /* call mount of this filesystem */
     if ((*ops)->mount(fs, rwflag, data) < 0)
     {
-        /* close device */
-        if (dev_id != NULL)
-            rt_device_close(fs->dev_id);    // TODO rt_device_close
 
         /* mount failed */
         efs_lock();
@@ -315,7 +293,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
 
 err1:
     efs_unlock();
-    free(fullpath);
+    vPortFree(fullpath);
 
     return -1;
 }
@@ -356,23 +334,21 @@ int efs_unmount(const char *specialfile)
     }
 
     /* close device, but do not check the status of device */
-    if (fs->dev_id != NULL)
-        rt_device_close(fs->dev_id);    // TODO
 
     if (fs->path != NULL)
-        free(fs->path);
+        vPortFree(fs->path);
 
     /* clear this filesystem table entry */
     memset(fs, 0, sizeof(struct efs_filesystem));
 
     efs_unlock();
-    free(fullpath);
+    vPortFree(fullpath);
 
     return 0;
 
 err1:
     efs_unlock();
-    free(fullpath);
+    vPortFree(fullpath);
 
     return -1;
 }
@@ -534,11 +510,9 @@ int efs_unmount_device(eris_device_t dev)
     }
 
     /* close device, but do not check the status of device */
-    if (fs->dev_id != NULL)
-        rt_device_close(fs->dev_id);    // TODO
 
     if (fs->path != NULL)
-        free(fs->path);
+        vPortFree(fs->path);
 
     /* clear this filesystem table entry */
     memset(fs, 0, sizeof(struct efs_filesystem));
@@ -554,5 +528,3 @@ err1:
 }
 
 #endif
-
-/**@}*/
