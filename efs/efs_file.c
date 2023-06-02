@@ -2,7 +2,6 @@
 #include "../include/efs_file.h"
 #include "../include/efs_private.h"
 #include <unistd.h>
-#include <pthread.h>
 
 #define EFS_FNODE_HASH_NR 128
 
@@ -10,17 +9,17 @@ static SemaphoreHandle_t xEfsFileMutex;
 
 void efs_fm_lock(void) 
 {
-    xSemaphoreTake( xEfsFileMutex, portMAX_DELAY );
+    xSemaphoreTake(xEfsFileMutex, portMAX_DELAY);
 }
 
 void efs_fm_unlock(void) 
 {
-    xSemaphoreGive( xEfsFileMutex );
+    xSemaphoreGive(xEfsFileMutex);
 }
 
 struct efs_vnode_mgr
 {
-    pthread_mutex_t lock;  // need solving 
+    static SemaphoreHandle_t xEfsMutex;  // need solving 
     list_t head[EFS_FNODE_HASH_NR];
 };
 
@@ -29,7 +28,7 @@ static struct efs_vnode_mgr efs_fm;
 void efs_vnode_mgr_init(void)
 {
     int i = 0;
-    pthread_mutex_init(&efs_fm.lock, NULL);  
+    efs_fm.xEfsMutex = xSemaphoreCreateMutex();
     for (i = 0; i < EFS_FNODE_HASH_NR; i++)
     {
         list_init(&efs_fm.head[i]);
