@@ -5,6 +5,7 @@
 #include <efs_fs.h>
 #include <efs_device.h>
 #include <efs_file.h>
+
 int open(const char *file, int flags, ...)
 {
     int fd, result;
@@ -26,7 +27,7 @@ int open(const char *file, int flags, ...)
         /* release the ref-count of fd */
         fd_release(fd);
 
-        printf("failed to open a file in efs_posix_efs_file_open!\n")
+        printf("failed to open a file in efs_posix_efs_file_open!\n");
 
         return -1;
     }
