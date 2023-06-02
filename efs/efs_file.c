@@ -1,8 +1,22 @@
 #include "../include/efs.h"
 #include "../include/efs_file.h"
 #include "../include/efs_private.h"
+#include <unistd.h>
+#include <pthread.h>
 
 #define EFS_FNODE_HASH_NR 128
+
+static SemaphoreHandle_t xEfsFileMutex;
+
+void efs_fm_lock(void) 
+{
+    xSemaphoreTake( xEfsFileMutex, portMAX_DELAY );
+}
+
+void efs_fm_unlock(void) 
+{
+    xSemaphoreGive( xEfsFileMutex );
+}
 
 struct efs_vnode_mgr
 {

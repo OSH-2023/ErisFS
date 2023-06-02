@@ -247,4 +247,4 @@ void efs_file_lock(void) {
 
 void efs_file_unlock(void) {
     xSemaphoreGive( xEfsFileMutex );
-}
+} 

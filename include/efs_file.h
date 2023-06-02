@@ -11,8 +11,7 @@
 
 #include "efs.h"
 #include "efs_fs.h"
-#include <unistd.h>
-#include <pthread.h>
+
 
 /* file descriptor */
 #define EFS_FD_MAGIC     0xfdfd
