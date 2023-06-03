@@ -32,7 +32,7 @@ struct list_node
     struct list_node * next;                          /**< point to next node. */
     struct list_node * prev;                          /**< point to prev node. */
 };
-typedef struct list_node list_t;                  /**< Type for lists. */
+typedef struct list_node eris_list_t;                  /**< Type for lists. */
 
 // struct rt_pollreq;
 
@@ -56,7 +56,7 @@ struct efs_vnode
     char * path;                        /* Name (below mount point) */
     char * fullpath;                    /* Full path is hash key */
     int ref_count;                      /* Descriptor reference count */
-    list_t list;                        /* The node of vnode hash table */
+    eris_list_t list;                        /* The node of vnode hash table */
 
     struct efs_filesystem * fs;         /* File system */
     const struct efs_file_ops * fops;   /* File operations */

@@ -11,7 +11,7 @@
 struct efs_vnode_mgr
 {
     struct SemaphoreHandle_t lock;  // need solving 
-    list_t head[EFS_FNODE_HASH_NR];
+    eris_list_t head[EFS_FNODE_HASH_NR];
 };
 
 static struct efs_vnode_mgr efs_fm;
@@ -50,11 +50,11 @@ static unsigned int bkdr_hash(const char * str)
     return (hash % EFS_FNODE_HASH_NR);
 }
 
-static struct efs_vnode * efs_vnode_find(const char * path, list_t ** hash_head)
+static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_head)
 {
     struct efs_vnode *vnode = NULL;
     int hash = bkdr_hash(path);
-    list_t * hh;
+    eris_list_t * hh;
 
     hh = efs_fm.head[hash].next;
 
@@ -124,7 +124,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     char * fullpath;
     int result;
     struct efs_vnode * vnode = NULL;
-    list_t * hash_head;
+    eris_list_t * hash_head;
 
     /* parameter check */
     if (fd == NULL)
