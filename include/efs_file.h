@@ -20,16 +20,6 @@
     ((type *) ((char *) (ptr) - (unsigned long) (&((type *)0)->member)))
     
 
-/**
- * Double List structure
- */
-struct eris_list_node
-{
-    struct eris_list_node * next;                          /**< point to next node. */
-    struct eris_list_node * prev;                          /**< point to prev node. */
-};
-typedef struct eris_list_node eris_list_t;                  /**< Type for lists. */
-
 // struct rt_pollreq;
 
 struct efs_file_ops
