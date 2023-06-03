@@ -419,6 +419,13 @@ static const struct efs_filesystem_ops _ramfs =
     efs_ramfs_rename,
 };
 
+int efs_ramfs_init(void)
+{
+    /* register ram file system */
+    efs_register(&_ramfs);
+
+    return 0;
+}
 struct efs_ramfs *efs_ramfs_create(eris_uint8_t *pool, eris_size_t size)
 {
     struct efs_ramfs *ramfs;
