@@ -140,8 +140,8 @@ eris_err_t eris_memheap_init(struct eris_memheap *memheap,
     memheap->block_list = item;
 
     /* initialize semaphore lock */
-//  eris_sem_init(&(memheap->lock), name, 1, Eris_IPC_FLAG_PRIO);
-//  memheap->locked = Eris_FALSE;
+    memheap->lock = xSemaphoreCreateMutex();
+    memheap->locked = Eris_FALSE;
  
     Eris_DEBUG_LOG(Eris_DEBUG_MEMHEAP,
                  ("memory memheap: start addr 0x%08x, size %d, free list header 0x%08x\n",
@@ -233,7 +233,7 @@ void * pvPortMalloc( size_t xWantedSize , eris_memheap * memheap)
      * prvPortMalloc(). */
     configASSERT( memheap->pxEnd );
 
-    vTaskSuspendAll();
+    xSemaphoreTake( memheap->lock, portMAX_DELAY );;
     {
         if( xWantedSize > 0 )
         {
@@ -350,7 +350,7 @@ void * pvPortMalloc( size_t xWantedSize , eris_memheap * memheap)
 
         traceMALLOC( pvReturn, xWantedSize );
     }
-    ( void ) xTaskResumeAll();
+    ( void ) xSemaphoreGive( memheap->lock);
 
     #if ( configUSE_MALLOC_FAILED_HOOK == 1 )
     {
@@ -399,7 +399,7 @@ void vPortFree( void * pv , eris_memheap *memheap)
                 }
                 #endif
 
-                vTaskSuspendAll();
+                xSemaphoreTake( memheap->lock, portMAX_DELAY );;
                 {
                     /* Add this block to the list of free blocks. */
                     memheap->xFreeBytesRemaining += pxLink->xBlockSize;
@@ -407,7 +407,7 @@ void vPortFree( void * pv , eris_memheap *memheap)
                     prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) ,memheap);
                     memheap->xNumberOfSuccessfulFrees++;
                 }
-                ( void ) xTaskResumeAll();
+                ( void ) xSemaphoreGive( memheap->lock);
             }
             else
             {
@@ -639,7 +639,7 @@ void *pvPortRealloc(struct eris_memheap *memheap, void *ptr, eris_size_t newsize
     //存在检测(未完成)
     oldsize = pxBlock->xUsedBlockSize;
     pxOldBlock = pxBlock;
-    vTaskSuspendAll();
+    xSemaphoreTake( memheap->lock, portMAX_DELAY );;
     {
         if(newsize > 0 )
         {
@@ -773,7 +773,7 @@ void *pvPortRealloc(struct eris_memheap *memheap, void *ptr, eris_size_t newsize
         }
         memheap->max_used_size = memheap->pool_size - memheap->xFreeBytesRemaining;
     }
-    ( void ) xTaskResumeAll();
+    ( void ) xSemaphoreGive( memheap->lock);
     if(flag)
     {
         vPortfree((void *)ptr,memheap);

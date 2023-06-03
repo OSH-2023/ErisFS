@@ -24,6 +24,27 @@ int efs_ramfs_unmount(struct efs_filesystem *fs)
     return Eris_EOK;
 }
 
+int efs_ramfs_statfs(struct efs_filesystem *fs, struct statfs *buf)
+{
+    struct efs_ramfs *ramfs;
+
+    ramfs = (struct efs_ramfs *)fs->data;
+    Eris_ASSERT(ramfs != NULL);                                       //未修改 freertos
+    Eris_ASSERT(buf != NULL);                                         //未修改
+
+    buf->f_bsize  = 512;
+    buf->f_blocks = ramfs->memheap.pool_size / 512;
+    buf->f_bfree  = ramfs->memheap.xFreeBytesRemaining / 512;
+
+    return Eris_EOK;
+}
+
+int efs_ramfs_ioctl(struct efs_file *file, int cmd, void *args)
+{
+    return -EIO;
+}
+
+
 int efs_ramfs_read(struct efs_file *file, void *buf, size_t count)
 {
     eris_size_t length;
@@ -116,6 +137,17 @@ int efs_ramfs_write(struct efs_file *fd, const void *buf, size_t count)
     return count;
 }
 
+int efs_ramfs_lseek(struct efs_file *file, off_t offset)
+{
+    if (offset <= (off_t)file->vnode->size)
+    {
+        file->pos = offset;
+
+        return file->pos;
+    }
+
+    return -EIO;
+}
 
 int efs_ramfs_close(struct efs_file *file)
 {
@@ -269,19 +301,106 @@ int efs_ramfs_stat(struct efs_filesystem *fs,
     return Eris_EOK;
 }
 
+int efs_ramfs_getdents(struct efs_file *file,
+                       struct dirent *dirp,
+                       uint32_t    count)
+{
+    eris_size_t index, end;
+    struct dirent *d;
+    struct ramfs_dirent *dirent;
+    struct efs_ramfs *ramfs;
+
+    dirent = (struct ramfs_dirent *)file->vnode->data;
+
+    ramfs  = dirent->fs;
+    Eris_ASSERT(ramfs != Eris_NULL);
+
+    if (dirent != &(ramfs->root))
+        return -EINVAL;
+
+    /* make integer count */
+    count = (count / sizeof(struct dirent));
+    if (count == 0)
+        return -EINVAL;
+
+    end = file->pos + count;
+    index = 0;
+    count = 0;
+    for (dirent = eris_list_entry(dirent->list.next, struct ramfs_dirent, list);
+         dirent != &(ramfs->root) && index < end;
+         dirent = eris_list_entry(dirent->list.next, struct ramfs_dirent, list))
+    {
+        if (index >= (eris_size_t)file->pos)
+        {
+            d = dirp + count;
+            d->d_type = DT_REG;
+            d->d_namlen = Eris_NAME_MAX;
+            d->d_reclen = (eris_uint16_t)sizeof(struct dirent);
+            strncpy(d->d_name, dirent->name, RAMFS_NAME_MAX);
+
+            count += 1;
+            file->pos += 1;
+        }
+        index += 1;
+    }
+
+    return count * sizeof(struct dirent);
+}
+
+int efs_ramfs_unlink(struct efs_filesystem *fs, const char *path)
+{
+    eris_size_t size;
+    struct efs_ramfs *ramfs;
+    struct ramfs_dirent *dirent;
+
+    ramfs = (struct efs_ramfs *)fs->data;
+    Eris_ASSERT(ramfs != NULL);
+
+    dirent = efs_ramfs_lookup(ramfs, path, &size);
+    if (dirent == NULL)
+        return -ENOENT;
+
+    eris_list_remove(&(dirent->list));
+    if (dirent->data != NULL)
+        vPortFree(dirent->data,&(ramfs->memheap));
+    vPortFree(dirent,&(ramfs->memheap));
+
+    return Eris_EOK;
+}
+
+int efs_ramfs_rename(struct efs_filesystem *fs,
+                     const char            *oldpath,
+                     const char            *newpath)
+{
+    struct ramfs_dirent *dirent;
+    struct efs_ramfs *ramfs;
+    eris_size_t size;
+
+    ramfs = (struct efs_ramfs *)fs->data;
+    Eris_ASSERT(ramfs != NULL);
+
+    dirent = efs_ramfs_lookup(ramfs, newpath, &size);
+    if (dirent != NULL)
+        return -EEXIST;
+
+    dirent = efs_ramfs_lookup(ramfs, oldpath, &size);
+    if (dirent == NULL)
+        return -ENOENT;
+
+    strncpy(dirent->name, newpath, RAMFS_NAME_MAX);
+
+    return Eris_EOK;
+}
 static const struct efs_file_ops _ram_fops =
 {
     efs_ramfs_open,
     efs_ramfs_close,
-    //efs_ramfs_ioctl,
-    NULL,/* ioctl */
+    efs_ramfs_ioctl,
     efs_ramfs_read,
     efs_ramfs_write,
-    NULL, /* flush */
-    //efs_ramfs_lseek,
-    NULL,/*lseek*/
-    //efs_ramfs_getdents,
-    NULL,/*getdents*/
+    NULL,
+    efs_ramfs_lseek,
+    efs_ramfs_getdents,
 };
 
 static const struct efs_filesystem_ops _ramfs =
@@ -293,14 +412,11 @@ static const struct efs_filesystem_ops _ramfs =
     efs_ramfs_mount,
     efs_ramfs_unmount,
     NULL, /* mkfs */
-    //efs_ramfs_statfs,
-    NULL,/*statfs*/
+    efs_ramfs_statfs,
 
-    //efs_ramfs_unlink,
-    NULL,/*unlink*/
+    efs_ramfs_unlink,
     efs_ramfs_stat,
-    //efs_ramfs_rename,
-    NULL,/*rename*/
+    efs_ramfs_rename,
 };
 
 struct efs_ramfs *efs_ramfs_create(eris_uint8_t *pool, eris_size_t size)

@@ -32,3 +32,5 @@ struct efs_ramfs
 };
 
 #endif
+
+struct efs_ramfs *efs_ramfs_create(eris_uint8_t *pool, eris_size_t size);

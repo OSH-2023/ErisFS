@@ -167,7 +167,7 @@ struct eris_memheap
     BlockLink_t              *free_list;
     BlockLink_t              *pxEnd;
     
-    struct eris_semaphore     lock;                       /**< semaphore lock */
+    static SemaphoreHandle_t  lock;                       /**< semaphore lock */
     eris_bool_t               locked;                     /**< External lock mark */
 };
 #define portBYTE_ALIGNMENT 8
