@@ -1,7 +1,7 @@
-#include <efs_device.h>
-#include <efs_file.h>
-#include <efs_fs.h>
-#include <efs.h>
+#ifndef __EFS_UTILS_H__
+#define __EFS_UTILS_H__
+
+#include <headers.h>
 
 typedef signed   char                   eris_int8_t;      /**<  8bit integer type */
 typedef signed   short                  eris_int16_t;     /**< 16bit integer type */
@@ -18,11 +18,6 @@ typedef unsigned long                   eris_ubase_t;     /**< Nbit unsigned CPU
 
 #define MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
-#include "FreeRTOS.h"
-#include "task.h"
-
-
-
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #if ( configSUPPORT_DYNAMIC_ALLOCATION == 0 )
@@ -36,7 +31,7 @@ typedef unsigned long                   eris_ubase_t;     /**< Nbit unsigned CPU
 /* Block sizes must not get too small. */
 #define heapMINIMUM_BLOCK_SIZE    ( ( size_t ) ( xHeapStructSize << 1 ) )
 
-/* Assumes 8bit bytes! */25
+/* Assumes 8bit bytes! */
 #define heapBITS_PER_BYTE         ( ( size_t ) 8 )
 
 /* Max value that fits in a size_t type. */
@@ -82,15 +77,6 @@ typedef unsigned long                   eris_ubase_t;     /**< Nbit unsigned CPU
 #define Eris_ENOENT                       12              /**< No entry */
 #define Eris_ENOSPC                       13              /**< No space left */
 
-struct eris_list_node
-{
-    struct eris_list_node *next;                          /**< point to next node. */
-    struct eris_list_node *prev;                          /**< point to prev node. */
-};
-typedef struct eris_list_node eris_list_t;                  /**< Type for lists. */
-
-
-
 /**
  * memory item on the heap
  */
@@ -132,7 +118,6 @@ typedef struct eris_list_node eris_list_t;                  /**< Type for lists.
 //     eris_bool_t               locked;                     /**< External lock mark */
 // };
 
-
 typedef struct A_BLOCK_LINK
 {
     eris_uint32_t             magic;
@@ -170,6 +155,7 @@ struct eris_memheap
     struct eris_semaphore     lock;                       /**< semaphore lock */
     eris_bool_t               locked;                     /**< External lock mark */
 };
+
 #define portBYTE_ALIGNMENT 8
 #if portBYTE_ALIGNMENT == 32
     #define portBYTE_ALIGNMENT_MASK    ( 0x001f )
@@ -187,17 +173,6 @@ struct eris_memheap
     #error "Invalid portBYTE_ALIGNMENT definition"
 #endif /* if portBYTE_ALIGNMENT == 32 */
 static const size_t xHeapStructSize = ( sizeof( BlockLink_t ) + ( ( size_t ) ( portBYTE_ALIGNMENT - 1 ) ) ) & ~( ( size_t ) portBYTE_ALIGNMENT_MASK );
-
-
-/**
- * Double List structure
- */
-struct eris_list_node
-{
-    struct eris_list_node *next;                          /**< point to next node. */
-    struct eris_list_node *prev;                          /**< point to prev node. */
-};
-typedef struct eris_list_node eris_list_t;                  /**< Type for lists. */
 
 /**
  * Single List structure
@@ -221,7 +196,7 @@ typedef struct eris_slist_node eris_slist_t;                /**< Type for single
 #define _INC_ERRNO
 /*
     freertos中见FreeRTOS/Source/include/projdefs.h
-*/
+    /Applications/ArmGNUToolchain/12.2.mpacbti-rel1/arm-none-eabi/arm-none-eabi/include/sys/errno.h already have these errnos
 #define EPERM 1
 #define ENOENT 2
 #define ENOFILE ENOENT
@@ -258,6 +233,8 @@ typedef struct eris_slist_node eris_slist_t;                /**< Type for single
 #define ENOLCK 39
 #define ENOSYS 40
 #define ENOTEMPTY 41
+*/
+
 
 #ifndef RC_INVOKED
 #if !defined(_SECURECEris_ERRCODE_VALUES_DEFINED)
@@ -709,12 +686,21 @@ eris_err_t eris_memheap_init(struct eris_memheap *memheap,
                          eris_size_t         size);
 
 eris_weak void *eris_memset(void *s, int c, eris_ubase_t count);
-void * pvPortMalloc( size_t xWantedSize , eris_memheap * memheap);
-void vPortFree( void * pv , eris_memheap *memheap);
-size_t xPortGetFreeHeapSize( eris_memheap *memheap );
-size_t xPortGetMinimumEverFreeHeapSize( eris_memheap *memheap );
-void * pvPortCalloc( size_t xNum,
+
+void * pvPortMalloc_efs( size_t xWantedSize , struct eris_memheap * memheap);
+
+void vPortFree_efs( void * pv , struct eris_memheap *memheap);
+
+size_t xPortGetFreeHeapSize_efs( struct eris_memheap *memheap );
+
+size_t xPortGetMinimumEverFreeHeapSize_efs( struct eris_memheap *memheap );
+
+void * pvPortCalloc_efs_efs( size_t xNum,
                      size_t xSize,
-                     eris_memheap *memheap );
-static void prvInsertBlockIntoFreeList( BlockLink_t * pxBlockToInsert ,eris_memheap * memheap);
-void *pvPortRealloc(struct eris_memheap *memheap, void *ptr, eris_size_t newsize);
+                     struct eris_memheap *memheap );
+
+void prvInsertBlockIntoFreeList_efs( BlockLink_t * pxBlockToInsert, struct eris_memheap * memheap);
+
+void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t newsize);
+
+#endif

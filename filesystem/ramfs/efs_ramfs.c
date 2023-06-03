@@ -1,6 +1,4 @@
-#include "efs_ramfs.h"
-#include "efs_util.h"
-
+#include "headers.h"
 
 int efs_ramfs_mount(struct efs_filesystem *fs,
                     unsigned long          rwflag,
@@ -26,7 +24,7 @@ int efs_ramfs_unmount(struct efs_filesystem *fs)
 
 int efs_ramfs_read(struct efs_file *file, void *buf, size_t count)
 {
-    eris_size_t length;
+    size_t length;
     struct ramfs_dirent *dirent;
 
     dirent = (struct ramfs_dirent *)file->vnode->data;
@@ -48,7 +46,7 @@ int efs_ramfs_read(struct efs_file *file, void *buf, size_t count)
 
 struct ramfs_dirent *efs_ramfs_lookup(struct efs_ramfs *ramfs,
                                       const char       *path,
-                                      eris_size_t        *size)
+                                      size_t        *size)
 {
     const char *subpath;
     struct ramfs_dirent *dirent;
@@ -92,7 +90,7 @@ int efs_ramfs_write(struct efs_file *fd, const void *buf, size_t count)
 
     if (count + fd->pos > fd->vnode->size)
     {
-        eris_uint8_t *ptr;
+        uint8_t *ptr;
         ptr = pvPortRealloc(&(ramfs->memheap), dirent->data, fd->pos + count);
         if (ptr == NULL)
         {
@@ -132,7 +130,7 @@ int efs_ramfs_close(struct efs_file *file)
 
 int efs_ramfs_open(struct efs_file *file)
 {
-    eris_size_t size;
+    size_t size;
     struct efs_ramfs *ramfs;
     struct ramfs_dirent *dirent;
     struct efs_filesystem *fs;
@@ -190,7 +188,7 @@ int efs_ramfs_open(struct efs_file *file)
 
                 /* create a file entry */
                 dirent = (struct ramfs_dirent *)
-                        pvPortMalloc(sizeof(struct ramfs_dirent),&(ramfs->memheap));
+                        pvPortMalloc_efs(sizeof(struct ramfs_dirent),&(ramfs->memheap));
                 if (dirent == NULL)
                 {
                     return -ENOMEM;
@@ -225,7 +223,7 @@ int efs_ramfs_open(struct efs_file *file)
             dirent->size = 0;
             if (dirent->data != NULL)
             {
-                vPortFree(dirent->data,&(ramfs->memheap));
+                vPortFree_efs(dirent->data, &(ramfs->memheap));
                 dirent->data = NULL;
             }
         }
@@ -249,7 +247,7 @@ int efs_ramfs_stat(struct efs_filesystem *fs,
                    const char            *path,
                    struct stat           *st)
 {
-    eris_size_t size;
+    size_t size;
     struct ramfs_dirent *dirent;
     struct efs_ramfs *ramfs;
 
@@ -303,16 +301,16 @@ static const struct efs_filesystem_ops _ramfs =
     NULL,/*rename*/
 };
 
-struct efs_ramfs *efs_ramfs_create(eris_uint8_t *pool, eris_size_t size)
+struct efs_ramfs *efs_ramfs_create(uint8_t *pool, size_t size)
 {
     struct efs_ramfs *ramfs;
-    eris_uint8_t *data_ptr;
+    uint8_t *data_ptr;
     eris_err_t result;
 
     size  = Eris_ALIGN_DOWN(size, Eris_ALIGN_SIZE);
     ramfs = (struct efs_ramfs *)pool;
 
-    data_ptr = (eris_uint8_t *)(ramfs + 1);
+    data_ptr = (uint8_t *)(ramfs + 1);
     size = size - sizeof(struct efs_ramfs);
     size = Eris_ALIGN_DOWN(size, Eris_ALIGN_SIZE);
 
