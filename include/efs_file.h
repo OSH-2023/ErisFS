@@ -27,12 +27,12 @@
 /**
  * Double List structure
  */
-struct list_node
+struct eris_list_node
 {
-    struct list_node * next;                          /**< point to next node. */
-    struct list_node * prev;                          /**< point to prev node. */
+    struct eris_list_node * next;                          /**< point to next node. */
+    struct eris_list_node * prev;                          /**< point to prev node. */
 };
-typedef struct list_node eris_list_t;                  /**< Type for lists. */
+typedef struct eris_list_node eris_list_t;                  /**< Type for lists. */
 
 // struct rt_pollreq;
 
