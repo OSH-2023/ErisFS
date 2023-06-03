@@ -99,7 +99,7 @@ eris_err_t eris_memheap_init(struct eris_memheap *memheap,
                          void              *start_addr,
                          eris_size_t         size)
 {
-    struct BlockLink_t *item;
+    BlockLink_t *item;
 
     Eris_ASSERT(memheap != Eris_NULL);
 
@@ -111,25 +111,24 @@ eris_err_t eris_memheap_init(struct eris_memheap *memheap,
     memheap->xFreeBytesRemaining            = memheap->pool_size - (2 * xHeapStructSize);
     memheap->max_used_size                  = memheap->pool_size - memheap->xFreeBytesRemaining;
     memheap->xMinimumEverFreeBytesRemaining = memheap->xFreeBytesRemaining;
-    memheap->xStart                         = *(memheap->start_addr);
+    memheap->xStart                         = *((BlockLink_t *)(memheap->start_addr));
 
     /* initialize the free list header */
     
-    item                        = &(memheap->xStart);
+    item                        = (BlockLink_t *)(memheap->start_addr);
     item->magic                 = (Eris_MEMHEAP_MAGIC | Eris_MEMHEAP_FREED);
     item->pool_ptr              = memheap;
-    item->pxNextFreeBlock       = (BlockLink_t*)((eris_uint8_t *)item + xHeapStructSize)
+    item->pxNextFreeBlock       = (BlockLink_t*)((eris_uint8_t *)item + xHeapStructSize);
 
     /* set the free list to free list header */
     memheap->free_list = item;
-    item = item->pxNextFreeBlock;
     /* initialize the first big memory block */
-    pxEnd                       = (BlockLink_t*)
-                ((eris_uint8_t *)item + memheap->available_size + xHeapStructSize);
-    item                        = (struct eris_memheap_item *)start_addr;
+    memheap->pxEnd                       = (BlockLink_t*)
+                ((eris_uint8_t *)item + memheap->xFreeBytesRemaining + xHeapStructSize);
+    item = item->pxNextFreeBlock;
     item->magic                 = (Eris_MEMHEAP_MAGIC | Eris_MEMHEAP_FREED);
     item->pool_ptr              = memheap;
-    item->pxNextFreeBlock       = pxEnd;
+    item->pxNextFreeBlock       = memheap->pxEnd;
     item->xBlockSize            = memheap->xFreeBytesRemaining;
 
 #ifdef Eris_USING_MEMTRACE
@@ -137,15 +136,19 @@ eris_err_t eris_memheap_init(struct eris_memheap *memheap,
 #endif /* Eris_USING_MEMTRACE */
 
     /* block list header */
-    memheap->block_list = item;
+    memheap->free_list = item;
 
     /* initialize semaphore lock */
     memheap->lock = xSemaphoreCreateMutex();
     memheap->locked = Eris_FALSE;
  
+    /*
     Eris_DEBUG_LOG(Eris_DEBUG_MEMHEAP,
                  ("memory memheap: start addr 0x%08x, size %d, free list header 0x%08x\n",
-                  start_addr, size, &(memheap->free_header)));
+                  start_addr, size, &(memheap->xStart)));
+    */
+    printf("memory memheap: start addr 0x%08x, size %ld, free list header 0x%08x\n",
+                  (unsigned int)start_addr, size, (unsigned int)&(memheap->xStart));
 
     return Eris_EOK;
 }
@@ -167,7 +170,7 @@ eris_weak void *eris_memset(void *s, int c, eris_ubase_t count)
     unsigned int i = 0;
     char *m = (char *)s;
     unsigned long buffer = 0;
-    unsigned long *aligned_addr = RT_NULL;
+    unsigned long *aligned_addr = NULL;
     unsigned char d = (unsigned int)c & (unsigned char)(-1);  /* To avoid sign extension, copy C to an
                                 unsigned variable. (unsigned)((char)(-1))=0xFF for 8bit and =0xFFFF for 16bit: word independent */
 
@@ -378,7 +381,7 @@ void vPortFree_efs( void * pv , struct eris_memheap *memheap)
     {
         /* The memory being freed will have an BlockLink_t structure immediately
          * before it. */
-        puc -= memheap->xHeapStructSize;
+        puc -= xHeapStructSize;
 
         /* This casting is to keep the compiler from issuing warnings. */
         pxLink = ( void * ) puc;
@@ -395,7 +398,7 @@ void vPortFree_efs( void * pv , struct eris_memheap *memheap)
                 heapFREE_BLOCK( pxLink );
                 #if ( configHEAP_CLEAR_MEMORY_ON_FREE == 1 )
                 {
-                    ( void ) memset( puc + memheap->xHeapStructSize, 0, pxLink->xBlockSize - memheap->xHeapStructSize );
+                    ( void ) memset( puc + xHeapStructSize, 0, pxLink->xBlockSize - xHeapStructSize );
                 }
                 #endif
 
@@ -454,7 +457,7 @@ void * pvPortCalloc_efs( size_t xNum,
 }
 /*-----------------------------------------------------------*/
 
-static void prvInsertBlockIntoFreeList_efs( BlockLink_t * pxBlockToInsert, struct eris_memheap * memheap)
+void prvInsertBlockIntoFreeList_efs( BlockLink_t * pxBlockToInsert, struct eris_memheap * memheap)
 {
     BlockLink_t * pxIterator;
     uint8_t * puc;
@@ -633,7 +636,7 @@ void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t new
     {
         return pvPortMalloc_efs(newsize,memheap);
     }
-    puc -= memheap->xHeapStructSize;
+    puc -= xHeapStructSize;
     pxBlock = (BlockLink_t *) puc;
 
     //存在检测(未完成)
@@ -643,7 +646,7 @@ void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t new
     {
         if(newsize > 0 )
         {
-            xAdditionalRequiredSize = memheap->xHeapStructSize + portBYTE_ALIGNMENT - ( newsize & portBYTE_ALIGNMENT_MASK );
+            xAdditionalRequiredSize = xHeapStructSize + portBYTE_ALIGNMENT - ( newsize & portBYTE_ALIGNMENT_MASK );
 
             if( heapADD_WILL_OVERFLOW( newsize, xAdditionalRequiredSize ) == 0 )
             {   
@@ -667,7 +670,7 @@ void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t new
             if(pxBlock->xBlockSize >= newsize )
             {   
                 memheap->xFreeBytesRemaining += pxOldBlock->xBlockSize;
-                pvReturn = ( ( ( uint8_t * ) pxBlock ) + memheap->xHeapStructSize);
+                pvReturn = ( ( ( uint8_t * ) pxBlock ) + xHeapStructSize);
                 pxBlock->xUsedBlockSize = xUsed;
 
                     if( ( pxBlock->xBlockSize - newsize ) > heapMINIMUM_BLOCK_SIZE )
@@ -704,8 +707,8 @@ void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t new
             }
             else if( newsize <= memheap->xFreeBytesRemaining)
             {
-                pxPreviousBlock = &xStart;
-                pxBlock = xStart.pxNextFreeBlock;
+                pxPreviousBlock = &(memheap->xStart);
+                pxBlock = memheap->xStart.pxNextFreeBlock;
 
 
                 while( ( pxBlock->xBlockSize < newsize ) && ( pxBlock->pxNextFreeBlock != NULL ) )
@@ -715,7 +718,7 @@ void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t new
                 }
 
                 
-                if( pxBlock != pxEnd )
+                if( pxBlock != memheap->pxEnd )
                 {
                     pvReturn = ( void * ) ( ( ( uint8_t * ) pxPreviousBlock->pxNextFreeBlock ) + xHeapStructSize );
 
@@ -776,7 +779,7 @@ void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t new
     ( void ) xSemaphoreGive( memheap->lock);
     if(flag)
     {
-        vPortfree((void *)ptr,memheap);
+        vPortFree_efs((void *)ptr,memheap);
     }
     return pvReturn;
 }

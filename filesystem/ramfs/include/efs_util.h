@@ -152,7 +152,7 @@ struct eris_memheap
     BlockLink_t              *free_list;
     BlockLink_t              *pxEnd;
     
-    static SemaphoreHandle_t  lock;                       /**< semaphore lock */
+    SemaphoreHandle_t         lock;                       /**< semaphore lock */
     eris_bool_t               locked;                     /**< External lock mark */
 };
 
@@ -695,7 +695,7 @@ size_t xPortGetFreeHeapSize_efs( struct eris_memheap *memheap );
 
 size_t xPortGetMinimumEverFreeHeapSize_efs( struct eris_memheap *memheap );
 
-void * pvPortCalloc_efs_efs( size_t xNum,
+void * pvPortCalloc_efs( size_t xNum,
                      size_t xSize,
                      struct eris_memheap *memheap );
 

@@ -112,7 +112,7 @@ int efs_ramfs_write(struct efs_file *fd, const void *buf, size_t count)
     if (count + fd->pos > fd->vnode->size)
     {
         uint8_t *ptr;
-        ptr = pvPortRealloc(&(ramfs->memheap), dirent->data, fd->pos + count);
+        ptr = pvPortRealloc_efs(&(ramfs->memheap), dirent->data, fd->pos + count);
         if (ptr == NULL)
         {
             //eris_set_errno(-ENOMEM);                                                //1
@@ -303,7 +303,7 @@ int efs_ramfs_getdents(struct efs_file *file,
                        struct dirent *dirp,
                        uint32_t    count)
 {
-    eris_size_t index, end;
+    size_t index, end;
     struct dirent *d;
     struct ramfs_dirent *dirent;
     struct efs_ramfs *ramfs;
@@ -328,7 +328,7 @@ int efs_ramfs_getdents(struct efs_file *file,
          dirent != &(ramfs->root) && index < end;
          dirent = eris_list_entry(dirent->list.next, struct ramfs_dirent, list))
     {
-        if (index >= (eris_size_t)file->pos)
+        if (index >= (size_t)file->pos)
         {
             d = dirp + count;
             d->d_type = DT_REG;
@@ -347,7 +347,7 @@ int efs_ramfs_getdents(struct efs_file *file,
 
 int efs_ramfs_unlink(struct efs_filesystem *fs, const char *path)
 {
-    eris_size_t size;
+    size_t size;
     struct efs_ramfs *ramfs;
     struct ramfs_dirent *dirent;
 
@@ -360,8 +360,8 @@ int efs_ramfs_unlink(struct efs_filesystem *fs, const char *path)
 
     eris_list_remove(&(dirent->list));
     if (dirent->data != NULL)
-        vPortFree(dirent->data,&(ramfs->memheap));
-    vPortFree(dirent,&(ramfs->memheap));
+        vPortFree_efs(dirent->data,&(ramfs->memheap));
+    vPortFree_efs(dirent,&(ramfs->memheap));
 
     return Eris_EOK;
 }
@@ -372,7 +372,7 @@ int efs_ramfs_rename(struct efs_filesystem *fs,
 {
     struct ramfs_dirent *dirent;
     struct efs_ramfs *ramfs;
-    eris_size_t size;
+    size_t size;
 
     ramfs = (struct efs_ramfs *)fs->data;
     Eris_ASSERT(ramfs != NULL);
