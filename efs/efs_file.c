@@ -10,7 +10,7 @@
 
 struct efs_vnode_mgr
 {
-    SemaphoreHandle_t lock;  // need solving 
+    struct SemaphoreHandle_t lock;  // need solving 
     list_t head[EFS_FNODE_HASH_NR];
 };
 
