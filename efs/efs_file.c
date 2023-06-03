@@ -1,3 +1,6 @@
+#include <FreeRTOS.h>
+#include <semphr.h>
+
 #include "../include/efs.h"
 #include "../include/efs_file.h"
 #include "../include/efs_private.h"
@@ -5,30 +8,28 @@
 
 #define EFS_FNODE_HASH_NR 128
 
-static SemaphoreHandle_t xEfsFileMutex;
-
-void efs_fm_lock(void) 
-{
-    xSemaphoreTake(xEfsFileMutex, portMAX_DELAY);
-}
-
-void efs_fm_unlock(void) 
-{
-    xSemaphoreGive(xEfsFileMutex);
-}
-
 struct efs_vnode_mgr
 {
-    static SemaphoreHandle_t xEfsMutex;  // need solving 
+    SemaphoreHandle_t lock;  // need solving 
     list_t head[EFS_FNODE_HASH_NR];
 };
 
 static struct efs_vnode_mgr efs_fm;
 
+void efs_fm_lock(void) 
+{
+    xSemaphoreTake(&efs_fm.lock, portMAX_DELAY);
+}
+
+void efs_fm_unlock(void) 
+{
+    xSemaphoreGive(&efs_fm.lock);
+}
+
 void efs_vnode_mgr_init(void)
 {
-    int i = 0;
-    efs_fm.xEfsMutex = xSemaphoreCreateMutex();
+    int i = 0; 
+    efs_fm.lock = xSemaphoreCreateMutex();
     for (i = 0; i < EFS_FNODE_HASH_NR; i++)
     {
         list_init(&efs_fm.head[i]);
