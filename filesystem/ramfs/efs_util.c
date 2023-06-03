@@ -454,7 +454,7 @@ void * pvPortCalloc_efs( size_t xNum,
 }
 /*-----------------------------------------------------------*/
 
-static void prvInsertBlockIntoFreeList_efs( BlockLink_t * pxBlockToInsert ,struct eris_memheap * memheap)
+static void prvInsertBlockIntoFreeList_efs( BlockLink_t * pxBlockToInsert, struct eris_memheap * memheap)
 {
     BlockLink_t * pxIterator;
     uint8_t * puc;

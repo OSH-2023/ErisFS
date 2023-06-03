@@ -1,4 +1,5 @@
 #include "headers.h"
+#include "efs_device.h"
 #include <unistd.h>
 
 #define EFS_FNODE_HASH_NR 128
@@ -6,7 +7,7 @@
 struct efs_vnode_mgr
 {
     SemaphoreHandle_t mutex;
-    list_t head[EFS_FNODE_HASH_NR];
+    eris_list_t head[EFS_FNODE_HASH_NR];
 };
 
 static struct efs_vnode_mgr efs_fm;
