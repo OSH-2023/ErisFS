@@ -1,10 +1,4 @@
-#include <FreeRTOS.h>
-#include <semphr.h>
-
-#include <efs.h>
-#include <efs_file.h>
-#include <efs_fs.h>
-#include <efs_posix.h>
+#include "headers.h"
 
 struct efs_filesystem_ops *filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX];
 struct efs_filesystem filesystem_table[EFS_FILESYSTEMS_MAX];
@@ -103,10 +97,10 @@ struct efs_file *fdt_fd_get(struct efs_fdtable* fdt, int fd)
         return NULL;
     }
 
-    struct efs_file *fd;
+    struct efs_file *fd_entry;
     efs_file_lock();
-    fd = fdt->fds[fd];
-    if (fd == NULL) 
+    fd_entry = fdt->fds[fd];
+    if (fd_entry == NULL) 
     {
         efs_file_unlock();
         printf("[efs.c] fdt_fd_get is failed! fd entry is NULL!\n");
@@ -114,7 +108,7 @@ struct efs_file *fdt_fd_get(struct efs_fdtable* fdt, int fd)
     }
     else 
     {
-        //fd->ref_count++;
+        //fd_entry->ref_count++;
         efs_file_unlock();
         return fd;
     }
@@ -351,22 +345,22 @@ char *efs_normalize_path(const char *directory, const char *filename)
     return normalized;
 }
 
-void efs_lock(void) 
+void efs_lock() 
 {
     xSemaphoreTake( xEfsMutex, portMAX_DELAY );
 }
 
-void efs_unlock(void) 
+void efs_unlock() 
 {
     xSemaphoreGive( xEfsMutex );
 }
 
-void efs_file_lock(void) 
+void efs_file_lock() 
 {
     xSemaphoreTake( xEfsFileMutex, portMAX_DELAY );
 }
 
-void efs_file_unlock(void) 
+void efs_file_unlock() 
 {
     xSemaphoreGive( xEfsFileMutex );
-}
+} 
