@@ -34,6 +34,7 @@ int open(const char *file, int flags, ...)
 
     return fd;
 }
+
 int close(int fd)
 {
     int result;
@@ -85,6 +86,7 @@ ssize_t read(int fd, void *buf, size_t len)
 
     return result;
 }
+
 ssize_t write(int fd, const void *buf, size_t len)
 {
     int result;

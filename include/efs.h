@@ -1,11 +1,5 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/time.h>
+#ifndef __EFS_H__
+#define __EFS_H__
 
 #define EFS_PATH_MAX 256
 
@@ -71,3 +65,5 @@ void fdt_fd_release(struct efs_fdtable* fdt, int fd);
 void fd_init(struct efs_file *fd);
 
 struct efs_fdtable *efs_fdtable_get(void);
+
+#endif

@@ -1,4 +1,7 @@
-#include <efs_device.h>
+#ifndef __EFS_FS_H__
+#define __EFS_FS_H__
+
+#include "headers.h"
 
 #define ERIS_EOK 0
 #define EFS_FILESYSTEM_TYPES_MAX 4
@@ -7,14 +10,6 @@
 //来自efs_file 中efs_file_open函数，暂定为0x200000，留待后续对接
 #define O_DIRECTORY 0x200000
 #define ERIS_DEVICE_OFLAG_RDWR 0x003    /* open the device in read-and_write mode */
-
-struct statfs
-{
-    size_t f_bsize;   /* block size */
-    size_t f_blocks;  /* total data blocks in file system */
-    size_t f_bfree;   /* free blocks in file system */
-    size_t f_bavail;  /* free blocks available to unprivileged user*/
-};
 
 /* Pre-declaration */
 struct efs_filesystem;
@@ -149,3 +144,5 @@ int efs_mount_device(eris_device_t dev);
 */
 int efs_unmount_device(eris_device_t dev);
 
+
+#endif

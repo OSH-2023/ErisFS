@@ -9,10 +9,6 @@
 #ifndef __EFS_FILE_H__
 #define __EFS_FILE_H__
 
-#include "efs.h"
-#include "efs_fs.h"
-
-
 /* file descriptor */
 #define EFS_FD_MAGIC     0xfdfd
 

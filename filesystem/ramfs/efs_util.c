@@ -220,7 +220,7 @@ eris_weak void *eris_memset(void *s, int c, eris_ubase_t count)
 
 
 
-void * pvPortMalloc( size_t xWantedSize , eris_memheap * memheap)
+void * pvPortMalloc_efs( size_t xWantedSize , struct eris_memheap * memheap)
 {
     BlockLink_t * pxBlock;
     BlockLink_t * pxPreviousBlock;
@@ -308,7 +308,7 @@ void * pvPortMalloc( size_t xWantedSize , eris_memheap * memheap)
                         pxBlock->xBlockSize = xWantedSize;
 
                         /* Insert the new block into the list of free blocks. */
-                        prvInsertBlockIntoFreeList( ( pxNewBlockLink ) ,memheap);
+                        prvInsertBlockIntoFreeList_efs( ( pxNewBlockLink ) ,memheap);
                     }
                     else
                     {
@@ -369,7 +369,7 @@ void * pvPortMalloc( size_t xWantedSize , eris_memheap * memheap)
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void * pv , eris_memheap *memheap)
+void vPortFree_efs( void * pv , struct eris_memheap *memheap)
 {
     uint8_t * puc = ( uint8_t * ) pv;
     BlockLink_t * pxLink;
@@ -404,7 +404,7 @@ void vPortFree( void * pv , eris_memheap *memheap)
                     /* Add this block to the list of free blocks. */
                     memheap->xFreeBytesRemaining += pxLink->xBlockSize;
                     traceFREE( pv, pxLink->xBlockSize );
-                    prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) ,memheap);
+                    prvInsertBlockIntoFreeList_efs( ( ( BlockLink_t * ) pxLink ) ,memheap);
                     memheap->xNumberOfSuccessfulFrees++;
                 }
                 ( void ) xTaskResumeAll();
@@ -422,27 +422,27 @@ void vPortFree( void * pv , eris_memheap *memheap)
 }
 /*-----------------------------------------------------------*/
 
-size_t xPortGetFreeHeapSize( eris_memheap *memheap )
+size_t xPortGetFreeHeapSize_efs( struct eris_memheap *memheap )
 {
     return memheap->xFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-size_t xPortGetMinimumEverFreeHeapSize( eris_memheap *memheap )
+size_t xPortGetMinimumEverFreeHeapSize_efs( struct eris_memheap *memheap )
 {
     return memheap->xMinimumEverFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-void * pvPortCalloc( size_t xNum,
+void * pvPortCalloc_efs( size_t xNum,
                      size_t xSize,
-                     eris_memheap *memheap )
+                     struct eris_memheap *memheap )
 {
     void * pv = NULL;
 
     if( heapMULTIPLY_WILL_OVERFLOW( xNum, xSize ) == 0 )
     {
-        pv = pvPortMalloc( xNum * xSize , memheap);
+        pv = pvPortMalloc_efs( xNum * xSize , memheap);
 
         if( pv != NULL )
         {
@@ -454,7 +454,7 @@ void * pvPortCalloc( size_t xNum,
 }
 /*-----------------------------------------------------------*/
 
-static void prvInsertBlockIntoFreeList( BlockLink_t * pxBlockToInsert ,eris_memheap * memheap)
+static void prvInsertBlockIntoFreeList_efs( BlockLink_t * pxBlockToInsert ,struct eris_memheap * memheap)
 {
     BlockLink_t * pxIterator;
     uint8_t * puc;
@@ -610,7 +610,7 @@ static void prvInsertBlockIntoFreeList( BlockLink_t * pxBlockToInsert ,eris_memh
 //}
 ///*-----------------------------------------------------------*/
 
-void *pvPortRealloc(struct eris_memheap *memheap, void *ptr, eris_size_t newsize)
+void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t newsize)
 {
     BlockLink_t * pxBlock;
     BlockLink_t * pxPreviousBlock;
@@ -625,13 +625,13 @@ void *pvPortRealloc(struct eris_memheap *memheap, void *ptr, eris_size_t newsize
     uint8_t * puc = ( uint8_t * ) ptr;
     if(newsize <= 0)
     {
-        vPortFree(ptr,memheap);
+        vPortFree_efs(ptr,memheap);
 
         return Eris_NULL;
     }
     if(ptr == NULL)
     {
-        return pvPortMalloc(newsize,memheap);
+        return pvPortMalloc_efs(newsize,memheap);
     }
     puc -= memheap->xHeapStructSize;
     pxBlock = (BlockLink_t *) puc;
@@ -681,7 +681,7 @@ void *pvPortRealloc(struct eris_memheap *memheap, void *ptr, eris_size_t newsize
                         pxBlock->xBlockSize = newsize;
 
                         /* Insert the new block into the list of free blocks. */
-                        prvInsertBlockIntoFreeList( ( pxNewBlockLink ) ,memheap);
+                        prvInsertBlockIntoFreeList_efs( ( pxNewBlockLink ) ,memheap);
                     }
                     else
                     {
@@ -733,7 +733,7 @@ void *pvPortRealloc(struct eris_memheap *memheap, void *ptr, eris_size_t newsize
                         pxBlock->xBlockSize = newsize;
 
                         /* Insert the new block into the list of free blocks. */
-                        prvInsertBlockIntoFreeList( ( pxNewBlockLink ),memheap );
+                        prvInsertBlockIntoFreeList_efs( ( pxNewBlockLink ),memheap );
                     }
                     else
                     {
