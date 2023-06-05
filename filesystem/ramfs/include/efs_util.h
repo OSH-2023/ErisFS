@@ -239,9 +239,6 @@ typedef struct eris_slist_node eris_slist_t;                /**< Type for single
 #ifndef RC_INVOKED
 #if !defined(_SECURECEris_ERRCODE_VALUES_DEFINED)
 #define _SECURECEris_ERRCODE_VALUES_DEFINED
-#define EINVAL 22
-#define ERANGE 34
-#define EILSEQ 42
 #define STRUNCATE 80
 #endif
 #endif

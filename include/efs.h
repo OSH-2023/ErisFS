@@ -19,9 +19,10 @@
 #define EFS_F_EOF               0x04000000
 #define EFS_F_ERR               0x08000000
 
+
 struct efs_fdtable
 {
-    uint32_t maxfd;
+    unsigned int maxfd;
     struct efs_file **fds;    /* efs_file.h/efs_fd */
     int used;               /* NEW! for check if full*/
 };

@@ -7,8 +7,7 @@
 #define EFS_FILESYSTEM_TYPES_MAX 4
 #define EFS_FILESYSTEMS_MAX 4
 #define ERIS_ERROR 1
-//来自efs_file 中efs_file_open函数，暂定为0x200000，留待后续对接
-#define O_DIRECTORY 0x200000
+
 #define ERIS_DEVICE_OFLAG_RDWR 0x003    /* open the device in read-and_write mode */
 
 /* Pre-declaration */

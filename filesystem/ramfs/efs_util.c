@@ -1,12 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <efs_device.h>
-#include <efs_file.h>
-#include <efs_fs.h>
-#include <efs.h>
-
-#include "efs_util.h"
+#include "headers.h"
 
 
 eris_int32_t eris_strcmp(const char *cs, const char *ct)
