@@ -28,7 +28,7 @@ void efs_vnode_mgr_init(void)
     efs_fm.mutex = xSemaphoreCreateMutex();
     for (i = 0; i < EFS_FNODE_HASH_NR; i++)
     {
-        list_init(&efs_fm.head[i]);
+        eris_list_init(&efs_fm.head[i]);
     }
 }
 
