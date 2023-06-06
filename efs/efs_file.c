@@ -133,7 +133,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         return -pdFREERTOS_ERRNO_ENOMEM;
     }
 
-    LOG_D("open file:%s", fullpath);
+    printf("open file:%s\n", fullpath);
 
     efs_fm_lock();
     /* vnode find */
@@ -243,7 +243,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     }
     efs_fm_unlock();
 
-    LOG_D("open successful");
+    printf("open successful\n");
     return 0;
 }
 
@@ -512,7 +512,7 @@ int efs_file_stat(const char * path, struct stat * buf)
 
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        LOG_E("can't find mounted filesystem on this path:%s", fullpath);
+        printf("can't find mounted filesystem on this path:%s", fullpath);
         free(fullpath);
 
         return -pdFREERTOS_ERRNO_ENOENT;

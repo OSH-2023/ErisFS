@@ -12,14 +12,14 @@
 
 //TODO 其他所使用的其他函数
 
-#include <headers.h>
+#include "headers.h"
 
 // DONE
 int efs_register(const struct efs_filesystem_ops *ops)
 {
     int ret = ERIS_EOK;
-    const struct efs_filesystem_ops **empty = NULL;
-    const struct efs_filesystem_ops **iter;
+    struct efs_filesystem_ops **empty = NULL;
+    struct efs_filesystem_ops **iter;
 
     /* lock filesystem */
     efs_lock();
@@ -157,7 +157,7 @@ int efs_filesystem_get_partition(struct efs_partition *part, uint8_t *buf, uint3
     part->offset = *(dpt + 8) | *(dpt + 9) << 8 | *(dpt + 10) << 16 | *(dpt + 11) << 24;
     part->size = *(dpt + 12) | *(dpt + 13) << 8 | *(dpt + 14) << 16 | *(dpt + 15) << 24;
 
-    printf("found part[%d], begin: %d, size: ",
+    printf("found part[%lud], begin: %ld, size: ",
                pindex, part->offset * 512);
     if ((part->size >> 11) == 0)
         printf("%d%s", part->size >> 1, "KB\n"); /* KB */
@@ -176,7 +176,7 @@ int efs_filesystem_get_partition(struct efs_partition *part, uint8_t *buf, uint3
 
 int efs_mount(const char *device_name, const char *path, const char *filesystemtype, unsigned long rwflag, const void *data)
 {
-    const struct efs_filesystem_ops **ops;
+    struct efs_filesystem_ops **ops;
     struct efs_filesystem *iter;
     struct efs_filesystem *fs = NULL;
     char *fullpath = NULL;
