@@ -133,7 +133,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         return -pdFREERTOS_ERRNO_ENOMEM;
     }
 
-    LOG_D("open file:%s", fullpath);
+    printf("open file:%s", fullpath);
 
     efs_fm_lock();
     /* vnode find */
@@ -166,7 +166,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         }
         vnode->ref_count = 1;
 
-        LOG_D("open in filesystem:%s", fs->ops->name);
+        printf("open in filesystem:%s", fs->ops->name);
         vnode->fs    = fs;             /* set file system */
         vnode->fops  = fs->ops->fops;  /* set file ops */
 
@@ -177,10 +177,14 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         if (!(fs->ops->flags & EFS_FS_FLAG_FULLPATH))
         {
             if (efs_subdir(fs->path, fullpath) == NULL)
+            {
                 vnode->path = strdup("/");
+            }   
             else
+            {
                 vnode->path = strdup(efs_subdir(fs->path, fullpath));
-            LOG_D("Actual file path: %s", vnode->path);
+            }
+            printf("Actual file path: %s", vnode->path);
         }
         else
         {
@@ -207,7 +211,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         fd->vnode = vnode;
 
         /* insert vnode to hash */
-        list_inseafter(hash_head, &vnode->list);
+        eris_list_insert_after(hash_head, &vnode->list);
     }
 
     fd->flags = flags;
@@ -230,7 +234,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         }
 
         efs_fm_unlock();
-        LOG_D("%s open failed", fullpath);
+        printf("%s open failed", fullpath);
 
         return result;
     }
@@ -243,7 +247,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     }
     efs_fm_unlock();
 
-    LOG_D("open successful");
+    printf("open successful");
     return 0;
 }
 
@@ -512,7 +516,7 @@ int efs_file_stat(const char * path, struct stat * buf)
 
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        LOG_E("can't find mounted filesystem on this path:%s", fullpath);
+        printf("can't find mounted filesystem on this path:%s", fullpath);
         free(fullpath);
 
         return -pdFREERTOS_ERRNO_ENOENT;
@@ -541,7 +545,7 @@ int efs_file_stat(const char * path, struct stat * buf)
         if (fs->ops->stat == NULL)
         {
             free(fullpath);
-            LOG_E("the filesystem didn't implement this function");
+            printf("the filesystem didn't implement this function");
 
             return -pdFREERTOS_ERRNO_EINTR;
         }
