@@ -1,5 +1,4 @@
 #include "headers.h"
-#include "efs_device.h"
 #include <unistd.h>
 
 #define EFS_FNODE_HASH_NR 128
@@ -56,7 +55,7 @@ static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_
 
     if (hash_head)
     {
-        *hash_head = &efs_fm.head[hash];
+        * hash_head = &efs_fm.head[hash];
     }
 
     while (hh != &efs_fm.head[hash])
@@ -71,11 +70,6 @@ static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_
     }
     return NULL;
 }
-
-/**
- * @addtogroup FileApi
- * @{
- */
 
 /**
  * This function will return whether this file has been opend.
@@ -516,7 +510,6 @@ int efs_file_stat(const char * path, struct stat * buf)
 
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        printf("can't find mounted filesystem on this path:%s", fullpath);
         printf("can't find mounted filesystem on this path:%s", fullpath);
         free(fullpath);
 

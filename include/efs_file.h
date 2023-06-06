@@ -2,12 +2,14 @@
  * @Description: 
  * @Version: 
  * @Author: Tyrion Huu
- * @Date: 2023-05-18 15:14:16
+ * @Date: 2023-06-06 13:53:58
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-05-30 20:43:52
+ * @LastEditTime: 2023-06-06 14:41:36
  */
 #ifndef __EFS_FILE_H__
 #define __EFS_FILE_H__
+
+#include "headers.h"
 
 /* file descriptor */
 #define EFS_FD_MAGIC     0xfdfd
