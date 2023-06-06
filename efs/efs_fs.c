@@ -358,8 +358,6 @@ int efs_mkfs(const char *fs_name, const char *device_name)
     eris_device_t dev_id = NULL;
 
     /* check device name, and it should not be NULL */
-    if (device_name != NULL)
-        dev_id = rt_device_find(device_name);
 
     if (dev_id == NULL)
     {
