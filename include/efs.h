@@ -38,9 +38,9 @@ void efs_fd_lock(void);
 
 void efs_fd_unlock(void);
 
-void efs_fm_lock(void);
+void efs_lock(void);
 
-void efs_fm_unlock(void);
+void efs_unlock(void);
 
 
 /* FD APIs */

@@ -119,14 +119,6 @@ const char *efs_subdir(const char *directory, const char *filepath)
     return dir;
 }
 
-//rewrite efs_subdir
-const char *efs_subdir2(const char *directory, const char *filename)
-{
-    int i;
-    int j;
-
-}
-
 void efs_lock() 
 {
     xSemaphoreTake( xEfsMutex, portMAX_DELAY );

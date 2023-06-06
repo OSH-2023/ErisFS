@@ -517,6 +517,7 @@ int efs_file_stat(const char * path, struct stat * buf)
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
         printf("can't find mounted filesystem on this path:%s", fullpath);
+        printf("can't find mounted filesystem on this path:%s", fullpath);
         free(fullpath);
 
         return -pdFREERTOS_ERRNO_ENOENT;

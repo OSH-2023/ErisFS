@@ -107,7 +107,7 @@ int efs_file_close(struct efs_file * fd);
 
 // int efs_file_ioctl(struct efs_file *fd, int cmd, void *args);
 
-// int efs_file_read(struct efs_file *fd, void *buf, size_t len);
+int efs_file_read(struct efs_file *fd, void *buf, size_t len);
 
 // int efs_file_getdents(struct efs_file *fd, struct dirent *dirp, size_t nbytes);
 
