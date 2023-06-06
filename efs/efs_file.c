@@ -218,7 +218,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         if (vnode->ref_count == 0)
         {
             /* remove from hash */
-            list_remove(&vnode->list);
+            eris_list_remove(&vnode->list);
             /* clear fd */
             if (vnode->path != vnode->fullpath)
             {
@@ -290,7 +290,7 @@ int efs_file_close(struct efs_file * fd)
         if (vnode->ref_count == 1)
         {
             /* remove from hash */
-            list_remove(&vnode->list);
+            eris_list_remove(&vnode->list);
             fd->vnode = NULL;
 
             if (vnode->path != vnode->fullpath)
