@@ -32,6 +32,8 @@ int efs_init(void);
 
 char *efs_normalize_path(const char *directory, const char *filename);
 
+const char *efs_subdir(const char *directory, const char *filepath);
+
 void efs_fd_lock(void);
 
 void efs_fd_unlock(void);

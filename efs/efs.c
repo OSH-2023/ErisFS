@@ -99,6 +99,34 @@ char *efs_normalize_path(const char *directory, const char *filename)
     return normalized;
 }
 
+/* return subdir based only on length */
+/* "/home", "/home/1.txt" -> "/1.txt" */
+/* "/abcd", "/home/1.txt" -> "/1.txt" */
+const char *efs_subdir(const char *directory, const char *filepath)
+{
+    const char *dir;
+
+    if (strlen(directory) >= strlen(filepath)) /* same length */
+        return NULL;
+
+    dir = filepath + strlen(directory);
+
+    if ((*dir != '/') && (dir != filepath))
+    {
+        dir --;
+    }
+
+    return dir;
+}
+
+//rewrite efs_subdir
+const char *efs_subdir2(const char *directory, const char *filename)
+{
+    int i;
+    int j;
+
+}
+
 void efs_lock() 
 {
     xSemaphoreTake( xEfsMutex, portMAX_DELAY );
