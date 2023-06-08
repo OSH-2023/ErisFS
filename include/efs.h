@@ -2,6 +2,7 @@
 #define __EFS_H__
 
 #define EFS_PATH_MAX 256
+#define EFS_MAX_FD 16
 
 #define EFS_FS_FLAG_DEFAULT     0x00    /* default flag */
 #define EFS_FS_FLAG_FULLPATH    0x01    /* set full path to underlaying file system */
@@ -52,6 +53,8 @@ int fd_new(void);
 int fdt_fd_new(struct efs_fdtable *fdt);
 
 int fd_creat(struct efs_fdtable *fdt, int startfd);
+
+int fd_expand(struct efs_fdtable *fdt, int fd);
 
 struct efs_file *fd_get(int fd_num);
 

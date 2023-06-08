@@ -61,6 +61,7 @@ static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_
     while (hh != &efs_fm.head[hash])
     {
         vnode = container_of(hh, struct efs_vnode, list);   // need solving 
+        printf("find vnode: %s\n", vnode->fullpath);
         if (strcmp(path, vnode->fullpath) == 0)
         {
             /* found */
@@ -94,7 +95,7 @@ int efs_file_is_open(const char * pathname)
     }
     efs_fm_unlock();
 
-    free(fullpath);
+    vPortFree(fullpath);
     return ret;
 }
 
@@ -122,12 +123,13 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
 
     /* make sure we have an absolute path */
     fullpath = efs_normalize_path(NULL, path);
+    //printf("fullpath: %s\n", fullpath);
     if (fullpath == NULL)
     {
         return -pdFREERTOS_ERRNO_ENOMEM;
     }
 
-    printf("open file:%s", fullpath);
+    //printf("open file: %s \n", fullpath);
 
     efs_fm_lock();
     /* vnode find */
@@ -138,7 +140,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         fd->pos   = 0;
         fd->vnode = vnode;
         efs_fm_unlock();
-        free(fullpath); /* release path */
+        vPortFree(fullpath); /* release path */
     }
     else
     {
@@ -147,45 +149,46 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         if (fs == NULL)
         {
             efs_fm_unlock();
-            free(fullpath); /* release path */
+            vPortFree(fullpath); /* release path */
+            printf("[efs_file.c] can't find mounted filesystem on this path: %s\n", fullpath);
             return -pdFREERTOS_ERRNO_ENOENT;
         }
 
-        vnode = calloc(1, sizeof(struct efs_vnode));
+        //vnode = pvPortCalloc(1, sizeof(struct efs_vnode));
+        vnode = pvPortMalloc(sizeof(struct efs_vnode));
+
         if (!vnode)
         {
             efs_fm_unlock();
-            free(fullpath); /* release path */
+            vPortFree(fullpath); /* release path */
+            printf("[efs_file.c] can't malloc vnode!\n");
             return -pdFREERTOS_ERRNO_ENOMEM;
         }
         vnode->ref_count = 1;
-
-        printf("open in filesystem:%s", fs->ops->name);
+        printf("open in filesystem: %s\n", fs->ops->name);
         vnode->fs    = fs;             /* set file system */
         vnode->fops  = fs->ops->fops;  /* set file ops */
 
         /* initialize the fd item */
         vnode->type  = FT_REGULAR; 
         vnode->flags = 0;
-
         if (!(fs->ops->flags & EFS_FS_FLAG_FULLPATH))
         {
             if (efs_subdir(fs->path, fullpath) == NULL)
             {
-                vnode->path = strdup("/");
+                vnode->path = strdup_efs("/");
             }   
             else
             {
-                vnode->path = strdup(efs_subdir(fs->path, fullpath));
+                vnode->path = strdup_efs(efs_subdir(fs->path, fullpath));
             }
-            printf("Actual file path: %s", vnode->path);
+            printf("Actual file path: %s\n", vnode->path);
         }
         else
         {
-            vnode->path = fullpath;
+            vnode->path = strdup_efs(fullpath);
         }
-        vnode->fullpath = fullpath;
-
+        vnode->fullpath = strdup_efs(fullpath);
         /* specific file system open routine */
         if (vnode->fops->open == NULL)
         {
@@ -193,11 +196,11 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             /* clear fd */
             if (vnode->path != vnode->fullpath)
             {
-                free(vnode->fullpath);
+                vPortFree(vnode->fullpath);
             }
-            free(vnode->path);
-            free(vnode);
-
+            vPortFree(vnode->path);
+            vPortFree(vnode);
+            printf("[efs_file.c] the filesystem didn't implement this open function");
             return -pdFREERTOS_ERRNO_EINTR;
         }
 
@@ -207,7 +210,6 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         /* insert vnode to hash */
         eris_list_insert_after(hash_head, &vnode->list);
     }
-
     fd->flags = flags;
 
     if ((result = vnode->fops->open(fd)) < 0)
@@ -220,15 +222,15 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             /* clear fd */
             if (vnode->path != vnode->fullpath)
             {
-                free(vnode->fullpath);
+                vPortFree(vnode->fullpath);
             }
-            free(vnode->path);
+            vPortFree(vnode->path);
             fd->vnode = NULL;
-            free(vnode);
+            vPortFree(vnode);
         }
 
         efs_fm_unlock();
-        printf("%s open failed", fullpath);
+        printf("%s open failed!\n", fullpath);
 
         return result;
     }
@@ -240,8 +242,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         fd->flags |= EFS_F_DIRECTORY;   // need solving 
     }
     efs_fm_unlock();
-
-    printf("open successful");
+    printf("open successed!\n");
     return 0;
 }
 
@@ -266,37 +267,32 @@ int efs_file_close(struct efs_file * fd)
     {
         efs_fm_lock();
         vnode = fd->vnode;
-
         if (vnode->ref_count <= 0)
         {
             efs_fm_unlock();
             return -pdFREERTOS_ERRNO_ENXIO;
         }
-
         if (vnode->fops->close != NULL)
         {
             result = vnode->fops->close(fd);
         }
-
         /* close fd error, return */
         if (result < 0)
         {
             efs_fm_unlock();
             return result;
         }
-
         if (vnode->ref_count == 1)
         {
             /* remove from hash */
             eris_list_remove(&vnode->list);
             fd->vnode = NULL;
-
-            if (vnode->path != vnode->fullpath)
-            {
-                free(vnode->fullpath);
-            }
-            free(vnode->path);
-            free(vnode);
+            //if (vnode->path != vnode->fullpath)
+            //{
+            vPortFree(vnode->fullpath);
+            //}
+            vPortFree(vnode->path);
+            vPortFree(vnode);
         }
         efs_fm_unlock();
     }
@@ -415,7 +411,7 @@ int efs_file_unlink(const char * path)
     else result = -pdFREERTOS_ERRNO_EINTR;
 
 __exit:
-    free(fullpath);
+    vPortFree(fullpath);
     return result;
 }
 
@@ -511,7 +507,7 @@ int efs_file_stat(const char * path, struct stat * buf)
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
         printf("can't find mounted filesystem on this path:%s", fullpath);
-        free(fullpath);
+        vPortFree(fullpath);
 
         return -pdFREERTOS_ERRNO_ENOENT;
     }
@@ -530,7 +526,7 @@ int efs_file_stat(const char * path, struct stat * buf)
         buf->st_mtime   = 0;
 
         /* release full path */
-        free(fullpath);
+        vPortFree(fullpath);
 
         return pdFREERTOS_ERRNO_NONE;
     }
@@ -538,7 +534,7 @@ int efs_file_stat(const char * path, struct stat * buf)
     {
         if (fs->ops->stat == NULL)
         {
-            free(fullpath);
+            vPortFree(fullpath);
             printf("the filesystem didn't implement this function");
 
             return -pdFREERTOS_ERRNO_EINTR;
@@ -551,7 +547,7 @@ int efs_file_stat(const char * path, struct stat * buf)
             result = fs->ops->stat(fs, efs_subdir(fs->path, fullpath), buf);
     }
 
-    free(fullpath);
+    vPortFree(fullpath);
 
     return result;
 }
@@ -621,11 +617,11 @@ int efs_file_rename(const char * oldpath, const char * newpath)
 __exit:
     if (oldfullpath)
     {
-        free(oldfullpath);
+        vPortFree(oldfullpath);
     }
     if (newfullpath)
     {
-        free(newfullpath);
+        vPortFree(newfullpath);
     }
 
     /* not at same file system, return pdFREERTOS_ERRNO_EXDEV */

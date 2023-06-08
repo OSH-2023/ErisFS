@@ -14,14 +14,16 @@
     #include "FreeRTOS.h"
     #include "semphr.h"
     #include "task.h"
+    #include "list.h"
+    #include "queue.h"
 
     #include "efs.h"
     #include "efs_device.h"
     #include "efs_util.h"
-    #include "efs_file.h"
     #include "efs_fs.h"
     #include "efs_posix.h"
     #include "efs_private.h"
+    #include "efs_file.h" 
 
     #include "efs_ramfs.h"
 #endif /* ifndef PLUS_FAT_H */

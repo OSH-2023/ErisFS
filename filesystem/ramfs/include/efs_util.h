@@ -1,7 +1,7 @@
-#ifndef __EFS_UTILS_H__
-#define __EFS_UTILS_H__
+#ifndef __EFS_UTIL_H__
+#define __EFS_UTIL_H__
 
-#include <headers.h>
+#include "headers.h"
 
 typedef signed   char                   eris_int8_t;      /**<  8bit integer type */
 typedef signed   short                  eris_int16_t;     /**< 16bit integer type */
@@ -580,5 +580,11 @@ void * pvPortCalloc_efs( size_t xNum,
 void prvInsertBlockIntoFreeList_efs( BlockLink_t * pxBlockToInsert, struct eris_memheap * memheap);
 
 void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t newsize);
+
+void *pvPortRealloc( void *pv, size_t xWantedSize );
+
+char *strdup_efs(const char *s);
+
+int strlen_efs(const char *s);
 
 #endif

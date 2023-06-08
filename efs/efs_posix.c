@@ -10,7 +10,6 @@ int open(const char *file, int flags, ...)
 {
     int fd, result;
     struct efs_file *d;
-
     /* allocate a fd */
     fd = fd_new();
     if (fd < 0)
@@ -19,8 +18,8 @@ int open(const char *file, int flags, ...)
 
         return -1;
     }
+    printf("fd_new: %d\n", fd);
     d = fd_get(fd);
-
     result = efs_file_open(d, file, flags);
     if (result < 0)
     {

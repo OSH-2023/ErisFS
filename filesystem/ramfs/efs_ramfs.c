@@ -183,7 +183,6 @@ int efs_ramfs_open(struct efs_file *file)
 
     ramfs = (struct efs_ramfs *)fs->data;
     Eris_ASSERT(ramfs != NULL);
-
     if (file->flags & O_DIRECTORY)
     {
         if (file->flags & O_CREAT)
@@ -244,7 +243,10 @@ int efs_ramfs_open(struct efs_file *file)
                 eris_list_insert_after(&(ramfs->root.list), &(dirent->list));
             }
             else
+            {
+                printf("[efs_ramfs.c] Error: file not found!\n");
                 return -ENOENT;
+            }
         }
 
         /* Creates a new file.
@@ -260,7 +262,6 @@ int efs_ramfs_open(struct efs_file *file)
             }
         }
     }
-
     file->vnode->data = dirent;
     file->vnode->size = dirent->size;
     if (file->flags & O_APPEND)

@@ -33,7 +33,7 @@ int efs_register(const struct efs_filesystem_ops *ops)
         else if (strcmp((*iter)->name, ops->name) == 0)
         {
             //rt_set_errno(-EEXIST); errno change
-            printf("The ops name is wrong.");
+            printf("The file system was already registered.");
             ret = -1;
             break;
         }
@@ -79,14 +79,15 @@ struct efs_filesystem *efs_filesystem_lookup(const char *path)
         if ((iter->path == NULL) || (iter->ops == NULL))
             continue;
 
-        fspath = strlen(iter->path);
+        fspath = strlen_efs(iter->path);
         if ((fspath < prefixlen)
             || (strncmp(iter->path, path, fspath) != 0))
             continue;
 
         /* check next path separator */
-        if (fspath > 1 && (strlen(path) > fspath) && (path[fspath] != '/'))
+        if (fspath > 1 && (strlen_efs(path) > fspath) && (path[fspath] != '/'))
             continue;
+        printf("path: %s\n", iter->path);
 
         fs = iter;
         prefixlen = fspath;
@@ -193,8 +194,11 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
 
     for (ops = &filesystem_operation_table[0];
             ops < &filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX]; ops++)
+    {
         if ((*ops != NULL) && (strncmp((*ops)->name, filesystemtype, strlen((*ops)->name)) == 0))
             break;
+        printf("filesystem: %s\n", (*ops)->name);
+    }
 
     efs_unlock();
 
@@ -202,7 +206,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     {
         /* can't find filesystem */
         //rt_set_errno(-ENODEV); errno change
-        printf("Can't find filesystem.");
+        printf("Can't find filesystem.\n");
         return -1;
     }
 
@@ -210,7 +214,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     if ((*ops == NULL) || ((*ops)->mount == NULL))
     {
         //rt_set_errno(-ENOSYS); errno change
-        printf("mount failed.");
+        printf("mount failed.\n");
         return -1;
     }
 

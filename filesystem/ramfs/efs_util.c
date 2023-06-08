@@ -921,3 +921,44 @@ void *pvPortRealloc_efs(struct eris_memheap *memheap, void *ptr, eris_size_t new
     }
     return pvReturn;
 }
+
+//https://forums.freertos.org/t/realloc-for-freertos/8058/3
+void *pvPortRealloc(void *mem, size_t newsize)
+{
+    if (newsize == 0) {
+        vPortFree(mem);
+        return NULL;
+    }
+
+    void *p;
+    p = pvPortMalloc(newsize);
+    if (p) {
+        /* zero the memory */
+        if (mem != NULL) {
+            memcpy(p, mem, newsize);
+            vPortFree(mem);
+        }
+    }
+    return p;
+}
+
+char *strdup_efs(const char *s) 
+{
+    char *t = NULL;
+    if (s && (t = (char *)pvPortMalloc(strlen(s) + 1)))
+    {
+        strcpy(t, s);
+    }
+    return t;
+}
+
+int strlen_efs(const char *s)
+{
+    int len = 0;
+    if (s)
+    {
+        while (*s++)
+            len++;
+    }
+    return len;
+}

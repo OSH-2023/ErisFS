@@ -161,12 +161,18 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
     int fd;
 
     // write to file
-    fd = open("test.txt", O_RDWR, 0);
+    fd = open("/test.txt", O_CREAT|O_RDWR, 0);
+	printf("--- open1 finished ---\n");
+
     write(fd, "Hello World!", 12);
+	printf("--- write1 finished ---\n");
+
     close(fd);
+	printf("--- close1 finished ---\n");
 
     // read from file
-    fd = open("test.txt", O_RDWR, 0);
+    fd = open("/test.txt", O_RDWR, 0);
+	printf("--- open2 finished ---\n");
     char buf[12];
     read(fd, buf, 12);
     printf("%s\n", buf);
