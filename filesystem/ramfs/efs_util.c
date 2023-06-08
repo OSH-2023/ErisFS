@@ -4,6 +4,149 @@
 #include "headers.h"
 
 
+void eris_list_init(eris_list_t *l)
+{
+    l->next = l->prev = l;
+}
+
+/**
+ * @brief insert a node after a list
+ *
+ * @param l list to insert it
+ * @param n new node to be inserted
+ */
+void eris_list_insert_after(eris_list_t *l, eris_list_t *n)
+{
+    l->next->prev = n;
+    n->next = l->next;
+
+    l->next = n;
+    n->prev = l;
+}
+
+/**
+ * @brief insert a node before a list
+ *
+ * @param n new node to be inserted
+ * @param l list to insert it
+ */
+void eris_list_insert_before(eris_list_t *l, eris_list_t *n)
+{
+    l->prev->next = n;
+    n->prev = l->prev;
+
+    l->prev = n;
+    n->next = l;
+}
+
+/**
+ * @brief remove node from list.
+ * @param n the node to remove from the list.
+ */
+void eris_list_remove(eris_list_t *n)
+{
+    n->next->prev = n->prev;
+    n->prev->next = n->next;
+
+    n->next = n->prev = n;
+}
+
+/**
+ * @brief tests whether a list is empty
+ * @param l the list to test.
+ */
+int eris_list_isempty(const eris_list_t *l)
+{
+    return l->next == l;
+}
+
+/**
+ * @brief get the list length
+ * @param l the list to get.
+ */
+unsigned int eris_list_len(const eris_list_t *l)
+{
+    unsigned int len = 0;
+    const eris_list_t *p = l;
+    while (p->next != l)
+    {
+        p = p->next;
+        len ++;
+    }
+
+    return len;
+}
+
+void eris_slist_init(eris_slist_t *l)
+{
+    l->next = Eris_NULL;
+}
+
+void eris_slist_append(eris_slist_t *l, eris_slist_t *n)
+{
+    struct eris_slist_node *node;
+
+    node = l;
+    while (node->next) node = node->next;
+
+    /* append the node to the tail */
+    node->next = n;
+    n->next = Eris_NULL;
+}
+
+void eris_slist_insert(eris_slist_t *l, eris_slist_t *n)
+{
+    n->next = l->next;
+    l->next = n;
+}
+
+unsigned int eris_slist_len(const eris_slist_t *l)
+{
+    unsigned int len = 0;
+    const eris_slist_t *list = l->next;
+    while (list != Eris_NULL)
+    {
+        list = list->next;
+        len ++;
+    }
+
+    return len;
+}
+
+eris_slist_t *eris_slist_remove(eris_slist_t *l, eris_slist_t *n)
+{
+    /* remove slist head */
+    struct eris_slist_node *node = l;
+    while (node->next && node->next != n) node = node->next;
+
+    /* remove node */
+    if (node->next != (eris_slist_t *)0) node->next = node->next->next;
+
+    return l;
+}
+
+eris_slist_t *eris_slist_first(eris_slist_t *l)
+{
+    return l->next;
+}
+
+eris_slist_t *eris_slist_tail(eris_slist_t *l)
+{
+    while (l->next) l = l->next;
+
+    return l;
+}
+
+eris_slist_t *eris_slist_next(eris_slist_t *n)
+{
+    return n->next;
+}
+
+int eris_slist_isempty(eris_slist_t *l)
+{
+    return l->next == Eris_NULL;
+}
+
 eris_int32_t eris_strcmp(const char *cs, const char *ct)
 {
     while (*cs && *cs == *ct)
