@@ -20,8 +20,6 @@ struct ramfs_dirent
     size_t size;             /* file size */
 };
 
-struct eris_memheap a;
-
 struct efs_ramfs
 {
     uint32_t magic;
