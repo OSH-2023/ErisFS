@@ -47,7 +47,7 @@ static unsigned int bkdr_hash(const char * str)
 
 static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_head)
 {
-    struct efs_vnode *vnode = NULL;
+    struct efs_vnode * vnode = NULL;
     int hash = bkdr_hash(path);
     eris_list_t * hh;
 
@@ -62,7 +62,7 @@ static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_
     {
         vnode = container_of(hh, struct efs_vnode, list);   // need solving 
         printf("find vnode: %s\n", vnode->fullpath);
-        if (strcmp(path, vnode->fullpath) == 0)
+        if (eris_strcmp(path, vnode->fullpath) == 0)
         {
             /* found */
             return vnode;
@@ -82,7 +82,7 @@ static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_
 int efs_file_is_open(const char * pathname)
 {
     char * fullpath = NULL;
-    struct efs_vnode *vnode = NULL;
+    struct efs_vnode * vnode = NULL;
     int ret = 0;
 
     fullpath = efs_normalize_path(NULL, pathname);
@@ -555,58 +555,58 @@ int efs_file_stat(const char * path, struct stat * buf)
 /**
  * this function will rename an old path name to a new path name.
  *
- * @param oldpath the old path name.
- * @param newpath the new path name.
+ * @param old_path the old path name.
+ * @param new_path the new path name.
  *
  * @return 0 on successful, -1 on failed.
  */
-int efs_file_rename(const char * oldpath, const char * newpath)
+int efs_file_rename(const char * old_path, const char * new_path)
 {
     int result = pdFREERTOS_ERRNO_NONE;
-    struct efs_filesystem * olefs = NULL, * newfs = NULL;
-    char * oldfullpath = NULL, * newfullpath = NULL;
+    struct efs_filesystem * old_efs = NULL, * new_efs = NULL;
+    char * old_full_path = NULL, * new_full_path = NULL;
 
-    newfullpath = NULL;
-    oldfullpath = NULL;
+    new_full_path = NULL;
+    old_full_path = NULL;
 
-    oldfullpath = efs_normalize_path(NULL, oldpath);
-    if (oldfullpath == NULL)
+    old_full_path = efs_normalize_path(NULL, old_path);
+    if (old_full_path == NULL)
     {
         result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
 
-    if (efs_file_is_open((const char *) oldfullpath))
+    if (efs_file_is_open((const char *) old_full_path))
     {
         result = -pdFREERTOS_ERRNO_EBUSY;
         goto __exit;
     }
 
-    newfullpath = efs_normalize_path(NULL, newpath);
-    if (newfullpath == NULL)
+    new_full_path = efs_normalize_path(NULL, new_path);
+    if (new_full_path == NULL)
     {
         result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
 
-    olefs = efs_filesystem_lookup(oldfullpath);
-    newfs = efs_filesystem_lookup(newfullpath);
+    old_efs = efs_filesystem_lookup(old_full_path);
+    new_efs = efs_filesystem_lookup(new_full_path);
 
-    if (olefs == newfs)
+    if (old_efs == new_efs)
     {
-        if (olefs->ops->rename == NULL)
+        if (old_efs->ops->rename == NULL)
         {
             result = -pdFREERTOS_ERRNO_EINTR;
         }
         else
         {
-            if (olefs->ops->flags & EFS_FS_FLAG_FULLPATH)   // need solving 
-                result = olefs->ops->rename(olefs, oldfullpath, newfullpath);
+            if (old_efs->ops->flags & EFS_FS_FLAG_FULLPATH)   // need solving 
+                result = old_efs->ops->rename(old_efs, old_full_path, new_full_path);
             else
                 /* use sub directory to rename in file system */
-                result = olefs->ops->rename(olefs,
-                                            efs_subdir(olefs->path, oldfullpath),
-                                            efs_subdir(newfs->path, newfullpath));
+                result = old_efs->ops->rename(old_efs,
+                                            efs_subdir(old_efs->path, old_full_path),
+                                            efs_subdir(new_efs->path, new_full_path));
         }
     }
     else
@@ -615,13 +615,13 @@ int efs_file_rename(const char * oldpath, const char * newpath)
     }
 
 __exit:
-    if (oldfullpath)
+    if (old_full_path)
     {
-        vPortFree(oldfullpath);
+        vPortFree(old_full_path);
     }
-    if (newfullpath)
+    if (new_full_path)
     {
-        vPortFree(newfullpath);
+        vPortFree(new_full_path);
     }
 
     /* not at same file system, return pdFREERTOS_ERRNO_EXDEV */

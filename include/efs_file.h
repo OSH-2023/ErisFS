@@ -4,7 +4,7 @@
  * @Author: Tyrion Huu
  * @Date: 2023-06-06 13:53:58
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-06-06 14:41:36
+ * @LastEditTime: 2023-06-09 11:12:12
  */
 #ifndef __EFS_FILE_H__
 #define __EFS_FILE_H__
@@ -34,7 +34,6 @@ struct efs_file_ops
     int (* flush)    (struct efs_file * fd);
     int (* lseek)    (struct efs_file * fd, off_t offset);
     int (* getdents) (struct efs_file * fd, struct dirent * dirp, uint32_t count);
-    // int (* poll)     (struct efs_file *fd, struct rt_pollreq *req);
 };
 
 struct efs_vnode
@@ -109,7 +108,7 @@ int efs_file_close(struct efs_file * fd);
 
 // int efs_file_ioctl(struct efs_file *fd, int cmd, void *args);
 
-int efs_file_read(struct efs_file *fd, void *buf, size_t len);
+int efs_file_read(struct efs_file * fd, void * buf, size_t len);
 
 // int efs_file_getdents(struct efs_file *fd, struct dirent *dirp, size_t nbytes);
 
