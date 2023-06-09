@@ -33,7 +33,7 @@ int efs_register(const struct efs_filesystem_ops *ops)
         else if (strcmp((*iter)->name, ops->name) == 0)
         {
             //rt_set_errno(-EEXIST); errno change
-            printf("The file system was already registered.");
+            printf("The file system was already registered.\n");
             ret = -1;
             break;
         }
@@ -43,7 +43,7 @@ int efs_register(const struct efs_filesystem_ops *ops)
     if (empty == NULL)
     {
         //rt_set_errno(-ENOSPC);  errno change
-        printf("There is no space to register this file system (%s).", ops->name);
+        printf("There is no space to register this file system (%s).\n", ops->name);
         ret = -1;
     }
     else if (ret == ERIS_EOK)
@@ -65,7 +65,7 @@ struct efs_filesystem *efs_filesystem_lookup(const char *path)
     prefixlen = 0;
 
     if (!path) {
-        printf("The path is NULL.");
+        printf("The path is NULL.\n");
         return NULL;
     }
 
@@ -133,11 +133,11 @@ int efs_filesystem_get_partition(struct efs_partition *part, uint8_t *buf, uint3
     uint8_t type;
 
     if(!part) {
-        printf("The path is NULL.");
+        printf("The path is NULL.\n");
         return -ERIS_ERROR;
     }
     if(!buf) {
-        printf("The buffer is NULL.");
+        printf("The buffer is NULL.\n");
         return -ERIS_ERROR;
     }
 
@@ -195,7 +195,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     for (ops = &filesystem_operation_table[0];
             ops < &filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX]; ops++)
     {
-        if ((*ops != NULL) && (strncmp((*ops)->name, filesystemtype, strlen((*ops)->name)) == 0))
+        if ((*ops != NULL) && (strncmp((*ops)->name, filesystemtype, strlen_efs((*ops)->name)) == 0))
             break;
         printf("filesystem: %s\n", (*ops)->name);
     }
@@ -223,7 +223,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     if (fullpath == NULL) /* not an abstract path */
     {
         //rt_set_errno(-ENOTDIR); errno change
-        printf("Fullpath Wrong.");
+        printf("Fullpath Wrong.\n");
         return -1;
     }
 
@@ -237,7 +237,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         {
             vPortFree(fullpath);
             //rt_set_errno(-ENOTDIR); errno change
-            printf("The path does not exist ");
+            printf("The path does not exist \n");
             return -1;
         }
         efs_file_close(&fd);    // TODO dfs_file_close
@@ -257,7 +257,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         else if (strcmp(iter->path, path) == 0)
         {
             //rt_set_errno(-EINVAL);  errno change
-            printf("The path has been mounted.");
+            printf("The path has been mounted.\n");
             goto err1;
         }
     }
@@ -265,7 +265,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     if ((fs == NULL) && (iter == &filesystem_table[EFS_FILESYSTEMS_MAX]))
     {
         //rt_set_errno(-ENOSPC);  errno change
-        printf("There is no space to mount this file system (%s).", filesystemtype);
+        printf("There is no space to mount this file system (%s).\n", filesystemtype);
         goto err1;
     }
 
@@ -310,7 +310,7 @@ int efs_unmount(const char *specialfile)
     if (fullpath == NULL)
     {
         //rt_set_errno(-ENOTDIR);
-        printf("Wrong path");
+        printf("Wrong path\n");
         return -1;
     }
 
@@ -366,7 +366,7 @@ int efs_mkfs(const char *fs_name, const char *device_name)
     if (dev_id == NULL)
     {
         //rt_set_errno(-ENODEV);
-        printf("Device (%s) was not found", device_name);
+        printf("Device (%s) was not found\n", device_name);
         return -1;
     }
 
@@ -377,7 +377,7 @@ int efs_mkfs(const char *fs_name, const char *device_name)
     {
         if (filesystem_operation_table[index] != NULL &&
             strncmp(filesystem_operation_table[index]->name, fs_name,
-                strlen(filesystem_operation_table[index]->name)) == 0)
+                strlen_efs(filesystem_operation_table[index]->name)) == 0)
             break;
     }
     efs_unlock();
@@ -388,7 +388,7 @@ int efs_mkfs(const char *fs_name, const char *device_name)
         const struct efs_filesystem_ops *ops = filesystem_operation_table[index];
         if (ops->mkfs == NULL)
         {
-            printf("The file system (%s) mkfs function was not implement", fs_name);
+            printf("The file system (%s) mkfs function was not implement\n", fs_name);
             //rt_set_errno(-ENOSYS);
             return -1;
         }
@@ -396,7 +396,7 @@ int efs_mkfs(const char *fs_name, const char *device_name)
         return ops->mkfs(dev_id, fs_name);
     }
 
-    printf("File system (%s) was not found.", fs_name);
+    printf("File system (%s) was not found.\n", fs_name);
 
     return -1;
 }
@@ -414,7 +414,7 @@ int efs_statfs(const char *path, struct statfs *buffer)
     }
 
     //rt_set_errno(-ENOSYS);
-    printf("The function statfs failed");
+    printf("The function statfs failed\n");
     return -1;
 }
 
