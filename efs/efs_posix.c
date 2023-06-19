@@ -6,7 +6,7 @@
 #include <efs_device.h>
 #include <efs_file.h>
 
-int open(const char *file, int flags, ...)
+int efs_open(const char *file, int flags, ...)
 {
     int fd, result;
     struct efs_file *d;

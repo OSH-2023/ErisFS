@@ -2,7 +2,7 @@
 #define __EFS_POSIX_H__
 
 
-int open(const char *file, int flags, ...);
+int efs_open(const char *file, int flags, ...);
 
 int close(int fd);
 

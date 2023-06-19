@@ -68,12 +68,12 @@ int main()
     int fd;
 
     // write to file
-    fd = open("test.txt", O_RDWR, 0);
+    fd = efs_open("test.txt", O_RDWR, 0);
     write(fd, "Hello World!", 12);
     close(fd);
 
     // read from file
-    fd = open("test.txt", O_RDWR, 0);
+    fd = efs_open("test.txt", O_RDWR, 0);
     char buf[12];
     read(fd, buf, 12);
     printf("%s\n", buf);

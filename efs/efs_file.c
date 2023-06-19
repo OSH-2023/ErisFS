@@ -48,8 +48,8 @@ static unsigned int bkdr_hash(const char * str)
 static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_head)
 {
     struct efs_vnode * vnode = NULL;
-    int hash = bkdr_hash(path);
-    eris_list_t * hh;
+    int hash = bkdr_hash(path);         // get hash value
+    eris_list_t * hh;   
 
     hh = efs_fm.head[hash].next;
 
@@ -60,8 +60,8 @@ static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_
 
     while (hh != &efs_fm.head[hash])
     {
-        vnode = container_of(hh, struct efs_vnode, list);   // need solving 
-        printf("find vnode: %s\n", vnode->fullpath);
+        vnode = container_of(hh, struct efs_vnode, list);  
+        printf("[efs_file.c] efs_file_open: find vnode: %s\n", vnode->fullpath);
         if (eris_strcmp(path, vnode->fullpath) == 0)
         {
             /* found */
@@ -69,6 +69,7 @@ static struct efs_vnode * efs_vnode_find(const char * path, eris_list_t ** hash_
         }
         hh = hh->next;
     }
+    printf("[efs_file.c] efs_vnode_find: not found vnode: %s\n", path);
     return NULL;
 }
 
@@ -86,6 +87,7 @@ int efs_file_is_open(const char * pathname)
     int ret = 0;
 
     fullpath = efs_normalize_path(NULL, pathname);
+    printf("[efs_file.c] efs_file_is_open: fullpath: %s\n", fullpath);
 
     efs_fm_lock();
     vnode = efs_vnode_find(fullpath, NULL);
@@ -93,6 +95,7 @@ int efs_file_is_open(const char * pathname)
     {
         ret = 1;
     }
+    printf("[efs_file.c] efs_file_is_open: ret: %d\n", ret);
     efs_fm_unlock();
 
     vPortFree(fullpath);
@@ -111,6 +114,7 @@ int efs_file_is_open(const char * pathname)
  */
 int efs_file_open(struct efs_file * fd, const char * path, int flags)
 {
+    printf("[efs_file.c] efs_file_open: path: %s\n", path);
     struct efs_filesystem * fs;
     char * fullpath;
     int result;
@@ -119,11 +123,13 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
 
     /* parameter check */
     if (fd == NULL)
+    {
         return -pdFREERTOS_ERRNO_EINVAL;
+    }
 
     /* make sure we have an absolute path */
     fullpath = efs_normalize_path(NULL, path);
-    //printf("fullpath: %s\n", fullpath);
+    printf("[efs_file.c] efs_file_open: fullpath: %s\n", fullpath);
     if (fullpath == NULL)
     {
         return -pdFREERTOS_ERRNO_ENOMEM;
@@ -150,7 +156,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         {
             efs_fm_unlock();
             vPortFree(fullpath); /* release path */
-            printf("[efs_file.c] can't find mounted filesystem on this path: %s\n", fullpath);
+            printf("[efs_file.c] efs_file_open: can't find mounted filesystem on this path: %s\n", fullpath);
             return -pdFREERTOS_ERRNO_ENOENT;
         }
 
@@ -161,11 +167,11 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         {
             efs_fm_unlock();
             vPortFree(fullpath); /* release path */
-            printf("[efs_file.c] can't malloc vnode!\n");
+            printf("[efs_file.c] efs_file_open: can't malloc vnode!\n");
             return -pdFREERTOS_ERRNO_ENOMEM;
         }
         vnode->ref_count = 1;
-        printf("open in filesystem: %s\n", fs->ops->name);
+        printf("[efs_file.c] efs_file_open: open in filesystem: %s\n", fs->ops->name);
         vnode->fs    = fs;             /* set file system */
         vnode->fops  = fs->ops->fops;  /* set file ops */
 
@@ -182,7 +188,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             {
                 vnode->path = strdup_efs(efs_subdir(fs->path, fullpath));
             }
-            printf("Actual file path: %s\n", vnode->path);
+            printf("[efs_file.c] efs_file_open: Actual file path: %s\n", vnode->path);
         }
         else
         {
@@ -200,7 +206,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             }
             vPortFree(vnode->path);
             vPortFree(vnode);
-            printf("[efs_file.c] the filesystem didn't implement this open function");
+            printf("[efs_file.c] efs_file_open: the filesystem didn't implement this open function");
             return -pdFREERTOS_ERRNO_EINTR;
         }
 
@@ -230,7 +236,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         }
 
         efs_fm_unlock();
-        printf("%s open failed!\n", fullpath);
+        printf("[efs_file.c] efs_file_open: %s open failed!\n", fullpath);
 
         return result;
     }
@@ -242,7 +248,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         fd->flags |= EFS_F_DIRECTORY;   // need solving 
     }
     efs_fm_unlock();
-    printf("open successed!\n");
+    printf("[efs_file.c] efs_file_open: open successed!\n");
     return 0;
 }
 
@@ -506,7 +512,7 @@ int efs_file_stat(const char * path, struct stat * buf)
 
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        printf("can't find mounted filesystem on this path:%s", fullpath);
+        printf("[efs_file.c] efs_file_open: can't find mounted filesystem on this path:%s", fullpath);
         vPortFree(fullpath);
 
         return -pdFREERTOS_ERRNO_ENOENT;
@@ -535,7 +541,7 @@ int efs_file_stat(const char * path, struct stat * buf)
         if (fs->ops->stat == NULL)
         {
             vPortFree(fullpath);
-            printf("the filesystem didn't implement this function");
+            printf("[efs_file.c] efs_file_open: the filesystem didn't implement this function");
 
             return -pdFREERTOS_ERRNO_EINTR;
         }
