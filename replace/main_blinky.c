@@ -136,7 +136,7 @@ int init() {
 	}
 	
 
-    if (efs_mount( NULL, "/", "ramfs", 0, efs_ramfs_create(rampool, 1024)) != 0) //
+    if (efs_mount( NULL, "/", "ramfs", 0, efs_ramfs_create(rampool, 512)) != 0) //
     {
         printf("File System on ram initialization failed!\n");
         return -1;
@@ -160,6 +160,7 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 	init();
     int fd;
 
+	// ------- FIRST TEST --------
     // write to file
     fd = efs_open("/test.txt", O_CREAT|O_RDWR, 0);
 	printf("--- open1 finished ---\n");
@@ -175,13 +176,45 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 	printf("--- open2 finished ---\n");
     char buf[12];
     read(fd, buf, 12);
-    printf("%s\n", buf);
-    close(fd);
+	printf("--- read2 finished ---\n");
+	close(fd);
+	printf("--- close2 finished ---\n");
 
+	printf("\n--- OUTPUT ---\n");
+    printf("%s\n\n", buf);
+
+	// ------- SECOND TEST --------
+	// write to file
+    fd = efs_open("/test1.in", O_CREAT|O_RDWR, 0);
+	printf("--- open1 finished ---\n");
+
+    write(fd, "HELLO WORLD aaaa!", 17);
+	printf("--- write1 finished ---\n");
+
+    close(fd);
+	printf("--- close1 finished ---\n");
+
+    // read from file
+    fd = efs_open("/test1.in", O_RDWR, 0);
+	printf("--- open2 finished ---\n");
+    char buf1[17];
+
+    read(fd, buf1, 17);
+	printf("--- read2 finished ---\n");
+	close(fd);
+	printf("--- close2 finished ---\n");
+
+	printf("\n--- OUTPUT ---\n");
+    printf("%s\n", buf1);
+	printf("%d\n\n", strlen_efs(buf1));
+
+
+	//= Useless code
 	if( xQueue != NULL )
 	{
 		/* Start the two tasks as described in the comments at the top of this
 		file. */
+		/**/
 		xTaskCreate( prvQueueReceiveTask,			/* The function that implements the task. */
 					"Rx", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 					configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
@@ -190,7 +223,6 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 					NULL );							/* The task handle is not required, so NULL is passed. */
 
 		xTaskCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL );
-
 		/* Create the software timer, but don't start it yet. */
 		xTimer = xTimerCreate( "Timer",				/* The text name assigned to the software timer - for debug only as it is not used by the kernel. */
 								xTimerPeriod,		/* The period of the software timer in ticks. */
@@ -199,9 +231,10 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 								prvQueueSendTimerCallback );/* The function executed when the timer expires. */
 
 		xTimerStart( xTimer, 0 ); /* The scheduler has not started so use a block time of 0. */
-
+		//*/
 		/* Start the tasks and timer running. */
 		vTaskStartScheduler();
+
 	}
 
 	/* If all is well, the scheduler will now be running, and the following
@@ -219,7 +252,6 @@ static void prvQueueSendTask( void *pvParameters )
 TickType_t xNextWakeTime;
 const TickType_t xBlockTime = mainTASK_SEND_FREQUENCY_MS;
 const uint32_t ulValueToSend = mainVALUE_SENT_FROM_TASK;
-
 	/* Prevent the compiler warning about the unused parameter. */
 	( void ) pvParameters;
 
