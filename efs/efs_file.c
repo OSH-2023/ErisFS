@@ -142,6 +142,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     vnode = efs_vnode_find(fullpath, &hash_head);
     if (vnode)
     {
+        printf("[efs_file.c] efs_file_open: vnode exist");
         vnode->ref_count++;
         fd->pos   = 0;
         fd->vnode = vnode;
@@ -150,8 +151,11 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     }
     else
     {
+        printf("[efs_file.c] efs_file_open: vnode not exist, creating vnode\n");
         /* find filesystem */
         fs = efs_filesystem_lookup(fullpath);
+
+        // not taken
         if (fs == NULL)
         {
             efs_fm_unlock();
@@ -163,6 +167,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         //vnode = pvPortCalloc(1, sizeof(struct efs_vnode));
         vnode = pvPortMalloc(sizeof(struct efs_vnode));
 
+        // not taken
         if (!vnode)
         {
             efs_fm_unlock();
@@ -218,6 +223,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     }
     fd->flags = flags;
 
+    // not taken
     if ((result = vnode->fops->open(fd)) < 0)
     {
         vnode->ref_count--;
@@ -249,6 +255,16 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     }
     efs_fm_unlock();
     printf("[efs_file.c] efs_file_open: open successed!\n");
+
+    // print hash table
+    // for(int i = 0; i < EFS_FNODE_HASH_NR; i++)
+    // {
+    //     printf("[efs_file.c] efs_file_open: hash table: %d\n", i);
+    //     eris_list_t * list = &vnode->list;
+    //     eris_list_t * iter = list->next;
+    //     printf("[efs_file.c] efs_file_open: hash value: %d\n", iter->value);
+    // }
+
     return 0;
 }
 
