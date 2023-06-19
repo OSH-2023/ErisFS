@@ -87,13 +87,14 @@ struct efs_filesystem *efs_filesystem_lookup(const char *path)
         /* check next path separator */
         if (fspath > 1 && (strlen_efs(path) > fspath) && (path[fspath] != '/'))
             continue;
-        printf("path: %s\n", iter->path);
+        //printf("[efs_fs.c] path: %s\n", iter->path);
 
         fs = iter;
         prefixlen = fspath;
     }
 
     efs_unlock();
+    //printf("[efs_fs.c] test\n");
 
     return fs;
 }

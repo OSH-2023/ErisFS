@@ -945,7 +945,7 @@ void *pvPortRealloc(void *mem, size_t newsize)
 char *strdup_efs(const char *s) 
 {
     char *t = NULL;
-    if (s && (t = (char *)pvPortMalloc(strlen(s) + 1)))
+    if (s && (t = (char *)pvPortMalloc(strlen_efs(s) + 1)))
     {
         strcpy(t, s);
     }
@@ -962,3 +962,19 @@ int strlen_efs(const char *s)
     }
     return len;
 }
+ 
+/*
+int strlen (const char *str)
+{
+	char *s = (char *)str;
+	int len = 0;
+
+	if (s == NULL)
+		return 0;
+
+	while (*s++ != '\0')
+		++len;
+
+	return len;
+}
+*/

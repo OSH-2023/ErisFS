@@ -122,7 +122,6 @@ const char *efs_subdir(const char *directory, const char *filepath)
     }
 
     strcpy(subdir, dir);
-
     return subdir;
 }
 
