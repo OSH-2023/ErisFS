@@ -358,11 +358,6 @@ int efs_file_read(struct efs_file * fd, void * buf, size_t len)
 
 /**
  * this function will fetch directory entries from a directory descriptor.
- *
- * @param fd the directory descriptor.
- * @param dirp the dirent buffer to save result.
- * @param nbytes the available room in the buffer.
- *
  * @return the read dirent, others on failed.
  */
 int efs_file_getdents(struct efs_file * fd, struct dirent * dirp, size_t nbytes)
@@ -370,17 +365,23 @@ int efs_file_getdents(struct efs_file * fd, struct dirent * dirp, size_t nbytes)
     /* parameter check */
     if (fd == NULL)
     {
+        printf("[efs_file.c] efs_file_getdents: fd is NULL\n");
         return -pdFREERTOS_ERRNO_EINVAL;   
     }
 
-    if (fd->vnode->type != FT_DIRECTORY)    // need solving 
+    if (fd->vnode->type != FT_DIRECTORY)    
     {
+        printf("[efs_file.c] efs_file_getdents: fd is not a dir\n");
         return -pdFREERTOS_ERRNO_EINVAL;
     }
 
     if (fd->vnode->fops->getdents != NULL)
     {
         return fd->vnode->fops->getdents(fd, dirp, nbytes);
+    }
+    else 
+    {
+        printf("[efs_file.c] efs_file_getdents: getdents is NULL\n");
     }
 
     return -pdFREERTOS_ERRNO_EINTR;
