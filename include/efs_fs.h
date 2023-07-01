@@ -75,7 +75,7 @@ struct efs_mount_tbl
 ** 参数：ops 文件系统操作方法
 ** 返回值：0 注册成功，-1 失败。
 */ 
-int efs_register(const struct efs_filesystem_ops *ops);
+int efs_register(struct efs_filesystem_ops *ops);
 
 /* 查找指定路径上的文件系统
 ** 参数：path 路径字符串

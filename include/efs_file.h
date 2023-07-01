@@ -78,32 +78,12 @@ struct efs_mmap2_args
     void * ret;         /* Return value */
 };
 
-/*
-    * @Description: This function is likely used to initialize the vnode manager in a file system. 
-                    The vnode manager is responsible for managing the virtual node (vnode) objects that represent files and directories in the file system. 
-                    By calling this function, the vnode manager is initialized and ready to manage the vnodes in the file system.
-    * @Version:
-*/
 void efs_vnode_mgr_init(void);
 
 // int efs_file_is_open(const char *pathname);
 
-/*
-    * @Description: This function is likely used to open a file in a file system. 
-                    The file is specified by the path argument. 
-                    The flags argument specifies how the file should be opened. 
-                    The return value is a file descriptor that can be used to access the file.
-    * @Version:
-*/
 int efs_file_open(struct efs_file * fd, const char * path, int flags);
 
-/*
-    * @Description: This function is likely used to close a file in a file system. 
-                    The file is specified by the fd argument. 
-                    The return value is zero if the file is closed successfully. 
-                    Otherwise, a negative value is returned.
-    * @Version:
-*/
 int efs_file_close(struct efs_file * fd);
 
 // int efs_file_ioctl(struct efs_file *fd, int cmd, void *args);
@@ -112,26 +92,17 @@ int efs_file_read(struct efs_file * fd, void * buf, size_t len);
 
 // int efs_file_getdents(struct efs_file *fd, struct dirent *dirp, size_t nbytes);
 
-// int efs_file_unlink(const char *path);
+int efs_file_unlink(const char *path);
 
-/* 
-    * @Description: This function is likely used to write data to a file in a file system. 
-                    The file is specified by the fd argument. 
-                    The data to be written is specified by the buf argument. 
-                    The number of bytes to write is specified by the len argument. 
-                    The return value is the number of bytes written. 
-                    A negative value is returned if an error occurs.
-    * @Version:
-*/
 int efs_file_write(struct efs_file * fd, const void * buf, size_t len);
 
 // int efs_file_flush(struct efs_file *fd);
 
-// int efs_file_lseek(struct efs_file *fd, off_t offset);
+off_t efs_file_lseek(struct efs_file *fd, off_t offset);
 
-// int efs_file_stat(const char *path, struct stat *buf);
+int efs_file_stat(const char *path, struct stat *buf);
 
-// int efs_file_rename(const char *oldpath, const char *newpath);
+int efs_file_rename(const char *old_path, const char *new_path);
 
 // int efs_file_ftruncate(struct efs_file *fd, off_t length);
 

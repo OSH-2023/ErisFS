@@ -388,9 +388,6 @@ int efs_file_getdents(struct efs_file * fd, struct dirent * dirp, size_t nbytes)
 
 /**
  * this function will unlink (remove) a specified path file from file system.
- *
- * @param path the specified path file to be unlinked.
- *
  * @return 0 on successful, -1 on failed.
  */
 int efs_file_unlink(const char * path)
@@ -399,42 +396,46 @@ int efs_file_unlink(const char * path)
     char * fullpath;
     struct efs_filesystem * fs;
 
-    /* Make sure we have an absolute path */
     fullpath = efs_normalize_path(NULL, path);
     if (fullpath == NULL)
-    {
+    {   printf("[efs_file.c] efs_file_rename: can't normalize path\n");
         return -pdFREERTOS_ERRNO_EINVAL;
     }
 
-    /* Check whether file is already open */
     if (efs_file_is_open(fullpath))
     {
-        result = -pdFREERTOS_ERRNO_EBUSY;
-        goto __exit;
+        printf("[efs_file.c] efs_file_unlink: file is already open\n");
+        vPortFree(fullpath);
+        return -pdFREERTOS_ERRNO_EBUSY;
     }
 
-    /* get filesystem */
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        result = -pdFREERTOS_ERRNO_ENOENT;
-        goto __exit;
+        printf("[efs_file.c] efs_file_unlink: no corresponding filesystem\n");
+        vPortFree(fullpath);
+        return -pdFREERTOS_ERRNO_ENOENT;
     }
 
     if (fs->ops->unlink != NULL)
     {
-        if (!(fs->ops->flags & EFS_FS_FLAG_FULLPATH))   // need solving 
+        if (!(fs->ops->flags & EFS_FS_FLAG_FULLPATH))
         {
+            //use sub dir
             if (efs_subdir(fs->path, fullpath) == NULL)
+                // len(fullpath) = len(fs->path)
                 result = fs->ops->unlink(fs, "/");
             else
                 result = fs->ops->unlink(fs, efs_subdir(fs->path, fullpath));
         }
         else
+            //use fullpath
             result = fs->ops->unlink(fs, fullpath);
     }
-    else result = -pdFREERTOS_ERRNO_EINTR;
+    else {
+        result = -pdFREERTOS_ERRNO_EINTR;
+        printf("[efs_file.c] efs_file_unlink: unlink is NULL\n");
+    }
 
-__exit:
     vPortFree(fullpath);
     return result;
 }
@@ -465,11 +466,7 @@ int efs_file_write(struct efs_file * fd, const void * buf, size_t len)
 
 /**
  * this function will flush buffer on a file descriptor.
- *
- * @param fd the file descriptor.
- *
  * @return 0 on successful, -1 on failed.
- */
 int efs_file_flush(struct efs_file * fd)
 {
     if (fd == NULL)
@@ -480,43 +477,42 @@ int efs_file_flush(struct efs_file * fd)
 
     return fd->vnode->fops->flush(fd);
 }
+ */
 
 /**
  * this function will seek the offset for specified file descriptor.
- *
- * @param fd the file descriptor.
- * @param offset the offset to be sought.
- *
  * @return the current position after seek.
  */
-int efs_file_lseek(struct efs_file * fd, off_t offset)
+off_t efs_file_lseek(struct efs_file * fd, off_t offset)
 {
-    int result;
+    int result = -1;
 
     if (fd == NULL)
+    {
+        printf("[efs_file.c] efs_file_lseek: fd is NULL\n");
         return -pdFREERTOS_ERRNO_EINVAL;
+    }
 
     if (fd->vnode->fops->lseek == NULL)
+    {
+        printf("[efs_file.c] efs_file_lseek: lseek is NULL\n");
         return -pdFREERTOS_ERRNO_EINTR;
+    }
 
     result = fd->vnode->fops->lseek(fd, offset);
 
-    /* update current position */
     if (result >= 0)
+    {
         fd->pos = result;
-
+    }
     return result;
 }
 
 /**
  * this function will get file information.
- *
- * @param path the file path.
- * @param buf the data buffer to save stat description.
- *
  * @return 0 on successful, -1 on failed.
  */
-int efs_file_stat(const char * path, struct stat * buf)
+int efs_file_stat(const char *path, struct stat *buf)
 {
     int result;
     char * fullpath;
@@ -525,31 +521,27 @@ int efs_file_stat(const char * path, struct stat * buf)
     fullpath = efs_normalize_path(NULL, path);
     if (fullpath == NULL)
     {
+        printf("[efs_file.c] efs_file_stat: can't normalize path\n");
         return -1;
     }
 
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        printf("[efs_file.c] efs_file_open: can't find mounted filesystem on this path:%s", fullpath);
+        printf("[efs_file.c] efs_file_stat: no corresponding filesystem\n");
         vPortFree(fullpath);
-
         return -pdFREERTOS_ERRNO_ENOENT;
     }
 
     if ((fullpath[0] == '/' && fullpath[1] == '\0') ||
         (efs_subdir(fs->path, fullpath) == NULL))
     {
-        /* it's the root directory */
         buf->st_dev   = 0;
-
         buf->st_mode  = S_IRUSR | S_IRGRP | S_IROTH |
                         S_IWUSR | S_IWGRP | S_IWOTH;
         buf->st_mode |= S_IFDIR | S_IXUSR | S_IXGRP | S_IXOTH;
-
         buf->st_size    = 0;
         buf->st_mtime   = 0;
 
-        /* release full path */
         vPortFree(fullpath);
 
         return pdFREERTOS_ERRNO_NONE;
@@ -559,13 +551,12 @@ int efs_file_stat(const char * path, struct stat * buf)
         if (fs->ops->stat == NULL)
         {
             vPortFree(fullpath);
-            printf("[efs_file.c] efs_file_open: the filesystem didn't implement this function");
+            printf("[efs_file.c] efs_file_stat: stat is NULL\n");
 
             return -pdFREERTOS_ERRNO_EINTR;
         }
 
-        /* get the real file path and get file stat */
-        if (fs->ops->flags & EFS_FS_FLAG_FULLPATH)  // need solving 
+        if (fs->ops->flags & EFS_FS_FLAG_FULLPATH)
             result = fs->ops->stat(fs, fullpath, buf);
         else
             result = fs->ops->stat(fs, efs_subdir(fs->path, fullpath), buf);
@@ -576,32 +567,28 @@ int efs_file_stat(const char * path, struct stat * buf)
     return result;
 }
 
+
 /**
  * this function will rename an old path name to a new path name.
- *
- * @param old_path the old path name.
- * @param new_path the new path name.
- *
  * @return 0 on successful, -1 on failed.
  */
 int efs_file_rename(const char * old_path, const char * new_path)
 {
-    int result = pdFREERTOS_ERRNO_NONE;
-    struct efs_filesystem * old_efs = NULL, * new_efs = NULL;
-    char * old_full_path = NULL, * new_full_path = NULL;
-
-    new_full_path = NULL;
-    old_full_path = NULL;
+    int result = -1;
+    struct efs_filesystem * old_fs, * new_fs;
+    char *old_full_path, *new_full_path;
 
     old_full_path = efs_normalize_path(NULL, old_path);
     if (old_full_path == NULL)
     {
+        printf("[efs_file.c] efs_file_rename: can't normalize old_path\n");
         result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
 
-    if (efs_file_is_open((const char *) old_full_path))
+    if (efs_file_is_open((const char *)old_full_path))
     {
+        printf("[efs_file.c] efs_file_rename: old_path is opened\n");
         result = -pdFREERTOS_ERRNO_EBUSY;
         goto __exit;
     }
@@ -609,32 +596,36 @@ int efs_file_rename(const char * old_path, const char * new_path)
     new_full_path = efs_normalize_path(NULL, new_path);
     if (new_full_path == NULL)
     {
+        printf("[efs_file.c] efs_file_rename: can't normalize new_path\n");
         result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
 
-    old_efs = efs_filesystem_lookup(old_full_path);
-    new_efs = efs_filesystem_lookup(new_full_path);
+    old_fs = efs_filesystem_lookup(old_full_path);
+    new_fs = efs_filesystem_lookup(new_full_path);
 
-    if (old_efs == new_efs)
+    if (old_fs == new_fs)
     {
-        if (old_efs->ops->rename == NULL)
+        if (old_fs->ops->rename == NULL)
         {
+            printf("[efs_file.c] efs_file_rename: rename is NULL\n");
             result = -pdFREERTOS_ERRNO_EINTR;
         }
         else
         {
-            if (old_efs->ops->flags & EFS_FS_FLAG_FULLPATH)   // need solving 
-                result = old_efs->ops->rename(old_efs, old_full_path, new_full_path);
+            if (old_fs->ops->flags & EFS_FS_FLAG_FULLPATH)
+                /* use fullpath */
+                result = old_fs->ops->rename(old_fs, old_full_path, new_full_path);
             else
-                /* use sub directory to rename in file system */
-                result = old_efs->ops->rename(old_efs,
-                                            efs_subdir(old_efs->path, old_full_path),
-                                            efs_subdir(new_efs->path, new_full_path));
+                /* use sub directory to fs->path */
+                result = old_fs->ops->rename(old_fs,
+                                            efs_subdir(old_fs->path, old_full_path),
+                                            efs_subdir(old_fs->path, new_full_path));
         }
     }
     else
     {
+        printf("[efs_file.c] efs_file_rename: old_path and new_path are not on the same filesystem\n");
         result = -pdFREERTOS_ERRNO_EXDEV;
     }
 
@@ -647,7 +638,5 @@ __exit:
     {
         vPortFree(new_full_path);
     }
-
-    /* not at same file system, return pdFREERTOS_ERRNO_EXDEV */
     return result;
 }

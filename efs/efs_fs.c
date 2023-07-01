@@ -15,7 +15,7 @@
 #include "headers.h"
 
 // DONE
-int efs_register(const struct efs_filesystem_ops *ops)
+int efs_register(struct efs_filesystem_ops *ops)
 {
     int ret = ERIS_EOK;
     struct efs_filesystem_ops **empty = NULL;
@@ -85,7 +85,7 @@ struct efs_filesystem *efs_filesystem_lookup(const char *path)
             continue;
 
         /* check next path separator */
-        if (fspath > 1 && (strlen_efs(path) > fspath) && (path[fspath] != '/'))
+        if (fspath > 1 && (strlen_efs(path) > (int)fspath) && (path[fspath] != '/'))
             continue;
         //printf("[efs_fs.c] path: %s\n", iter->path);
 
@@ -412,10 +412,13 @@ int efs_statfs(const char *path, struct statfs *buffer)
     {
         if (fs->ops->statfs != NULL)
             return fs->ops->statfs(fs, buffer);
+        else 
+        {
+            printf("[efs_fs.c] efs_statfs: statfs is NULL\n");
+            return -1;
+        }
     }
-
-    //rt_set_errno(-ENOSYS);
-    printf("The function statfs failed\n");
+    printf("[efs_fs.c] efs_statfs: no corresponding filesystem\n");
     return -1;
 }
 

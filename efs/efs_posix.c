@@ -91,12 +91,10 @@ ssize_t write(int fd, const void *buf, size_t len)
     int result;
     struct efs_file *d;
 
-    /* get the fd */
     d = fd_get(fd);
     if (d == NULL)
     {
-         printf("failed to get the file in efs_posix_write_fd_get!\n");
-
+        printf("failed to get the file in efs_posix_write_fd_get!\n");
         return -1;
     }
 
@@ -104,9 +102,30 @@ ssize_t write(int fd, const void *buf, size_t len)
     if (result < 0)
     {
         printf("failed to close the file in efs_posix_efs_file_write!\n");
-
         return -1;
     }
 
     return result;
+}
+
+int fstat_(int fd, struct stat *buf)
+{
+    if (buf == NULL)
+    {
+        printf("[efs_posic.c] fstat: no enough buf!\n");
+        rt_set_errno(-EBADF);
+        return -1;
+    }
+
+    struct efs_file *d;
+
+    d = fd_get(fd);
+    if (d == NULL)
+    {
+        printf("[efs_posic.c] fstat: failed to get the file!\n");
+        rt_set_errno(-EBADF);
+        return -1;
+    }
+
+    return stat(d->vnode->fullpath, buf);
 }

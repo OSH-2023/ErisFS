@@ -162,7 +162,7 @@ int fd_expand(struct efs_fdtable *fdt, int fd)
     {
         nd = EFS_MAX_FD;
     }
-    struct efs_file **fds = (struct efs_fd **)pvPortRealloc(fdt->fds, nd * sizeof(struct efs_fd *));
+    struct efs_file **fds = (struct efs_file **)pvPortRealloc(fdt->fds, nd * sizeof(struct efs_file *));
     if (!fds)
     {
         return -1;
@@ -426,6 +426,40 @@ int efs_init(void)
     }
     init_ready = pdTRUE;
     printf("efs inited.\n");
+    return 0;
+}
+
+// actually only copy the pointer rather than efs_file
+int dup_efs(int oldfd, int startfd) 
+{
+    int newfd = -1;
+
+    efs_file_lock();
+    struct efs_fdtable *fdt = efs_fdtable_get();
+    if((oldfd < 0) || oldfd >= (int)fdt->maxfd)
+    {
+        printf("[efs.c] dup_efs is failed! oldfd is illegal!\n");
+        efs_file_unlock();
+        return newfd;
+    } 
+    if(!fdt->fds[oldfd])
+    {
+        printf("[efs.c] dup_efs is failed! oldfd is NULL!\n");
+        efs_file_unlock();
+        return newfd;
+    }
+    newfd = fd_creat(fdt, startfd);
+    if(newfd < 0) 
+    {
+        printf("[efs.c] dup_efs is failed! Couldn't found an empty fd entry!\n");
+        efs_file_unlock();
+        return newfd;
+    }
+    else 
+    {
+        fdt->fds[newfd] = fdt->fds[oldfd];
+        fdt->fds[newfd]->ref_count++;
+    }
     return 0;
 }
 

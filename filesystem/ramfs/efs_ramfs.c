@@ -402,7 +402,7 @@ static const struct efs_file_ops _ram_fops =
     efs_ramfs_getdents,
 };
 
-static const struct efs_filesystem_ops _ramfs =
+static struct efs_filesystem_ops _ramfs =
 {
     "ram",
     EFS_FS_FLAG_DEFAULT,

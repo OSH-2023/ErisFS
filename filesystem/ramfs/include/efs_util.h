@@ -14,6 +14,7 @@ typedef unsigned int                    eris_uint32_t;    /**< 32bit unsigned in
 typedef int                             eris_bool_t;      /**< boolean type */
 typedef signed long                     eris_base_t;      /**< Nbit CPU related date type */
 typedef unsigned long                   eris_ubase_t;     /**< Nbit unsigned CPU related data type */
+typedef signed long      off_t;
 
 
 #define MPU_WRAPPERS_INCLUDED_FROM_API_FILE

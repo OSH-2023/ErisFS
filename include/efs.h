@@ -72,4 +72,7 @@ void fd_init(struct efs_file *fd);
 
 struct efs_fdtable *efs_fdtable_get(void);
 
+//
+int dup_efs(int oldfd, int startfd);
+
 #endif
