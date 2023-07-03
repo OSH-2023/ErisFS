@@ -236,3 +236,34 @@ int statfs(const char *path, struct statfs *buf)
 
     return result;
 }
+
+int creat(const char *path, mode_t mode)
+{
+    return open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
+}
+
+int ftruncate(int fd, off_t length)
+{
+    int result;
+    struct dfs_fd *d;
+
+    d = fd_get(fd);
+    if (d == NULL)
+    {
+        printf("[efs_posix.c] failed to get the file in efs_posix_ftruncate!\n");
+        return -EBADF;
+    }
+
+    if (length < 0)
+    {
+        printf("[efs_posix.c] length cannot be negtive in efs_posix_ftruncate!\n");
+        return -EINVAL;
+    }
+    result = dfs_file_ftruncate(d, length);
+    if (result < 0)
+    {
+        return result;
+    }
+
+    return 0;
+}

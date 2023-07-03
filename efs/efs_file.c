@@ -641,3 +641,25 @@ __exit:
     }
     return result;
 }
+
+int efs_file_ftruncate(struct efs_file *fd, off_t length)
+{
+    int result;
+
+    if (fd == NULL || fd->vnode->type != FT_REGULAR || length < 0) 
+    {
+        printf("[efs_file.c] efs_file_ftruncate: fd is NULL or not a regular file system fd\n");
+        return -EINVAL;
+    }
+
+    if (fd->vnode->fops->ioctl == NULL)
+        return -ENOSYS;
+
+    result = fd->vnode->fops->ioctl(fd, EFS_FIOFTRUNCATE, (void*)&length); 
+    // TO BE CHECKED
+
+    if (result == 0)
+        fd->vnode->size = length;
+
+    return result;
+}

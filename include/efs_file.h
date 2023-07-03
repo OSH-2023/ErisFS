@@ -104,7 +104,7 @@ int efs_file_stat(const char *path, struct stat *buf);
 
 int efs_file_rename(const char *old_path, const char *new_path);
 
-// int efs_file_ftruncate(struct efs_file *fd, off_t length);
+int efs_file_ftruncate(struct efs_file *fd, off_t length);
 
 // int efs_file_mmap2(struct efs_file *fd, struct efs_mmap2_args *mmap2);
 
