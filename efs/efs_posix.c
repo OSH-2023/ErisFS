@@ -14,7 +14,7 @@ int efs_open(const char *file, int flags, ...)
     fd = fd_new();
     if (fd < 0)
     {
-        printf("failed to open a file in efs_posix_fd_new!\n");
+        printf("[efs_posix.c]failed to open a file in efs_posix_fd_new!\n");
 
         return -1;
     }
@@ -26,7 +26,7 @@ int efs_open(const char *file, int flags, ...)
         /* release the ref-count of fd */
         fd_release(fd);
 
-        printf("failed to open a file in efs_posix_efs_file_open!\n");
+        printf("[efs_posix.c]failed to open a file in efs_posix_efs_file_open!\n");
 
         return -1;
     }
@@ -42,7 +42,7 @@ int close(int fd)
     d = fd_get(fd);
     if (d == NULL)
     {
-        printf("failed to get the file in efs_posix_close_fd_get!\n");
+        printf("[efs_posix.c]failed to get the file in efs_posix_close_fd_get!\n");
 
         return -1;
     }
@@ -51,7 +51,7 @@ int close(int fd)
 
     if (result < 0)
     {
-        printf("failed to close the file in efs_posix_close_efs_file_close!\n");
+        printf("[efs_posix.c]failed to close the file in efs_posix_close_efs_file_close!\n");
 
         return -1;
     }
@@ -70,7 +70,7 @@ ssize_t read(int fd, void *buf, size_t len)
     d = fd_get(fd);
     if (d == NULL)
     {
-        printf("failed to get the file in efs_posix_fd_get!\n");
+        printf("[efs_posix.c]failed to get the file in efs_posix_fd_get!\n");
 
         return -1;
     }
@@ -78,7 +78,7 @@ ssize_t read(int fd, void *buf, size_t len)
     result = efs_file_read(d, buf, len);
     if (result < 0)
     {
-        printf("failed to close the file in efs_posix_efs_file_read!\n");
+        printf("[efs_posix.c]failed to close the file in efs_posix_efs_file_read!\n");
 
         return -1;
     }
@@ -94,14 +94,14 @@ ssize_t write(int fd, const void *buf, size_t len)
     d = fd_get(fd);
     if (d == NULL)
     {
-        printf("failed to get the file in efs_posix_write_fd_get!\n");
+        printf("[efs_posix.c]failed to get the file in efs_posix_write_fd_get!\n");
         return -1;
     }
 
     result = efs_file_write(d, buf, len);
     if (result < 0)
     {
-        printf("failed to close the file in efs_posix_efs_file_write!\n");
+        printf("[efs_posix.c]failed to close the file in efs_posix_efs_file_write!\n");
         return -1;
     }
 
@@ -112,8 +112,7 @@ int fstat_(int fd, struct stat *buf)
 {
     if (buf == NULL)
     {
-        printf("[efs_posic.c] fstat: no enough buf!\n");
-        rt_set_errno(-EBADF);
+        printf("[efs_posix.c] fstat: no enough buf!\n");
         return -1;
     }
 
@@ -122,10 +121,118 @@ int fstat_(int fd, struct stat *buf)
     d = fd_get(fd);
     if (d == NULL)
     {
-        printf("[efs_posic.c] fstat: failed to get the file!\n");
-        rt_set_errno(-EBADF);
+        printf("[efs_posix.c] fstat: failed to get the file!\n");
         return -1;
     }
 
     return stat(d->vnode->fullpath, buf);
+}
+
+off_t lseek(int fd, off_t offset, int whence)
+{
+    int result;
+    struct efs_file *d;
+
+    d = fd_get(fd);
+    if (d == NULL)
+    {
+        printf("[efs_posix.c]failed to open a file in efs_posix_lseek!\n");
+
+        return -1;
+    }
+
+    switch (whence)
+    {
+    case SEEK_SET:
+        break;
+
+    case SEEK_CUR:
+        offset += d->pos;
+        break;
+
+    case SEEK_END:
+        offset += d->vnode->size;
+        break;
+
+    default:
+        printf("[efs_posix.c]no valid whence in efs_posix_lseek!\n");
+
+        return -1;
+    }
+
+    if (offset < 0)
+    {
+        printf("[efs_posix.c]no valid offset in efs_posix_lseek!\n");
+
+        return -1;
+    }
+    result = efs_file_lseek(d, offset);
+    if (result < 0)
+    {
+        printf("[efs_posix.c]failed to seek the result in efs_posix_lseek!\n");
+
+        return -1;
+    }
+
+    return offset;
+}
+
+int rename(const char *old_file, const char *new_file)
+{
+    int result;
+
+    result = efs_file_rename(old_file, new_file);
+    if (result < 0)
+    {
+        printf("[efs_posix.c]failed to get the result in efs_posix_rename!\n");
+
+        return -1;
+    }
+
+    return 0;
+}
+
+int unlink(const char *pathname)
+{
+    int result;
+
+    result = efs_file_unlink(pathname);
+    if (result < 0)
+    {
+        printf("[efs_posix.c]failed to get the result in efs_posix_unlink!\n");
+
+        return -1;
+    }
+
+    return 0;
+}
+
+int stat(const char *file, struct stat *buf)
+{
+    int result;
+
+    result = efs_file_stat(file, buf);
+    if (result < 0)
+    {
+        printf("[efs_posix.c]failed to get the result in efs_posix_stat!\n");
+
+        return -1;
+    }
+
+    return result;
+}
+
+int statfs(const char *path, struct statfs *buf)
+{
+    int result;
+
+    result = efs_statfs(path, buf);
+    if (result < 0)
+    {
+        printf("[efs_posix.c]failed to get the result in efs_posix_statfs!\n");
+
+        return -1;
+    }
+
+    return result;
 }
