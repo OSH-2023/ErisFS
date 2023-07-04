@@ -242,9 +242,9 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             fd->vnode = NULL;
             vPortFree(vnode);
         }
-        printf("[efs_file.c] test\n");
+        //printf("[efs_file.c] test\n");
         efs_fm_unlock();
-        printf("[efs_file.c] efs_file_open: %s open failed!\n", fullpath);
+        //printf("[efs_file.c] efs_file_open: %s open failed!\n", fullpath);
 
         return result;
     }
@@ -256,7 +256,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         fd->flags |= EFS_F_DIRECTORY;   // need solving 
     }
     efs_fm_unlock();
-    printf("[efs_file.c] efs_file_open: open successed!\n");
+    //printf("[efs_file.c] efs_file_open: open successed!\n");
 
     // print hash table
     // for(int i = 0; i < EFS_FNODE_HASH_NR; i++)

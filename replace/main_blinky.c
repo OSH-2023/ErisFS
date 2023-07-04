@@ -147,104 +147,122 @@ int init() {
         return 0;
     } 
 }
-/*-----------------------------------------------------------*/
 
-/*** SEE THE COMMENTS AT THE TOP OF THIS FILE ***/
-void main_blinky( void )
-{
-const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 
-	/* Create the queue. */
-	xQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( uint32_t ) );
-
-	init();
+void rw_test() {
     int fd;
-
+	printf("\n[RW Test] START\n");
 	// ------- FIRST TEST --------
     // write to file
     fd = efs_open("/test.txt", O_CREAT|O_RDWR, 0);
-	printf("--- open1 finished ---\n");
-
+	//printf("--- open1 finished ---\n");
     write(fd, "Hello World!", 12);
-	printf("--- write1 finished ---\n");
-
+	printf("write: Hello World!\n");
+	//printf("--- write1 finished ---\n");
     close(fd);
-	printf("--- close1 finished ---\n");
+	//printf("--- close1 finished ---\n");
 
     // read from file
     fd = efs_open("/test.txt", O_RDWR, 0);
-	printf("--- open2 finished ---\n");
+	//printf("--- open2 finished ---\n");
     char buf[12];
     read(fd, buf, 12);
-	printf("--- read2 finished ---\n");
+	//printf("--- read2 finished ---\n");
 	close(fd);
-	printf("--- close2 finished ---\n");
+	//printf("--- close2 finished ---\n");
 
-	printf("\n--- OUTPUT ---\n");
-    printf("%s\n\n", buf);
+	//printf("\n--- OUTPUT ---\n");
+    printf("read: %s\n", buf);
 
 	// ------- SECOND TEST --------
 	// write to file
     fd = efs_open("/test1.in", O_CREAT|O_RDWR, 0);
-	printf("--- open1 finished ---\n");
-
     write(fd, "HELLO WORLD aaaa!", 17);
-	printf("--- write1 finished ---\n");
-
+	printf("write: HELLO WORLD aaaa!\n");
     close(fd);
-	printf("--- close1 finished ---\n");
 
     // read from file
     fd = efs_open("/test1.in", O_RDWR, 0);
-	printf("--- open2 finished ---\n");
     char buf1[17];
-
     read(fd, buf1, 17);
-	printf("--- read2 finished ---\n");
 	close(fd);
-	printf("--- close2 finished ---\n");
+    printf("read: %s\n", buf1);
 
-	printf("\n--- OUTPUT ---\n");
-    printf("%s\n", buf1);
-	printf("%d\n\n", strlen_efs(buf1));
+	vPortFree(buf);
+	vPortFree(buf1);
 
+	printf("[RW Test] END\n");
+}
 
-	//= Useless code
-	if( xQueue != NULL )
+void rename_test()
+{
+	printf("\n[Rename Test] START\n");
+	printf("/test1.in -> /test2.in\n");
+	if (rename("/test1.in", "/test2.in") < 0)
+        printf("ERROR\n");
+    else
 	{
-		/* Start the two tasks as described in the comments at the top of this
-		file. */
-		/**/
-		xTaskCreate( prvQueueReceiveTask,			/* The function that implements the task. */
-					"Rx", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
-					configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
-					NULL, 							/* The parameter passed to the task - not used in this simple case. */
-					mainQUEUE_RECEIVE_TASK_PRIORITY,/* The priority assigned to the task. */
-					NULL );							/* The task handle is not required, so NULL is passed. */
-
-		xTaskCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL );
-		/* Create the software timer, but don't start it yet. */
-		xTimer = xTimerCreate( "Timer",				/* The text name assigned to the software timer - for debug only as it is not used by the kernel. */
-								xTimerPeriod,		/* The period of the software timer in ticks. */
-								pdTRUE,				/* xAutoReload is set to pdTRUE, so this is an auto-reload timer. */
-								NULL,				/* The timer's ID is not used. */
-								prvQueueSendTimerCallback );/* The function executed when the timer expires. */
-
-		xTimerStart( xTimer, 0 ); /* The scheduler has not started so use a block time of 0. */
-		//*/
-		/* Start the tasks and timer running. */
-		vTaskStartScheduler();
-
+		printf("Reading: test2.in\n");
+		
+		int fd = 0;
+		fd = efs_open("/test2.in", O_RDWR, 0);
+    	char buf1[17];
+    	read(fd, buf1, 17);
+		close(fd);
+		printf("%s\n", buf1);
+		printf("OK\n");
+		vPortFree(buf1);
 	}
+	printf("\n[Rename Test] END\n");
+}
 
-	/* If all is well, the scheduler will now be running, and the following
-	line will never be reached.  If the following line does execute, then
-	there was insufficient FreeRTOS heap memory available for the idle and/or
-	timer tasks	to be created.  See the memory management section on the
-	FreeRTOS web site for more details.  NOTE: This demo uses static allocation
-	for the idle and timer tasks so this line should never execute. */
+void stat_test()
+{
+	printf("\n[Stat Test] START\n");
+	printf("checking /test2.in\n");
+
+	struct stat *buf;
+
+	if (stat("/test2.in", buf) < 0)
+        printf("ERROR\n");
+    else
+	{
+		printf("OK\n");
+		printf("st_size: %d\n", buf->st_size);
+		printf("st_blocks: %d\n", buf->st_blocks);
+		printf("st_flags: %d\n", buf->st_flags);
+	}
+	printf("\n[Stat Test] END\n");
+}
+
+void statfs_test()
+{
+	printf("\n[Statfs Test] START\n");
+	printf("checking /test2.in\n");
+
+	struct stat *buf;
+
+	if (statfs("/", buf) < 0)
+        printf("ERROR\n");
+    else
+	{
+		printf("OK\n");
+		printf("st_size: %d\n", buf->st_size);
+		printf("st_blocks: %d\n", buf->st_blocks);
+		printf("st_flags: %d\n", buf->st_flags);
+	}
+	printf("\n[Statfs Test] END\n");
+}
+
+/*-----------------------------------------------------------*/
+
+void main_blinky( void )
+{
+	init();
+	rw_test();
 	for( ;; );
 }
+
 /*-----------------------------------------------------------*/
 
 static void prvQueueSendTask( void *pvParameters )
