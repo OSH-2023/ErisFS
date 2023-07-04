@@ -13,6 +13,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define ERIS_EBUSY                        7               /**< Busy */
+#define ERIS_ENOSYS                       6               /**< No system */
+#define ERIS_DEVICE_FLAG_ACTIVATED        0x010           /**< device is activated */
+#define ERIS_DEVICE_FLAG_STANDALONE       0x008           /**< standalone device */
+#define ERIS_DEVICE_OFLAG_OPEN            0x008           /**< device is opened */
+#define ERIS_DEVICE_OFLAG_CLOSE           0x000           /**< device is closed */
+#define ERIS_DEVICE_OFLAG_MASK            0xf0f           /**< mask of open flag */
+
 typedef signed long                       eris_off_t;       /**< Type for offset */
 typedef unsigned long                       eris_size_t;       /**< Type for offset */
 
