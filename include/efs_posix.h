@@ -43,4 +43,22 @@ int encrypt(const char *, int);
 
 int decrypt(const char *, int);
 
+int mkdir(const char *path, mode_t mode);
+
+int rmdir(const char *pathname);
+
+DIR *opendir(const char *name);
+
+struct dirent *readdir(DIR *d);
+
+long telldir(DIR *d);
+
+void seekdir(DIR *d, long offset);
+
+void rewinddir(DIR *d);
+
+int closedir(DIR *d);
+
+
+
 #endif

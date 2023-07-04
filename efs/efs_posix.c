@@ -390,11 +390,222 @@ int ftruncate(int fd, off_t length)
         printf("[efs_posix.c] length cannot be negtive in efs_posix_ftruncate!\n");
         return -EINVAL;
     }
-    result = dfs_file_ftruncate(d, length);
+    result = efs_file_ftruncate(d, length);
     if (result < 0)
     {
         return result;
     }
 
     return 0;
+}
+
+int mkdir(const char *path, mode_t mode)
+{
+    int fd;
+    struct efs_file *d;
+    int result;
+
+    fd = fd_new();
+    if (fd == -1)
+    {
+       printf("[efs_posix.c]failed to get the file in efs_posix_mkdir!\n");
+
+        return -1;
+    }
+
+    d = fd_get(fd);
+
+    result = efs_file_open(d, path, O_DIRECTORY | O_CREAT);
+
+    if (result < 0)
+    {
+        fd_release(fd);
+        printf("[efs_posix.c]failed to release in efs_posix_mkdir!\n");
+
+        return -1;
+    }
+
+    efs_file_close(d);
+    fd_release(fd);
+
+    return 0;
+}
+
+int rmdir(const char *pathname)
+{
+    int result;
+
+    result = efs_file_unlink(pathname);
+    if (result < 0)
+    {
+        printf("[efs_posix.c]failed to unlink in efs_posix_rmdir!\n");
+
+        return -1;
+    }
+
+    return 0;
+}
+
+DIR *opendir(const char *name)
+{
+    struct efs_file *d;
+    int fd, result;
+    DIR *t;
+
+    t = NULL;
+
+    /* allocate a fd */
+    fd = fd_new();
+    if (fd == -1)
+    {
+        printf("[efs_posix.c]failed to get the file in efs_posix_opendir!\n");
+
+        return NULL;
+    }
+    d = fd_get(fd);
+
+    result = efs_file_open(d, name, O_RDONLY | O_DIRECTORY);
+    if (result >= 0)
+    {
+        /* open successfully */
+        t = (DIR *) pvPortMalloc(sizeof(DIR));//potential problem: pvportmalloc or pvportmalloc_efs
+        if (t == NULL)
+        {
+            efs_file_close(d);
+            fd_release(fd);
+        }
+        else
+        {
+            memset(t, 0, sizeof(DIR));
+
+            t->fd = fd;
+        }
+
+        return t;
+    }
+
+    /* open failed */
+    fd_release(fd);
+    printf("[efs_posix.c]failed to release in efs_posix_opendir!\n");
+
+    return NULL;
+}
+
+struct dirent *readdir(DIR *d)
+{
+    int result;
+    struct efs_file *fd;
+
+    fd = fd_get(d->fd);
+    if (fd == NULL)
+    {
+        printf("[efs_posix.c]failed to get the file in efs_posix_readdir!\n");
+        return NULL;
+    }
+
+    if (d->num)
+    {
+        struct dirent *dirent_ptr;
+        dirent_ptr = (struct dirent *)&d->buf[d->cur];
+        d->cur += dirent_ptr->d_reclen;
+    }
+
+    if (!d->num || d->cur >= d->num)
+    {
+        /* get a new entry */
+        result = efs_file_getdents(fd,
+                                   (struct dirent *)d->buf,
+                                   sizeof(d->buf) - 1);
+        if (result <= 0)
+        {
+            printf("[efs_posix.c]failed to getdents in efs_posix_readdir!\n");
+
+            return NULL;
+        }
+
+        d->num = result;
+        d->cur = 0; /* current entry index */
+    }
+
+    return (struct dirent *)(d->buf + d->cur);
+}
+
+long telldir(DIR *d)
+{
+    struct efs_file *fd;
+    long result;
+
+    fd = fd_get(d->fd);
+    if (fd == NULL)
+    {
+        printf("[efs_posix.c]failed to get the file in efs_posix_telldir!\n");
+
+        return 0;
+    }
+
+    result = fd->pos - d->num + d->cur;
+
+    return result;
+}
+
+void seekdir(DIR *d, long offset)
+{
+    struct efs_file *fd;
+
+    fd = fd_get(d->fd);
+    if (fd == NULL)
+    {
+        printf("[efs_posix.c]failed to get the file in efs_posix_seekdir!\n");
+
+        return ;
+    }
+
+    /* seek to the offset position of directory */
+    if (efs_file_lseek(fd, offset) >= 0)
+        d->num = d->cur = 0;
+}
+
+void rewinddir(DIR *d)
+{
+    struct efs_file *fd;
+
+    fd = fd_get(d->fd);
+    if (fd == NULL)
+    {
+        printf("[efs_posix.c]failed to get the file in efs_posix_rewinddir!\n");
+
+        return ;
+    }
+
+    /* seek to the beginning of directory */
+    if (efs_file_lseek(fd, 0) >= 0)
+        d->num = d->cur = 0;
+}
+
+int closedir(DIR *d)
+{
+    int result;
+    struct efs_file *fd;
+
+    fd = fd_get(d->fd);
+    if (fd == NULL)
+    {
+        printf("[efs_posix.c]failed to get the file in efs_posix_rewinddir!\n");
+
+        return -1;
+    }
+
+    result = =efs_file_close(fd);
+    fd_release(d->fd);
+
+    vPortFree(d);//////?
+
+    if (result < 0)
+    {
+        printf("[efs_posix.c]failed to close in efs_posix_closedir!\n");
+
+        return -1;
+    }
+    else
+        return 0;
 }
