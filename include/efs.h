@@ -20,6 +20,9 @@
 #define EFS_F_EOF               0x04000000
 #define EFS_F_ERR               0x08000000
 
+/* */
+#define EFS_FIOFTRUNCATE  0x70820000U //FR
+
 
 struct efs_fdtable
 {

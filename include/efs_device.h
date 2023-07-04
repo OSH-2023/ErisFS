@@ -42,7 +42,7 @@ struct eris_object
 
     eris_list_t   list;                                    /**< list node of kernel object */
 };
- 
+
 
 /**
  * device (I/O) class type设备类型
@@ -106,5 +106,30 @@ struct eris_ipc_object
 };
 
 typedef struct eris_object *eris_object_t;                   /**< Type for kernel objects. */
+
+/* 根据设备名称获取设备句柄，进而可以操作设备。
+** 参数：
+** name	设备的名称
+** 返回值：
+** 成功则返回已注册的设备句柄, 失败则返回 ERIS_NULL 。
+*/
+eris_device_t eris_device_find(const char *name);
+
+/* 打开设备并检测设备是否已经初始化，没有初始化则会默认调用初始化接口初始化设备。
+** 参数：
+** dev	设备句柄
+** oflag	设备的打开模式标志位
+** 返回值：
+** 成功返回ERIS_EOK；失败则返回错误码。
+*/ 
+eris_err_t  eris_device_open (eris_device_t dev, uint16_t oflag);
+
+/* 关闭指定的设备。
+** 参数：
+** dev	设备句柄
+** 返回值：
+** 成功返回ERIS_EOK；失败则返回错误码。
+*/
+eris_err_t  eris_device_close(eris_device_t dev);
 
 #endif

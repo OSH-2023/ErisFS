@@ -22,5 +22,7 @@ ssize_t write(int fd, const void *buf, size_t len);
 
 int fstat_(int fd, struct stat *buf);
 
+int creat(const char *path, mode_t mode);
+
 
 #endif
