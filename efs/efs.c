@@ -242,7 +242,6 @@ int fdt_fd_new(struct efs_fdtable *fdt)
         efs_file_unlock();
         return -1;
     }
-
     efs_file_unlock();
     return fd_num;
     
@@ -258,7 +257,7 @@ struct efs_file *fd_get(int fd)
 /* get efs_file corresponding to fd in specific fdt */
 struct efs_file *fdt_fd_get(struct efs_fdtable* fdt, int fd) 
 {
-    printf("fd: %d\n", fd);
+    //printf("fd: %d\n", fd);
     if(fd < 0 || fd >= (int)fdt->maxfd) 
     {
         printf("[efs.c] fdt_fd_get is failed! fd_num is illegal!\n");

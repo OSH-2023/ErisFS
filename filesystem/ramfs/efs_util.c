@@ -189,6 +189,7 @@ void *eris_memcpy(void *dst, const void *src, eris_ubase_t count)
     long *aligned_dst = Eris_NULL;
     long *aligned_src = Eris_NULL;
     eris_ubase_t len = count;
+    memset(dst_ptr, 0, len);
 
     /* If the size is small, or either SRC or DST is unaligned,
     then punt into the byte copy loop.  This should be rare. */
@@ -196,7 +197,6 @@ void *eris_memcpy(void *dst, const void *src, eris_ubase_t count)
     {
         aligned_dst = (long *)dst_ptr;
         aligned_src = (long *)src_ptr;
-
         /* Copy 4X long words at a time if possible. */
         while (len >= BIGBLOCKSIZE)
         {
@@ -213,7 +213,6 @@ void *eris_memcpy(void *dst, const void *src, eris_ubase_t count)
             *aligned_dst++ = *aligned_src++;
             len -= LITTLEBLOCKSIZE;
         }
-
         /* Pick up any residual with a byte copier. */
         dst_ptr = (char *)aligned_dst;
         src_ptr = (char *)aligned_src;
@@ -962,19 +961,3 @@ int strlen_efs(const char *s)
     }
     return len;
 }
- 
-/*
-int strlen (const char *str)
-{
-	char *s = (char *)str;
-	int len = 0;
-
-	if (s == NULL)
-		return 0;
-
-	while (*s++ != '\0')
-		++len;
-
-	return len;
-}
-*/

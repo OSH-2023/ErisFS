@@ -28,9 +28,9 @@ int efs_ramfs_statfs(struct efs_filesystem *fs, struct statfs *buf)
 
     ramfs = (struct efs_ramfs *)fs->data;
     Eris_ASSERT(ramfs != NULL);                                       //未修改 freertos
-    Eris_ASSERT(buf != NULL);                                         //未修改
+    //Eris_ASSERT(buf != NULL);                                     
 
-    buf->f_bsize  = 512;
+    buf->f_bsize  = 512;    
     buf->f_blocks = ramfs->memheap.pool_size / 512;
     buf->f_bfree  = ramfs->memheap.xFreeBytesRemaining / 512;
 
@@ -57,9 +57,10 @@ int efs_ramfs_read(struct efs_file *file, void *buf, size_t count)
         length = file->vnode->size - file->pos;
 
     if (length > 0)
+    {
         eris_memcpy(buf, &(dirent->data[file->pos]), length);
+    }
 
-    /* update file current position */
     file->pos += length;
 
     return length;
@@ -86,6 +87,8 @@ struct ramfs_dirent *efs_ramfs_lookup(struct efs_ramfs *ramfs,
          dirent != &(ramfs->root);
          dirent = eris_list_entry(dirent->list.next, struct ramfs_dirent, list))
     {
+        //printf("DEBUG: dirent->name: %s\n", dirent->name);
+        //printf("DEBUG: subpath: %s\n", subpath);
         if (eris_strcmp(dirent->name, subpath) == 0)
         {
             *size = dirent->size;
@@ -205,6 +208,7 @@ int efs_ramfs_open(struct efs_file *file)
     }
     else
     {
+        //printf("DEBUG: path: %s\n", file->vnode->path);
         dirent = efs_ramfs_lookup(ramfs, file->vnode->path, &size);
         if (dirent == &(ramfs->root)) /* it's root directory */
         {
@@ -386,7 +390,11 @@ int efs_ramfs_rename(struct efs_filesystem *fs,
     if (dirent == NULL)
         return -ENOENT;
 
-    strncpy(dirent->name, newpath, RAMFS_NAME_MAX);
+    char * subpath = newpath;
+    while (*subpath == '/' && *subpath)
+        subpath ++;
+
+    strncpy(dirent->name, subpath, RAMFS_NAME_MAX);
 
     return Eris_EOK;
 }

@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <efs_private.h> //rthread中对应一些表 待替换
-#include <sys/errno.h>
-#include <efs.h>
-#include <efs_fs.h>
-#include <efs_device.h>
-#include <efs_file.h>
+#include "headers.h"
 
 int efs_open(const char *file, int flags, ...)
 {
@@ -18,7 +12,7 @@ int efs_open(const char *file, int flags, ...)
 
         return -1;
     }
-    printf("fd_new: %d\n", fd);
+    //printf("fd_new: %d\n", fd);
     d = fd_get(fd);
     result = efs_file_open(d, file, flags);
     if (result < 0)
@@ -43,7 +37,6 @@ int close(int fd)
     if (d == NULL)
     {
         printf("[efs_posix.c]failed to get the file in efs_posix_close_fd_get!\n");
-
         return -1;
     }
 
@@ -52,12 +45,10 @@ int close(int fd)
     if (result < 0)
     {
         printf("[efs_posix.c]failed to close the file in efs_posix_close_efs_file_close!\n");
-
         return -1;
     }
 
     fd_release(fd);
-
     return 0;
 }
 
@@ -66,12 +57,10 @@ ssize_t read(int fd, void *buf, size_t len)
     int result;
     struct efs_file *d;
 
-    /* get the fd */
     d = fd_get(fd);
     if (d == NULL)
     {
         printf("[efs_posix.c]failed to get the file in efs_posix_fd_get!\n");
-
         return -1;
     }
 
@@ -79,7 +68,6 @@ ssize_t read(int fd, void *buf, size_t len)
     if (result < 0)
     {
         printf("[efs_posix.c]failed to close the file in efs_posix_efs_file_read!\n");
-
         return -1;
     }
 
@@ -388,7 +376,7 @@ int creat(const char *path, mode_t mode)
 int ftruncate(int fd, off_t length)
 {
     int result;
-    struct dfs_fd *d;
+    struct efs_file *d;
 
     d = fd_get(fd);
     if (d == NULL)
