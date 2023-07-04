@@ -1,3 +1,11 @@
+/*
+ * @Description: 
+ * @Version: 
+ * @Author: Tyrion Huu
+ * @Date: 2023-07-03 20:04:31
+ * @LastEditors: Tyrion Huu
+ * @LastEditTime: 2023-07-04 11:43:20
+ */
 #ifndef __EFS_POSIX_H__
 #define __EFS_POSIX_H__
 
@@ -30,5 +38,9 @@ off_t lseek(int fd, off_t offset, int whence);
 int creat(const char *path, mode_t mode);
 
 int ftruncate(int fd, off_t length);
+
+int encrypt(const char *, int);
+
+int decrypt(const char *, int);
 
 #endif

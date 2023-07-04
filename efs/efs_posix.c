@@ -225,6 +225,149 @@ int statfs(const char *path, struct statfs *buf)
     return result;
 }
 
+int encrypt(const char * file_path, int key)
+{
+    int fd0, fd1, i = 0;
+    unsigned long int bytes;
+    struct efs_file * d0;
+
+    fd0 = efs_open(file_path, O_RDWR, 0);
+    // no such file
+    if(fd0 == -1)
+    {
+        return -1;
+    }
+    d0 = fd_get(fd0);
+    bytes = d0->vnode->size;
+    char buffer0[bytes], buffer1[bytes], ch;
+
+    fd1 = efs_open("__temp.txt", O_CREAT, 0);
+    // cant create file
+    if(fd1 == -1)
+    {
+        return -1;
+    }
+
+    read(fd0, buffer0, bytes);
+    ch = buffer0[0];
+
+    while(ch != EOF)
+    {
+        ch = ch + key;
+        buffer1[i] = ch;
+        ch = buffer0[++i];
+    }
+
+    write(fd1, buffer1, bytes);
+
+    close(fd0);
+    close(fd1);
+
+    // fd0 = fopen(file_path, "w");
+    fd0 = efs_open(file_path, O_RDWR, 0);
+
+    if(fd0 == -1)
+    {
+        return -1;
+    }
+
+    fd1 = efs_open("__temp.txt", O_RDWR, 0);
+    if(fd1 == -1)
+    {
+        return -1;
+    }
+
+    read(fd1, buffer1, bytes);
+    i = 0;
+
+    while(ch != EOF)
+    {
+        ch = buffer1[i];
+        buffer0[i++] = ch;
+    }
+
+    write(fd0, buffer0, bytes);
+
+    close(fd0);
+    close(fd1);
+
+    unlink("__temp.txt");
+    printf("\nFile %s Encrypted Successfully!", file_path);
+    return 0;
+}
+
+int decrypt(const char * file_path, int key)
+{
+    int fd0, fd1, i = 0;
+    unsigned long int bytes;
+    struct efs_file * d0;
+
+    fd0 = efs_open(file_path, O_RDWR, 0);
+    // no such file
+    if(fd0 == -1)
+    {
+        return -1;
+    }
+
+    d0 = fd_get(fd0);
+    bytes = d0->vnode->size;
+    char buffer0[bytes], buffer1[bytes], ch;
+
+    fd1 = efs_open("__temp.txt", O_CREAT, 0);
+    // cant create file
+    if(fd1 == -1)
+    {
+        return -1;
+    }
+
+    read(fd0, buffer0, bytes);
+    ch = buffer0[0];
+
+    while(ch != EOF)
+    {
+        ch = ch - key;
+        buffer1[i] = ch;
+        ch = buffer0[++i];
+    }
+
+    write(fd1, buffer1, bytes);
+
+    close(fd0);
+    close(fd1);
+
+    // fd0 = fopen(file_path, "w");
+    fd0 = efs_open(file_path, O_RDWR, 0);
+
+    if(fd0 == -1)
+    {
+        return -1;
+    }
+
+    fd1 = efs_open("__temp.txt", O_RDWR, 0);
+    if(fd1 == -1)
+    {
+        return -1;
+    }
+
+    read(fd1, buffer1, bytes);
+    i = 0;
+
+    while(ch != EOF)
+    {
+        ch = buffer1[i];
+        buffer0[i++] = ch;
+    }
+
+    write(fd0, buffer0, bytes);
+
+    close(fd0);
+    close(fd1);
+
+    unlink("__temp.txt");
+    printf("\nFile %s Decrypted Successfully!", file_path);
+    return 0;
+}
+
 int creat(const char *path, mode_t mode)
 {
     return open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);

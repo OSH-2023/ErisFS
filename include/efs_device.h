@@ -13,6 +13,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define ERIS_EBUSY                        7               /**< Busy */
+#define ERIS_ENOSYS                       6               /**< No system */
+#define ERIS_DEVICE_FLAG_ACTIVATED        0x010           /**< device is activated */
+#define ERIS_DEVICE_FLAG_STANDALONE       0x008           /**< standalone device */
+#define ERIS_DEVICE_OFLAG_OPEN            0x008           /**< device is opened */
+#define ERIS_DEVICE_OFLAG_CLOSE           0x000           /**< device is closed */
+#define ERIS_DEVICE_OFLAG_MASK            0xf0f           /**< mask of open flag */
+
 typedef signed long                       eris_off_t;       /**< Type for offset */
 typedef unsigned long                       eris_size_t;       /**< Type for offset */
 
@@ -42,7 +50,7 @@ struct eris_object
 
     eris_list_t   list;                                    /**< list node of kernel object */
 };
- 
+
 
 /**
  * device (I/O) class type设备类型
@@ -106,5 +114,30 @@ struct eris_ipc_object
 };
 
 typedef struct eris_object *eris_object_t;                   /**< Type for kernel objects. */
+
+/* 根据设备名称获取设备句柄，进而可以操作设备。
+** 参数：
+** name	设备的名称
+** 返回值：
+** 成功则返回已注册的设备句柄, 失败则返回 ERIS_NULL 。
+*/
+eris_device_t eris_device_find(const char *name);
+
+/* 打开设备并检测设备是否已经初始化，没有初始化则会默认调用初始化接口初始化设备。
+** 参数：
+** dev	设备句柄
+** oflag	设备的打开模式标志位
+** 返回值：
+** 成功返回ERIS_EOK；失败则返回错误码。
+*/ 
+eris_err_t  eris_device_open (eris_device_t dev, uint16_t oflag);
+
+/* 关闭指定的设备。
+** 参数：
+** dev	设备句柄
+** 返回值：
+** 成功返回ERIS_EOK；失败则返回错误码。
+*/
+eris_err_t  eris_device_close(eris_device_t dev);
 
 #endif

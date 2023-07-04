@@ -189,6 +189,9 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     {
         /* which is a non-device filesystem mount */
         dev_id = NULL;
+    } else if (dev_id = eris_device_find(device_name) == NULL) {
+        printf("[efs_fs.c] no this device\n");
+        return -1;
     }
     /* find out the specific filesystem */
     efs_lock();
@@ -220,7 +223,7 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     }
 
     /* make full path for special file */
-    fullpath = efs_normalize_path(NULL, path);  // TODO dfs_normalize_path
+    fullpath = efs_normalize_path(NULL, path);
     if (fullpath == NULL) /* not an abstract path */
     {
         //rt_set_errno(-ENOTDIR); errno change
@@ -234,14 +237,14 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
         struct efs_file fd;
 
         fd_init(&fd);
-        if (efs_file_open(&fd, fullpath, O_RDONLY | O_DIRECTORY) < 0)   // TODO dfs_file_open
+        if (efs_file_open(&fd, fullpath, O_RDONLY | O_DIRECTORY) < 0)
         {
             vPortFree(fullpath);
             //rt_set_errno(-ENOTDIR); errno change
             printf("The path does not exist \n");
             return -1;
         }
-        efs_file_close(&fd);    // TODO dfs_file_close
+        efs_file_close(&fd);
     }
 
     /* check whether the file system mounted or not  in the filesystem table
@@ -280,9 +283,26 @@ int efs_mount(const char *device_name, const char *path, const char *filesystemt
     /* release filesystem_table lock */
     efs_unlock();
 
+    /* open device, but do not check the status of device */
+    if (dev_id != NULL)
+    {
+        if (eris_device_open(fs->dev_id,
+                            ERIS_DEVICE_OFLAG_RDWR) != ERIS_EOK)
+        {
+            /* The underlying device has error, clear the entry. */
+            efs_lock();
+            memset(fs, 0, sizeof(struct efs_filesystem));
+
+            goto err1;
+        }
+    }
+
     /* call mount of this filesystem */
     if ((*ops)->mount(fs, rwflag, data) < 0)
     {
+        /* close device */
+        if (dev_id != NULL)
+            eris_device_close(fs->dev_id);
 
         /* mount failed */
         efs_lock();
@@ -337,6 +357,8 @@ int efs_unmount(const char *specialfile)
     }
 
     /* close device, but do not check the status of device */
+    if (fs->dev_id != NULL)
+        rt_device_close(fs->dev_id);
 
     if (fs->path != NULL)
         vPortFree(fs->path);
@@ -363,6 +385,8 @@ int efs_mkfs(const char *fs_name, const char *device_name)
     eris_device_t dev_id = NULL;
 
     /* check device name, and it should not be NULL */
+    if (device_name != NULL)
+        dev_id = eris_device_find(device_name);
 
     if (dev_id == NULL)
     {
@@ -514,6 +538,8 @@ int efs_unmount_device(eris_device_t dev)
     }
 
     /* close device, but do not check the status of device */
+    if (fs->dev_id != NULL)
+        eris_device_close(fs->dev_id);
 
     if (fs->path != NULL)
         vPortFree(fs->path);
