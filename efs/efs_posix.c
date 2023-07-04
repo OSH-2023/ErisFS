@@ -237,7 +237,7 @@ int statfs(const char *path, struct statfs *buf)
     return result;
 }
 
-int encrypt(char * file_path)
+int encrypt(const char * file_path, int key)
 {
     int fd0, fd1, i = 0;
     unsigned long int bytes;
@@ -265,7 +265,7 @@ int encrypt(char * file_path)
 
     while(ch != EOF)
     {
-        ch = ch + 100;
+        ch = ch + key;
         buffer1[i] = ch;
         ch = buffer0[++i];
     }
@@ -308,7 +308,7 @@ int encrypt(char * file_path)
     return 0;
 }
 
-int decrypt(char * file_path)
+int decrypt(const char * file_path, int key)
 {
     int fd0, fd1, i = 0;
     unsigned long int bytes;
@@ -337,7 +337,7 @@ int decrypt(char * file_path)
 
     while(ch != EOF)
     {
-        ch = ch - 100;
+        ch = ch - key;
         buffer1[i] = ch;
         ch = buffer0[++i];
     }

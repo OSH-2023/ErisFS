@@ -24,5 +24,8 @@ int fstat_(int fd, struct stat *buf);
 
 int creat(const char *path, mode_t mode);
 
+int encrypt(const char *, int);
+
+int decrypt(const char *, int);
 
 #endif
