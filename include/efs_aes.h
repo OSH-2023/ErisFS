@@ -4,7 +4,7 @@
  * @Author: Tyrion Huu
  * @Date: 2023-07-05 09:39:28
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-07-05 16:06:44
+ * @LastEditTime: 2023-07-05 17:12:25
  */
 #include "headers.h"
 
@@ -36,3 +36,8 @@
  *  ((x >> 7) & 1) * 0x1b ----
  */
 #define xtime(x)   ((x << 1) ^ (((x >> 7) & 0x01) * 0x1b))
+
+int encryptAES(const char *);
+
+int decryptAES(const char *);
+

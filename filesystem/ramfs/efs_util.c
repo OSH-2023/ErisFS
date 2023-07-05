@@ -278,14 +278,14 @@ eris_err_t eris_memheap_init(struct eris_memheap *memheap,
     /* initialize semaphore lock */
     memheap->lock = xSemaphoreCreateMutex();
     memheap->locked = Eris_FALSE;
- 
+
     /*
     Eris_DEBUG_LOG(Eris_DEBUG_MEMHEAP,
-                 ("memory memheap: start addr 0x%08x, size %d, free list header 0x%08x\n",
-                  start_addr, size, &(memheap->xStart)));
+                    ("memory memheap: start addr 0x%08x, size %d, free list header 0x%08x\n",
+                    start_addr, size, &(memheap->xStart)));
     */
     printf("memory memheap: start addr 0x%08x, size %ld, free list header 0x%08x\n",
-                  (unsigned int)start_addr, size, (unsigned int)&(memheap->xStart));
+                    (unsigned int)start_addr, size, (unsigned int)&(memheap->xStart));
 
     return Eris_EOK;
 }
@@ -575,8 +575,8 @@ size_t xPortGetMinimumEverFreeHeapSize_efs( struct eris_memheap *memheap )
 /*-----------------------------------------------------------*/
 
 void * pvPortCalloc_efs( size_t xNum,
-                     size_t xSize,
-                     struct eris_memheap *memheap )
+                        size_t xSize,
+                        struct eris_memheap *memheap )
 {
     void * pv = NULL;
 
