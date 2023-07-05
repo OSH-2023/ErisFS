@@ -21,21 +21,20 @@ ssize_t read(int fd, void *buf, size_t len);
 
 ssize_t write(int fd, const void *buf, size_t len);
 
+int stat(const char *file, struct stat *buf);
+
 int fstat_(int fd, struct stat *buf);
 
+//modes are not used
 int creat(const char *path, mode_t mode);
 
 int statfs(const char *path, struct statfs *buf);
-
-int stat(const char *file, struct stat *buf);
 
 int unlink(const char *pathname);
 
 int rename(const char *old_file, const char *new_file);
 
 off_t lseek(int fd, off_t offset, int whence);
-
-int creat(const char *path, mode_t mode);
 
 int ftruncate(int fd, off_t length);
 

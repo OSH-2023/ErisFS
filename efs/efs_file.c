@@ -252,21 +252,11 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     fd->flags |= EFS_F_OPEN;    // need solving 
     if (flags & O_DIRECTORY)
     {
+        printf("HI\n");
         fd->vnode->type = FT_DIRECTORY; // need solving 
         fd->flags |= EFS_F_DIRECTORY;   // need solving 
     }
     efs_fm_unlock();
-    //printf("[efs_file.c] efs_file_open: open successed!\n");
-
-    // print hash table
-    // for(int i = 0; i < EFS_FNODE_HASH_NR; i++)
-    // {
-    //     printf("[efs_file.c] efs_file_open: hash table: %d\n", i);
-    //     eris_list_t * list = &vnode->list;
-    //     eris_list_t * iter = list->next;
-    //     printf("[efs_file.c] efs_file_open: hash value: %d\n", iter->value);
-    // }
-
     return 0;
 }
 

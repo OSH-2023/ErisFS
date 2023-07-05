@@ -155,8 +155,9 @@ void rw_test() {
 	// ------- FIRST TEST --------
     // write to file
     fd = efs_open("/test.txt", O_CREAT|O_RDWR, 0);
+	//printf("1\n");
 	//printf("--- open1 finished ---\n");
-    write(fd, "Hello World!", 12);
+    write(fd, "Hello World!", 13);
 	printf("write: Hello World!\n");
 	//printf("--- write1 finished ---\n");
     close(fd);
@@ -165,8 +166,8 @@ void rw_test() {
     // read from file
     fd = efs_open("/test.txt", O_RDWR, 0);
 	//printf("--- open2 finished ---\n");
-    char buf[12];
-    read(fd, buf, 12);
+    char buf[13];
+    read(fd, buf, 13);
 	//printf("--- read2 finished ---\n");
 	close(fd);
 	//printf("--- close2 finished ---\n");
@@ -177,19 +178,16 @@ void rw_test() {
 	// ------- SECOND TEST --------
 	// write to file
     fd = efs_open("/test1.in", O_CREAT|O_RDWR, 0);
-    write(fd, "HELLO WORLD aaaa!", 17);
+    write(fd, "HELLO WORLD aaaa!", 18);
 	printf("write: HELLO WORLD aaaa!\n");
     close(fd);
 
     // read from file
     fd = efs_open("/test1.in", O_RDWR, 0);
-    char buf1[17];
-    read(fd, buf1, 17);
+    char buf1[20];
+    read(fd, buf1, 18);
 	close(fd);
     printf("read: %s\n", buf1);
-
-	vPortFree(buf);
-	vPortFree(buf1);
 
 	printf("[RW Test] END\n");
 }
@@ -198,6 +196,8 @@ void rename_test()
 {
 	printf("\n[Rename Test] START\n");
 	printf("/test1.in -> /test2.in\n");
+	//printf("%d", rename("/test.txt", "/test2.in"));
+	
 	if (rename("/test1.in", "/test2.in") < 0)
         printf("ERROR\n");
     else
@@ -205,15 +205,15 @@ void rename_test()
 		printf("Reading: test2.in\n");
 		
 		int fd = 0;
-		fd = efs_open("/test2.in", O_RDWR, 0);
-    	char buf1[17];
-    	read(fd, buf1, 17);
+		printf("%d", efs_open("/test2.in", O_RDWR, 0));
+		//fd = efs_open("/test2.in", O_RDWR, 0);
+    	char buf[20];
+    	read(fd, buf, 18);
 		close(fd);
-		printf("%s\n", buf1);
+		printf("%s\n", buf);
 		printf("OK\n");
-		vPortFree(buf1);
 	}
-	printf("\n[Rename Test] END\n");
+	printf("[Rename Test] END\n");
 }
 
 void stat_test()
@@ -222,17 +222,15 @@ void stat_test()
 	printf("checking /test2.in\n");
 
 	struct stat *buf;
-
 	if (stat("/test2.in", buf) < 0)
         printf("ERROR\n");
     else
 	{
 		printf("OK\n");
 		printf("st_size: %d\n", buf->st_size);
-		printf("st_blocks: %d\n", buf->st_blocks);
-		printf("st_flags: %d\n", buf->st_flags);
+		printf("st_mode: %d\n", buf->st_mode);
 	}
-	printf("\n[Stat Test] END\n");
+	printf("[Stat Test] END\n");
 }
 
 void statfs_test()
@@ -249,9 +247,51 @@ void statfs_test()
 		printf("OK\n");
 		printf("st_size: %d\n", buf->st_size);
 		printf("st_blocks: %d\n", buf->st_blocks);
-		printf("st_flags: %d\n", buf->st_flags);
 	}
-	printf("\n[Statfs Test] END\n");
+	printf("[Statfs Test] END\n");
+}
+
+void lseek_test()
+{
+	printf("\n[Lseek Test] START\n");
+	int fd = 0;
+	fd = efs_open("/test2.in", O_CREAT|O_RDWR, 0);
+	char buf1[20];
+	for (int i = 0; i < 20; i++)
+	{
+		lseek(fd, i, SEEK_SET);
+		read(fd, buf1, 1);
+		printf("%d: %s\n", buf1);
+	}
+
+	printf("[Lseek Test] END\n");
+}
+
+void dir_test()
+{
+	printf("\n[Directory Test] START\n");
+
+	int fd = 0;
+	fd = efs_open("/test_dir/test.txt", O_CREAT|O_RDWR, 0);
+	struct stat *buf;
+	if (mkdir("/test_dir", 0) < 0)
+        printf("ERROR\n");
+    else
+	{
+    	// write to file
+    	fd = efs_open("/test_dir/test.txt", O_CREAT|O_RDWR, 0);
+		//printf("1\n");
+		//printf("--- open1 finished ---\n");
+    	write(fd, "Test info in /test_dir/test.txt", 32);
+		printf("write: Test info in /test_dir/test.txt\n");
+		char buf[40];
+    	read(fd, buf, 32);
+		printf("%s\n", buf);
+		printf("OK\n");
+		
+	}
+	close(fd);
+	printf("[Stat Test] END\n");
 }
 
 /*-----------------------------------------------------------*/
@@ -260,6 +300,11 @@ void main_blinky( void )
 {
 	init();
 	rw_test();
+	rename_test();
+	stat_test();
+	statfs_test();
+	l
+	//dir_test();
 	for( ;; );
 }
 
