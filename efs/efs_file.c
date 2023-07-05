@@ -262,9 +262,6 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
 
 /**
  * this function will close a file descriptor.
- *
- * @param fd the file descriptor to be closed.
- *
  * @return 0 on successful, -1 on failed.
  */
 int efs_file_close(struct efs_file * fd)
