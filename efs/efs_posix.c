@@ -12,14 +12,11 @@ int efs_open(const char *file, int flags, ...)
 
         return -1;
     }
-    //printf("fd_new: %d\n", fd);
     d = fd_get(fd);
     result = efs_file_open(d, file, flags);
     if (result < 0)
     {
-        /* release the ref-count of fd */
         fd_release(fd);
-
         printf("[efs_posix.c]failed to open a file in efs_posix_efs_file_open!\n");
 
         return -1;
@@ -240,8 +237,8 @@ int encryptSimple(const char * file_path, int key)
     d = fd_get(fd);
     bytes = d->vnode->size;
 
+    lseek(fd, 0, SEEK_SET);
     read(fd, buffer, bytes);
-    close(fd);
 
     for(int i = 0; i < bytes; i++)
     {
@@ -249,16 +246,13 @@ int encryptSimple(const char * file_path, int key)
             buffer[i] = (buffer[i] + key) % 128;
     }
 
-    if(fd = efs_open(file_path, O_RDWR, 0) < 0)
-    {
-        return -1;
-    }
-
+    lseek(fd, 0, SEEK_SET);
     write(fd, buffer, bytes);
     close(fd);
+
     vPortFree(buffer);
 
-    printf("\nFile %s Encrypted Successfully!\n", file_path);
+    printf("File %s Encrypted Successfully!\n", file_path);
     return 0;
 }
 
@@ -277,8 +271,8 @@ int decryptSimple(const char * file_path, int key)
     d = fd_get(fd);
     bytes = d->vnode->size;
 
+    lseek(fd, 0, SEEK_SET);
     read(fd, buffer, bytes);
-    close(fd);
 
     for(int i = 0; i < bytes; i++)
     {
@@ -286,16 +280,13 @@ int decryptSimple(const char * file_path, int key)
             buffer[i] = (buffer[i] - key) % 128;
     }
 
-    if(fd = efs_open(file_path, O_RDWR, 0) < 0)
-    {
-        return -1;
-    }
-
+    lseek(fd, 0, SEEK_SET);
     write(fd, buffer, bytes);
     close(fd);
+
     vPortFree(buffer);
 
-    printf("\nFile %s Decrypted Successfully!\n", file_path);
+    printf("File %s Decrypted Successfully!\n", file_path);
     return 0;
 }
 

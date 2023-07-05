@@ -256,15 +256,64 @@ void lseek_test()
 	printf("\n[Lseek Test] START\n");
 	int fd = 0;
 	fd = efs_open("/test2.in", O_CREAT|O_RDWR, 0);
-	char buf1[20];
+	char buf[20];
 	for (int i = 0; i < 20; i++)
 	{
+		memset(buf, 0, 20);
 		lseek(fd, i, SEEK_SET);
-		read(fd, buf1, 1);
-		printf("%d: %s\n", buf1);
+		read(fd, buf, 1);
+		printf("%d: %s\n", i, buf);
 	}
+	close(fd);
 
 	printf("[Lseek Test] END\n");
+}
+
+void unlink_test()
+{
+	printf("\n[Unlink Test] START\n");
+	if (unlink("/test2.in") < 0)
+        printf("ERROR\n");
+    else
+	{
+		int fd = open("/test2.in", O_RDWR, 0);
+		if(fd > 0) 
+			printf("ERROR\n");
+		else
+			printf("OK\n");
+	}
+
+	printf("[Unlink Test] END\n");
+}
+
+void crypt_test()
+{
+	printf("\n[Crypt Test] START\n");
+
+	int fd = 0;
+	fd = efs_open("/test2.in", O_RDWR, 0);
+	char buf[20];
+    read(fd, buf, 18);
+	close(fd);
+	printf("original: %s\n", buf);
+
+	encrypt("/test2.in", 7);
+
+	fd = efs_open("/test2.in", O_RDWR, 0);
+	memset(buf, 0, 20);
+    read(fd, buf, 18);
+	close(fd);
+	printf("encrypted: %s\n", buf);
+
+	decrypt("/test2.in", 7);
+
+	fd = efs_open("/test2.in", O_RDWR, 0);
+	memset(buf, 0, 20);
+    read(fd, buf, 18);
+	close(fd);
+	printf("decrypted: %s\n", buf);
+	
+	printf("[Crypt Test] END\n");
 }
 
 void dir_test()
@@ -303,7 +352,9 @@ void main_blinky( void )
 	rename_test();
 	stat_test();
 	statfs_test();
-	l
+	lseek_test();
+	crypt_test();
+	unlink_test();
 	//dir_test();
 	for( ;; );
 }
