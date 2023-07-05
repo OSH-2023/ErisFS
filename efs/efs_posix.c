@@ -227,144 +227,75 @@ int statfs(const char *path, struct statfs *buf)
 
 int encryptSimple(const char * file_path, int key)
 {
-    int fd0, fd1, i = 0;
+    int fd;
     unsigned long int bytes;
-    struct efs_file * d0;
+    struct efs_file * d;
+    char* buffer;
+    buffer = (char *)pvPortMalloc(bytes * sizeof(char));
 
-    fd0 = efs_open(file_path, O_RDWR, 0);
-    // no such file
-    if(fd0 == -1)
+    if(fd = efs_open(file_path, O_RDWR, 0) < 0)
     {
         return -1;
     }
-    d0 = fd_get(fd0);
-    bytes = d0->vnode->size;
-    char buffer0[bytes], buffer1[bytes], ch;
+    d = fd_get(fd);
+    bytes = d->vnode->size;
 
-    fd1 = efs_open("__temp.txt", O_CREAT, 0);
-    // cant create file
-    if(fd1 == -1)
+    read(fd, buffer, bytes);
+    close(fd);
+
+    for(int i = 0; i < bytes; i++)
     {
-        return -1;
+        if(buffer[i] != EOF)
+            buffer[i] = (buffer[i] + key) % 128;
     }
 
-    read(fd0, buffer0, bytes);
-    ch = buffer0[0];
-
-    while(ch != EOF)
-    {
-        ch = ch + key;
-        buffer1[i] = ch;
-        ch = buffer0[++i];
-    }
-
-    write(fd1, buffer1, bytes);
-
-    close(fd0);
-    close(fd1);
-
-    // fd0 = fopen(file_path, "w");
-    fd0 = efs_open(file_path, O_RDWR, 0);
-
-    if(fd0 == -1)
+    if(fd = efs_open(file_path, O_RDWR, 0) < 0)
     {
         return -1;
     }
 
-    fd1 = efs_open("__temp.txt", O_RDWR, 0);
-    if(fd1 == -1)
-    {
-        return -1;
-    }
+    write(fd, buffer, bytes);
+    close(fd);
+    vPortFree(buffer);
 
-    read(fd1, buffer1, bytes);
-    i = 0;
-
-    while(ch != EOF)
-    {
-        ch = buffer1[i];
-        buffer0[i++] = ch;
-    }
-
-    write(fd0, buffer0, bytes);
-
-    close(fd0);
-    close(fd1);
-
-    unlink("__temp.txt");
-    printf("\nFile %s Encrypted Successfully!", file_path);
+    printf("\nFile %s Encrypted Successfully!\n", file_path);
     return 0;
 }
 
 int decryptSimple(const char * file_path, int key)
 {
-    int fd0, fd1, i = 0;
+    int fd;
     unsigned long int bytes;
-    struct efs_file * d0;
+    struct efs_file * d;
+    char* buffer;
+    buffer = (char *)pvPortMalloc(bytes * sizeof(char));
 
-    fd0 = efs_open(file_path, O_RDWR, 0);
-    // no such file
-    if(fd0 == -1)
+    if(fd = efs_open(file_path, O_RDWR, 0) < 0)
+    {
+        return -1;
+    }
+    d = fd_get(fd);
+    bytes = d->vnode->size;
+
+    read(fd, buffer, bytes);
+    close(fd);
+
+    for(int i = 0; i < bytes; i++)
+    {
+        if(buffer[i] != EOF)
+            buffer[i] = (buffer[i] - key) % 128;
+    }
+
+    if(fd = efs_open(file_path, O_RDWR, 0) < 0)
     {
         return -1;
     }
 
-    d0 = fd_get(fd0);
-    bytes = d0->vnode->size;
-    char buffer0[bytes], buffer1[bytes], ch;
+    write(fd, buffer, bytes);
+    close(fd);
+    vPortFree(buffer);
 
-    fd1 = efs_open("__temp.txt", O_CREAT, 0);
-    // cant create file
-    if(fd1 == -1)
-    {
-        return -1;
-    }
-
-    read(fd0, buffer0, bytes);
-    ch = buffer0[0];
-
-    while(ch != EOF)
-    {
-        ch = ch - key;
-        buffer1[i] = ch;
-        ch = buffer0[++i];
-    }
-
-    write(fd1, buffer1, bytes);
-
-    close(fd0);
-    close(fd1);
-
-    // fd0 = fopen(file_path, "w");
-    fd0 = efs_open(file_path, O_RDWR, 0);
-
-    if(fd0 == -1)
-    {
-        return -1;
-    }
-
-    fd1 = efs_open("__temp.txt", O_RDWR, 0);
-    if(fd1 == -1)
-    {
-        return -1;
-    }
-
-    read(fd1, buffer1, bytes);
-    i = 0;
-
-    while(ch != EOF)
-    {
-        ch = buffer1[i];
-        buffer0[i++] = ch;
-    }
-
-    write(fd0, buffer0, bytes);
-
-    close(fd0);
-    close(fd1);
-
-    unlink("__temp.txt");
-    printf("\nFile %s Decrypted Successfully!", file_path);
+    printf("\nFile %s Decrypted Successfully!\n", file_path);
     return 0;
 }
 
@@ -414,14 +345,12 @@ int mkdir(const char *path, mode_t mode)
     }
 
     d = fd_get(fd);
-
     result = efs_file_open(d, path, O_DIRECTORY | O_CREAT);
 
     if (result < 0)
     {
         fd_release(fd);
-        printf("[efs_posix.c]failed to release in efs_posix_mkdir!\n");
-
+        printf("[efs_posix.c]failed to create directory in mkdir!\n");
         return -1;
     }
 
@@ -477,7 +406,6 @@ DIR *opendir(const char *name)
         else
         {
             memset(t, 0, sizeof(DIR));
-
             t->fd = fd;
         }
 
@@ -591,7 +519,6 @@ int closedir(DIR *d)
     if (fd == NULL)
     {
         printf("[efs_posix.c]failed to get the file in efs_posix_rewinddir!\n");
-
         return -1;
     }
 
@@ -603,7 +530,6 @@ int closedir(DIR *d)
     if (result < 0)
     {
         printf("[efs_posix.c]failed to close in efs_posix_closedir!\n");
-
         return -1;
     }
     else

@@ -83,6 +83,7 @@ SOURCE_FILES += (ERIS_EFS)/efs.c
 SOURCE_FILES += (ERIS_EFS)/efs_posix.c
 SOURCE_FILES += (ERIS_EFS)/efs_fs.c
 SOURCE_FILES += (ERIS_EFS)/efs_file.c
+SOURCE_FILES += (ERIS_EFS)/efs_device.c
 SOURCE_FILES += (ERIS_FS)/ramfs/efs_ramfs.c
 SOURCE_FILES += (ERIS_FS)/ramfs/efs_util.c
 
