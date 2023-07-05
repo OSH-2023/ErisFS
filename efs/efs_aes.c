@@ -418,29 +418,24 @@ void CipherInverse(void)
     return;
 }
 
-int encryptAES(const char * file_path)
+// key_size is 128 or 192 or 256
+// input_key is 16 or 24 or 32 bytes    (char)
+// file_path is input file path
+// new_file is output file path
+int encryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key)
 {
     int fd0, fd1;                       // file descriptor
     struct efs_file * fp, * wp;         // input file pointer, output(writer) file pointer
-    int key_size = 0;                   // key Size
     int EOF_flag = 0;                   // detect end of file flag
-    unsigned char input_key[32];        // user input Main key
     unsigned char plaintext_block[16];  // plaintext, encrypt each block (128bit) once
 
     printf("----- AES file encryption -----\n");
-    while (key_size != 128 && key_size != 192 && key_size != 256)
-    {
-        printf("Enter AES key size (Only 128 or 192 or 256) : ");
-        scanf("%d", &key_size);
-    }
 
     NBK = key_size / 32;        // Number of block of key
     NR   = NBK + 6;             // Number of round(NR)
 
     if (key_size == 128)
     {
-        printf("Enter AES KEY (16 characters) : ");
-        scanf("%s", input_key);
         for (int i = 0; i < 16; i++)
         {
             key[i] = input_key[i];
@@ -448,8 +443,6 @@ int encryptAES(const char * file_path)
     }
     else if (key_size == 192)
     {
-        printf("Enter AES KEY (24 characters) : ");
-        scanf("%s", input_key);
         for (int i = 0; i < 24; i++)
         {
             key[i] = input_key[i];
@@ -457,8 +450,6 @@ int encryptAES(const char * file_path)
     }
     else if (key_size == 256)
     {
-        printf("Enter AES KEY (32 characters) : ");
-        scanf("%s", input_key);
         for (int i = 0; i < 32; i++)
         {
             key[i] = input_key[i];
@@ -480,9 +471,7 @@ int encryptAES(const char * file_path)
     fp = fd_get(fd0);                   // get input file pointer
 
     /* get output Ciphertext */
-    printf("Enter Ciphertext file name to write out cipher => "); 
-    scanf("%s", &file_path); 
-    if ((fd1 = efs_open(file_path, O_RDWR | O_CREAT, 0)) == -1)
+    if ((fd1 = efs_open(new_file, O_RDWR | O_CREAT, 0)) == -1)
     {
         printf("Create file Error...\n");
         return -1;
@@ -501,7 +490,7 @@ int encryptAES(const char * file_path)
          */
         for (int c = 0; c < 16; c++)
         {
-            fp->pos = blockNum * 16 + c;
+            lseek(fd0, blockNum * 16 + c, SEEK_SET);
             read(fd0, &ch, 1);
             plaintext_block[c] = ch;
             if (ch == EFS_F_EOF)
@@ -529,7 +518,7 @@ int encryptAES(const char * file_path)
         /* Write Ciphertext to file */
         for(int c = 0; c < 16; c++)  
         {
-            wp->pos = blockNum * 16 + c;
+            lseek(fd1, blockNum * 16 + c, SEEK_SET);
             write(fd1, &out[c], 1);
         }
         
@@ -550,38 +539,33 @@ int encryptAES(const char * file_path)
         }
     }
     close(fd0);
-    wp->pos = 0;
+    lseek(fd1, 0, SEEK_SET);
     close(fd1);
     printf("------------------------------------------------\n");
     printf("Encryption process complete !! \n");
     return 0;
 }
 
-int decryptAES(const char * file_path)
+// key_size is 128 or 192 or 256
+// input_key is 16 or 24 or 32 bytes    (char)
+// file_path is input file path
+// new_file is output file path
+int decryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key)
 {   
     int fd0, fd1; // file descriptor
     struct efs_file * fp, * wp; // input file pointer, output(writer) file pointer
-    int key_size = 0; // key Size
     int EOF_flag = 0; // detect end of file flag
-    unsigned char input_key[32]; // user input Main key
     unsigned char Ciphertext_block[16]; // plaintext, encrypt each block (128bit) once
 
     fp = fd_get(fd0); // get input file pointer
     wp = fd_get(fd1); // get output file pointer
     printf("*** AES decryption System ***\n");
-    while (key_size != 128 && key_size != 192 && key_size != 256)
-    {
-        printf("Enter AES key size (Only 128 or 192 or 256): ");
-        scanf("%d", &key_size);
-    }
 
     NBK = key_size / 32;     // Number of block of key
     NR   = NBK + 6;         // Number of round(NR)
     
     if (key_size == 128)
     {
-        printf("Enter AES KEY (16 characters): ");
-        scanf("%s", input_key);
         for (int i = 0; i < 16; i++)
         {
             key[i] = input_key[i];
@@ -589,8 +573,6 @@ int decryptAES(const char * file_path)
     }
     else if (key_size == 192)
     {
-        printf("Enter AES KEY (24 characters): ");
-        scanf("%s", input_key);
         for (int i = 0; i < 24; i++)
         {
             key[i] = input_key[i];
@@ -598,8 +580,6 @@ int decryptAES(const char * file_path)
     }
     else if (key_size == 256)
     {
-        printf("Enter AES KEY (32 characters): ");
-        scanf("%s", input_key);
         for (int i = 0; i < 32; i++)
         {
             key[i] = input_key[i];
@@ -621,9 +601,7 @@ int decryptAES(const char * file_path)
     fp = fd_get(fd0);                   // get input file pointer
 
     /* get output decrypted plaintext */
-    printf("Enter file name to store decrypted plaintext  => "); 
-    scanf("%s", &file_path); 
-    if ((fd1 = efs_open(file_path, O_WRONLY | O_CREAT, 0)) == -1)
+    if ((fd1 = efs_open(new_file, O_WRONLY | O_CREAT, 0)) == -1)
     {
         printf("Create file Error...\n");
         return -1;
@@ -641,7 +619,7 @@ int decryptAES(const char * file_path)
          */
         for (int c = 0; c < 16; c++)
         {
-            fp->pos = blockNum * 16 + c;
+            lseek(fd0, blockNum * 16 + c, SEEK_SET);
             read(fd0, &ch, 1);
             Ciphertext_block[c] = ch;
             in[c] = Ciphertext_block[c];
@@ -663,7 +641,7 @@ int decryptAES(const char * file_path)
                 EOF_flag = 0;
                 break;
             }
-            wp->pos = blockNum * 16 + c;
+            lseek(fd1, blockNum * 16 + c, SEEK_SET);
             write(fd1, &out[c], 1);
         }
 
@@ -685,7 +663,7 @@ int decryptAES(const char * file_path)
         }
     }
     close(fd0);
-    wp->pos = 0;
+    lseek(fd1, 0, SEEK_SET);
     close(fd1);
     printf("------------------------------------------------\n");
     printf("Decryption process complete !! \n");
