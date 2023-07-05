@@ -24,6 +24,7 @@
     #include "efs_posix.h"
     #include "efs_private.h"
     #include "efs_file.h" 
+    #include "efs_aes.h"
 
     #include "efs_ramfs.h"
 #endif /* ifndef PLUS_FAT_H */

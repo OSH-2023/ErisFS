@@ -39,9 +39,9 @@ int creat(const char *path, mode_t mode);
 
 int ftruncate(int fd, off_t length);
 
-int encrypt(const char *, int);
+int encryptSimple(const char *, int);
 
-int decrypt(const char *, int);
+int decryptSimple(const char *, int);
 
 int mkdir(const char *path, mode_t mode);
 

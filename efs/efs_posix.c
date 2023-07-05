@@ -225,7 +225,7 @@ int statfs(const char *path, struct statfs *buf)
     return result;
 }
 
-int encrypt(const char * file_path, int key)
+int encryptSimple(const char * file_path, int key)
 {
     int fd0, fd1, i = 0;
     unsigned long int bytes;
@@ -296,7 +296,7 @@ int encrypt(const char * file_path, int key)
     return 0;
 }
 
-int decrypt(const char * file_path, int key)
+int decryptSimple(const char * file_path, int key)
 {
     int fd0, fd1, i = 0;
     unsigned long int bytes;
@@ -387,7 +387,7 @@ int ftruncate(int fd, off_t length)
 
     if (length < 0)
     {
-        printf("[efs_posix.c] length cannot be negtive in efs_posix_ftruncate!\n");
+        printf("[efs_posix.c] length cannot be negative in efs_posix_ftruncate!\n");
         return -EINVAL;
     }
     result = efs_file_ftruncate(d, length);
@@ -408,7 +408,7 @@ int mkdir(const char *path, mode_t mode)
     fd = fd_new();
     if (fd == -1)
     {
-       printf("[efs_posix.c]failed to get the file in efs_posix_mkdir!\n");
+        printf("[efs_posix.c]failed to get the file in efs_posix_mkdir!\n");
 
         return -1;
     }
@@ -515,7 +515,7 @@ struct dirent *readdir(DIR *d)
         /* get a new entry */
         result = efs_file_getdents(fd,
                                    (struct dirent *)d->buf,
-                                   sizeof(d->buf) - 1);
+                                    sizeof(d->buf) - 1);
         if (result <= 0)
         {
             printf("[efs_posix.c]failed to getdents in efs_posix_readdir!\n");
@@ -595,7 +595,7 @@ int closedir(DIR *d)
         return -1;
     }
 
-    result = =efs_file_close(fd);
+    result = efs_file_close(fd);
     fd_release(d->fd);
 
     vPortFree(d);//////?
