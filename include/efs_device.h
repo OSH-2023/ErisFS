@@ -140,4 +140,32 @@ eris_err_t  eris_device_open (eris_device_t dev, uint16_t oflag);
 */
 eris_err_t  eris_device_close(eris_device_t dev);
 
+/* 从设备读取数据。
+** 参数：
+** dev	设备句柄
+** pos	读取的偏移量
+** buffer	用于保存读取数据的数据缓冲区
+** size	缓冲区的大小
+** 返回值：
+** 成功返回实际读取的大小，块设备返回的大小以块为单位；失败则返回0。
+*/
+eris_ssize_t eris_device_read(eris_device_t dev,
+                            eris_off_t    pos,
+                            void       *buffer,
+                            eris_size_t   size);
+
+/*向设备写入数据。
+** 参数：
+** dev	设备句柄
+** pos	写入的偏移量
+** buffer	要写入设备的数据缓冲区
+** size	写入数据的大小
+** 返回值：
+** 成功返回实际写入数据的大小，块设备返回的大小以块为单位；失败则返回0。
+*/
+eris_ssize_t eris_device_write(eris_device_t dev,
+                            eris_off_t    pos,
+                            const void *buffer,
+                            eris_size_t   size);
+
 #endif

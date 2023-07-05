@@ -3,12 +3,13 @@
 #define device_init     (dev->init)
 #define device_open     (dev->open)
 #define device_close    (dev->close)
+#define device_read     (dev->read)
+#define device_write    (dev->write)
 
 eris_device_t eris_device_find(const char *name){
     if (eris_strcmp(name, "Apollo")) return NULL;
     else return NULL;
 }
-
 
 eris_err_t  eris_device_open (eris_device_t dev, uint16_t oflag){
     eris_err_t result = ERIS_EOK;
@@ -104,4 +105,60 @@ eris_err_t  eris_device_close(eris_device_t dev){
         dev->open_flag = ERIS_DEVICE_OFLAG_CLOSE;
 
     return result;
+}
+
+eris_ssize_t eris_device_read(eris_device_t dev,
+                            eris_off_t    pos,
+                            void       *buffer,
+                            eris_size_t   size)
+{
+    /* parameter check */
+    if(dev == NULL) {
+        printf("[efs_device.c] no this dev");
+        return 0;
+    }
+    if (dev->ref_count == 0)
+    {
+        printf("[efs_device.c] device hasn't been referenced");
+        return 0;
+    }
+
+    /* call device_read interface */
+    if (device_read != NULL)
+    {
+        return device_read(dev, pos, buffer, size);
+    }
+
+    /* set error code */
+    printf("[efs_device.c] need read function of device");
+
+    return 0;
+}
+
+eris_ssize_t eris_device_write(eris_device_t dev,
+                            eris_off_t    pos,
+                            const void *buffer,
+                            eris_size_t   size)
+{
+    /* parameter check */
+    if(dev == NULL) {
+        printf("[efs_device.c] no this dev");
+        return 0;
+    }
+    if (dev->ref_count == 0)
+    {
+        printf("[efs_device.c] device hasn't been referenced");
+        return 0;
+    }
+
+    /* call device_write interface */
+    if (device_write != NULL)
+    {
+        return device_write(dev, pos, buffer, size);
+    }
+
+    /* set error code */
+    printf("[efs_device.c] need write function of device");
+
+    return 0;
 }
