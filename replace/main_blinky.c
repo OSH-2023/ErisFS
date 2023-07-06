@@ -316,6 +316,34 @@ void crypt_test()
 	printf("[Crypt Test] END\n");
 }
 
+//not for ramfs
+void ftruncate_test() 
+{
+	printf("\n[Ftruncate Test] START\n");
+
+	int fd = 0;
+	fd = efs_open("/test2.in", O_RDWR, 0);
+	char buf[20];
+    read(fd, buf, 18);
+	printf("original: %s\n", buf);
+
+	if(ftruncate(fd, 5) < 0)
+	{
+		printf("ERROR\n");
+	}
+	else 
+	{
+		printf("OK\n");
+	}
+
+	read(fd, buf, 18);
+	printf("truncated: %s\n", buf);
+
+	close(fd);
+	printf("[Ftruncate Test] END\n");
+}
+
+//not for ramfs
 void dir_test()
 {
 	printf("\n[Directory Test] START\n");
@@ -343,6 +371,7 @@ void dir_test()
 	printf("[Stat Test] END\n");
 }
 
+
 /*-----------------------------------------------------------*/
 
 void main_blinky( void )
@@ -354,6 +383,7 @@ void main_blinky( void )
 	statfs_test();
 	lseek_test();
 	crypt_test();
+	//ftruncate_test();
 	unlink_test();
 	//dir_test();
 	for( ;; );
