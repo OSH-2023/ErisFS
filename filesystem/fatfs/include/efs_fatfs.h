@@ -3,15 +3,25 @@
 
 #include <headers.h>
 
+/**
+ * block device geometry structure
+ */
+struct eris_device_blk_geometry
+{
+    uint64_t sector_count;                           /**< count of sectors */
+    uint32_t bytes_per_sector;                       /**< number of bytes per sector */
+    uint32_t block_size;                             /**< number of bytes to erase one block */
+};
+
 int efs_fatfs_init(void);
 
-static int get_disk(device_t id);
+static int get_disk(eris_device_t id);
 
 int efs_fatfs_mount(struct efs_filesystem *fs, unsigned long rwflag, const void *data);
 
 int efs_fatfs_unmount(struct efs_filesystem *fs);
 
-int efs_fatfs_mkfs(device_t dev_id, const char *fs_name);
+int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name);
 
 int efs_fatfs_statfs(struct efs_filesystem *fs, struct statfs *buf);
 
