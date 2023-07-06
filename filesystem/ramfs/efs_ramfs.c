@@ -241,7 +241,7 @@ int efs_ramfs_open(struct efs_file *file)
                 dirent->data = NULL;
                 dirent->size = 0;
                 dirent->fs = ramfs;
-                file->vnode->type = FT_DIRECTORY;
+                file->vnode->type = FT_REGULAR; //regular file
 
                 /* add to the root directory */
                 eris_list_insert_after(&(ramfs->root.list), &(dirent->list));
