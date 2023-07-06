@@ -57,7 +57,8 @@ int efs_fatfs_read(struct efs_file *file, void *buf, size_t len);
 
 int efs_fatfs_write(struct efs_file *file, const void *buf, size_t len);
 
-int efs_fatfs_flush(struct efs_file *file);
+// UNUSED
+//int efs_fatfs_flush(struct efs_file *file);
 
 int efs_fatfs_lseek(struct efs_file *file, off_t offset);
 
@@ -70,7 +71,7 @@ static const struct efs_file_ops efs_fat_fops =
     efs_fatfs_ioctl,
     efs_fatfs_read,
     efs_fatfs_write,
-    efs_fatfs_flush,
+    NULL, //flush - not used & unsupported
     efs_fatfs_lseek,
     efs_fatfs_getdents,
     NULL, 
