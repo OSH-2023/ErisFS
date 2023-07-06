@@ -1,5 +1,5 @@
 /* 
- write a test program for a virtual file system.
+    write a test program for a virtual file system.
 */
 #include <headers.h>
 
