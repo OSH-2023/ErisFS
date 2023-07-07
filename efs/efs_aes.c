@@ -427,7 +427,7 @@ void CipherInverse(void)
 int encryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key)
 {
     int fd0, fd1;                       // file descriptor
-    struct efs_file * fp, * wp;         // input file pointer, output(writer) file pointer
+    int i;
     int EOF_flag = 0;                   // detect end of file flag
     unsigned char plaintext_block[16];  // plaintext, encrypt each block (128bit) once
 
@@ -465,12 +465,11 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
     /* key Expansion function */
     KeyExpansion(); // Expansion key - AES-128(44words/176 bytes), AES-192(52w/208 bytes), AES-256(60w/260bytes)
 
-    if (fd0 = efs_open(file_path, O_RDWR, 0) == -1)
+    if ((fd0 = efs_open(file_path, O_RDWR, 0)) == -1)
     {
         printf("Open file Error...\n");
         return -1;
     }
-    fp = fd_get(fd0);                   // get input file pointer
 
     /* get output Ciphertext */
     if ((fd1 = efs_open(new_file, O_RDWR | O_CREAT, 0)) == -1)
@@ -478,7 +477,6 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
         printf("Create file Error...\n");
         return -1;
     }
-    wp = fd_get(fd1);                   // get output file pointer
 
     int blockNum = 0; // record processing block number(128 bit)
     char ch;
@@ -493,9 +491,10 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
         for (int c = 0; c < 16; c++)
         {
             lseek(fd0, blockNum * 16 + c, SEEK_SET);
+            read(fd0, &i, 4);
             read(fd0, &ch, 1);
             plaintext_block[c] = ch;
-            if (ch == EFS_F_EOF)
+            if (i == EOF)
             {
                 for (int padding = c; padding < 16; padding++)
                 {
@@ -534,8 +533,8 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
         printf("\n");
         blockNum++;
 
-        read(fd0, &ch, 1);      // read next character, if read EFS_F_EOF, EOF_flag = 0 (end of file
-        if (ch == EFS_F_EOF)
+        read(fd0, &i, 1);      // read next character, if read EOF, EOF_flag = 0 (end of file
+        if (i == EOF)
         {
             EOF_flag = 0;
         }
@@ -555,12 +554,10 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
 int decryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key)
 {   
     int fd0, fd1; // file descriptor
-    struct efs_file * fp, * wp; // input file pointer, output(writer) file pointer
+    int i;
     int EOF_flag = 0; // detect end of file flag
     unsigned char Ciphertext_block[16]; // plaintext, encrypt each block (128bit) once
 
-    fp = fd_get(fd0); // get input file pointer
-    wp = fd_get(fd1); // get output file pointer
     printf("*** AES decryption System ***\n");
 
     NBK = key_size / 32;     // Number of block of key
@@ -595,12 +592,11 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
     /* key Expansion function */
     KeyExpansion(); // Expansion key - AES-128(44words/176 bytes), AES-192(52w/208 bytes), AES-256(60w/260bytes)
 
-    if (fd0 = efs_open(file_path, O_RDONLY, 0) == -1)
+    if ((fd0 = efs_open(file_path, O_RDONLY, 0)) == -1)
     {
         printf("Open file Error...\n");
         return -1;
     }
-    fp = fd_get(fd0);                   // get input file pointer
 
     /* get output decrypted plaintext */
     if ((fd1 = efs_open(new_file, O_WRONLY | O_CREAT, 0)) == -1)
@@ -608,7 +604,6 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
         printf("Create file Error...\n");
         return -1;
     }
-    wp = fd_get(fd1);                   // get output file pointer
 
     int blockNum = 0; // record processing block number(128 bit)
     char ch;
@@ -658,8 +653,8 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
         printf("\n");
         blockNum++;
 
-        read(fd0, &ch, 1);      // read next character, if read EFS_F_EOF, EOF_flag = 0 (end of file
-        if (ch == EFS_F_EOF)
+        read(fd0, &i, 4);      // read next character, if read EOF, EOF_flag = 0 (end of file
+        if (i == EOF)
         {
             EOF_flag = 0;
         }
