@@ -679,12 +679,6 @@ int efs_fatfs_unlink(struct efs_filesystem *fs, const char *path)
     extern int fatfs_get_vol(FATFS * fat);
 
     /* add path for fatfs FatFS driver support */
-    vol = elm_get_vol((FATFS *)fs->data);
-    if (vol < 0)
-    {
-        printf('[efs_fatfs.c] failed to get valid vol in efs_fatfs_unlink!\n');
-        return -1;
-    }
     drivers_fn = (char *)pvPortMalloc(256);
     if (drivers_fn == NULL)
     {
@@ -712,15 +706,9 @@ int efs_fatfs_rename(struct efs_filesystem *fs, const char *oldpath, const char 
     char *drivers_oldfn;
     const char *drivers_newfn;
     int vol;
-    extern int elm_get_vol(FATFS * fat);
+    //extern int elm_get_vol(FATFS * fat);
 
     /* add path for ELM FatFS driver support */
-    vol = elm_get_vol((FATFS *)fs->data);
-    if (vol < 0)
-    {
-        printf('[efs_fatfs.c] failed to get valid vol in efs_fatfs_rename!\n');
-        return -1;
-    }
 
     drivers_oldfn = (char *)rt_malloc(256);
     if (drivers_fn == NULL)
@@ -756,15 +744,9 @@ int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat *st)
 #if FF_VOLUMES > 1
     int vol;
     char *drivers_fn;
-    extern int elm_get_vol(FATFS * fat);
+    //extern int elm_get_vol(FATFS * fat);
 
     /* add path for ELM FatFS driver support */
-    vol = elm_get_vol((FATFS *)fs->data);
-    if (vol < 0)
-    {
-        printf('[efs_fatfs.c] failed to get valid vol in efs_fatfs_stat!\n');
-        return -1;
-    }
     drivers_fn = (char *)rt_malloc(256);
     if (drivers_fn == NULL)
     {
