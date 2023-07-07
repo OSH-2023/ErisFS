@@ -1,8 +1,50 @@
 #include "headers.h"
 
+#undef SS
+#if FF_MAX_SS == FF_MIN_SS
+#define SS(fs) ((UINT)FF_MAX_SS) /* Fixed sector size */
+#else
+#define SS(fs) ((fs)->ssize) /* Variable sector size */
+#endif
+
+
+eris_device_t disk[FF_VOLUMES]={0};
+
+static const short __spm[13] =
+{
+    0,
+    (31),
+    (31 + 28),
+    (31 + 28 + 31),
+    (31 + 28 + 31 + 30),
+    (31 + 28 + 31 + 30 + 31),
+    (31 + 28 + 31 + 30 + 31 + 30),
+    (31 + 28 + 31 + 30 + 31 + 30 + 31),
+    (31 + 28 + 31 + 30 + 31 + 30 + 31 + 31),
+    (31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30),
+    (31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31),
+    (31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30),
+    (31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31),
+};
+
+struct tm {
+        int  tm_sec;     /* seconds after the minute [0-60] */
+        int  tm_min;     /* minutes after the hour [0-59] */
+        int  tm_hour;    /* hours since midnight [0-23] */
+        int  tm_mday;    /* day of the month [1-31] */
+        int  tm_mon;     /* months since January [0-11] */
+        int  tm_year;    /* years since 1900 */
+        int  tm_wday;    /* days since Sunday [0-6] */
+        int  tm_yday;    /* days since January 1 [0-365] */
+        int  tm_isdst;   /* Daylight Savings Time flag */
+        long tm_gmtoff;  /* offset from CUT in seconds */
+        char *tm_zone;   /* timezone abbreviation */
+    };
+
+
 int fatfs_result_to_errno(FRESULT result) 
 {
-    int status = RT_EOK;
+    int status = 0;
 
     switch (result)
     {
@@ -73,7 +115,7 @@ int efs_fatfs_open(struct efs_file *file)
                 vPortFree(drivers_fn);
 #endif
                 printf("[efs_fatfs.c] efs_fatfs_open: failed to create directory!\n");
-                return fatfs_result_to_dfs(result);
+                return fatfs_result_to_errno(result);
             }
         }
 
@@ -94,9 +136,9 @@ int efs_fatfs_open(struct efs_file *file)
 #endif
         if (result != FR_OK)
         {
-            vPortfree(dir);
+            vPortFree(dir);
             printf("[efs_fatfs.c] efs_fatfs_open: failed to open the directory!\n");
-            return fatfs_result_to_dfs(result);
+            return fatfs_result_to_errno(result);
         }
 
         //data point to dir entry
@@ -156,7 +198,7 @@ int efs_fatfs_open(struct efs_file *file)
         {
             vPortFree(fd);
             printf("[fatfs.c] efs_fatfs_open: failed to open the file!\n");
-            return fatfs_result_to_dfs(result);
+            return fatfs_result_to_errno(result);
         }
     }
     return 0;
@@ -183,7 +225,7 @@ int efs_fatfs_close(struct efs_file *file)
             return fatfs_result_to_errno(FR_NO_PATH);
         }
         else 
-            vPortfree(dir);
+            vPortFree(dir);
     }
     else if(file->vnode->type == FT_REGULAR)
     {
@@ -204,7 +246,7 @@ int efs_fatfs_close(struct efs_file *file)
         }
     }
 
-    return fatfs_result_to_dfs(result);
+    return fatfs_result_to_errno(result);
 }
 
 int efs_fatfs_ioctl(struct efs_file *file, int cmd, void *args)
@@ -242,7 +284,7 @@ int efs_fatfs_read(struct efs_file *file, void *buf, size_t len)
             return byte_read;
     }
 
-    return fatfs_result_to_dfs(result);
+    return fatfs_result_to_errno(result);
 }
 
 //return < 0 means error, return > 0 means the number of bytes written
@@ -270,7 +312,7 @@ int efs_fatfs_write(struct efs_file *file, const void *buf, size_t len)
         result = f_sync(fd);
     }
 
-    return fatfs_result_to_dfs(result);
+    return fatfs_result_to_errno(result);
 }
 
 /* UNUSED
@@ -296,7 +338,7 @@ int efs_fatfs_flush(struct efs_file *file)
     }
 
     result = f_sync(fd);
-    return fatfs_result_to_dfs(result);
+    return fatfs_result_to_errno(result);
 }
 
 */
@@ -330,23 +372,25 @@ int efs_fatfs_lseek(struct efs_file *file, off_t offset)
         DIR *dir = NULL;
 
         dir = (DIR *)(file->data);
-        if(fd == NULL)
+        if(dir == NULL)
         {
             printf("[fatfs.c] efs_fatfs_lseek: failed to find dir data!\n");
             return fatfs_result_to_errno(FR_NO_PATH);
         }
         else 
         {
-            result = f_seekdir(dir, offset / sizeof(struct dirent));
-            if (result == FR_OK)
-            {
-                file->pos = offset;
-                return file->pos;
-            }
+            printf("[fatfs.c] efs_fatfs_lseek: no seekdir\r\n");
+            return (-1);
+            //result = f_seekdir(dir, offset / sizeof(struct dirent));
+            //if (result == FR_OK)
+            //{
+            //    file->pos = offset;
+            //    return file->pos;
+            //}
         }
     }
 
-    return fatfs_result_to_dfs(result);
+    return fatfs_result_to_errno(result);
 }
 
 //return < 0 means error, return > 0 means the space in buf used.
@@ -398,7 +442,7 @@ int efs_fatfs_getdents(struct efs_file *file, struct dirent *dirp, uint32_t coun
 
         d->d_namlen = (uint8_t)strlen_efs(fn);
         d->d_reclen = (uint16_t)sizeof(struct dirent);
-        strncpy(d->d_name, fn, DFS_PATH_MAX);
+        strncpy(d->d_name, fn, EFS_PATH_MAX);
 
         index ++;
         if (index * sizeof(struct dirent) >= count)
@@ -433,14 +477,13 @@ int efs_fatfs_mount(struct efs_filesystem *fs, unsigned long rwflag, const void 
     FATFS *fat;
     FRESULT result;
     int index;
-    struct rt_device_blk_geometry geometry;
     char logic_nbr[3] = {'0',':', 0};
 
     /* get an empty position */
     index = get_disk(NULL);
     if (index == -1)
     {
-        printf('[efs_fatfs.c] failed to get disk in efs_fatfs_mount!\n');
+        printf("[efs_fatfs.c] failed to get disk in efs_fatfs_mount!\n");
         return -1;
     }
         
@@ -453,7 +496,7 @@ int efs_fatfs_mount(struct efs_filesystem *fs, unsigned long rwflag, const void 
     if (fat == NULL)
     {
         disk[index] = NULL;
-        printf('[efs_fatfs.c] failed to allocate space for fat in efs_fatfs_mount!\n');
+        printf("[efs_fatfs.c] failed to allocate space for fat in efs_fatfs_mount!\n");
         return -1;
     }
 
@@ -471,7 +514,7 @@ int efs_fatfs_mount(struct efs_filesystem *fs, unsigned long rwflag, const void 
             f_mount(NULL, (const TCHAR *)logic_nbr, 1);
             disk[index] = NULL;
             vPortFree(fat);
-            printf('[efs_fatfs.c] failed to allocate space for dir in efs_fatfs_mount!\n');
+            printf("[efs_fatfs.c] failed to allocate space for dir in efs_fatfs_mount!\n");
             return -1;
         }
 
@@ -504,7 +547,7 @@ int efs_fatfs_unmount(struct efs_filesystem *fs)
 
     if (fat == NULL)
     {
-        printf('[efs_fatfs.c] failed to fetch fat in efs_fatfs_unmount!\n');
+        printf("[efs_fatfs.c] failed to fetch fat in efs_fatfs_unmount!\n");
         return -1;
     }
 
@@ -512,7 +555,7 @@ int efs_fatfs_unmount(struct efs_filesystem *fs)
     index = get_disk(fs->dev_id);
     if (index == -1) /* not found */
     {
-        printf('[efs_fatfs.c] failed to get disk in efs_fatfs_unmount!\n');
+        printf("[efs_fatfs.c] failed to get disk in efs_fatfs_unmount!\n");
         return -1;
     }
 
@@ -542,7 +585,7 @@ int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name)
 
     work = pvPortMalloc(FF_MAX_SS);
     if(NULL == work) {
-        printf('[efs_fatfs.c] failed to allocate space for work in efs_fatfs_mkfs!\n');
+        printf("[efs_fatfs.c] failed to allocate space for work in efs_fatfs_mkfs!\n");
         return -1;
     }
 
@@ -575,7 +618,7 @@ int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name)
             if (fat == NULL)
             {
                 vPortFree(work); /* release memory */
-                printf('[efs_fatfs.c] failed to allocate space for fat in efs_fatfs_mkfs!\n');
+                printf("[efs_fatfs.c] failed to allocate space for fat in efs_fatfs_mkfs!\n");
                 return -1;
             }
 
@@ -638,12 +681,12 @@ int efs_fatfs_statfs(struct efs_filesystem *fs, struct statfs *buf)
 
     if (fs == NULL)
     {
-        printf('[efs_fatfs.c] failed to get valid fs in efs_fatfs_statfs!\n');
+        printf("[efs_fatfs.c] failed to get valid fs in efs_fatfs_statfs!\n");
         return -1;
     }
     if (buf == NULL)
     {
-        printf('[efs_fatfs.c] failed to get valid buf in efs_fatfs_statfs!\n');
+        printf("[efs_fatfs.c] failed to get valid buf in efs_fatfs_statfs!\n");
         return -1;
     }
 
@@ -733,7 +776,92 @@ int efs_fatfs_rename(struct efs_filesystem *fs, const char *oldpath, const char 
     return fatfs_result_to_errno(result);
 }
 
-int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat *st)
+long long timegm(struct tm * const t)
+{
+    long long day;
+    long long i;
+    long long years;
+
+    if(t == NULL)
+    {
+        printf("[efs_fatfs.c] failed to get t in timegm!\n");
+        return (long long)-1;
+    }
+
+    years = (long long)t->tm_year - 70;
+    if (t->tm_sec > 60)         /* seconds after the minute - [0, 60] including leap second */
+    {
+        t->tm_min += t->tm_sec / 60;
+        t->tm_sec %= 60;
+    }
+    if (t->tm_min >= 60)        /* minutes after the hour - [0, 59] */
+    {
+        t->tm_hour += t->tm_min / 60;
+        t->tm_min %= 60;
+    }
+    if (t->tm_hour >= 24)       /* hours since midnight - [0, 23] */
+    {
+        t->tm_mday += t->tm_hour / 24;
+        t->tm_hour %= 24;
+    }
+    if (t->tm_mon >= 12)        /* months since January - [0, 11] */
+    {
+        t->tm_year += t->tm_mon / 12;
+        t->tm_mon %= 12;
+    }
+    while (t->tm_mday > __spm[1 + t->tm_mon])
+    {
+        if (t->tm_mon == 1 && __isleap(t->tm_year + 1900))
+        {
+            --t->tm_mday;
+        }
+        t->tm_mday -= __spm[t->tm_mon];
+        ++t->tm_mon;
+        if (t->tm_mon > 11)
+        {
+            t->tm_mon = 0;
+            ++t->tm_year;
+        }
+    }
+
+    if (t->tm_year < 70)
+    {
+        printf("[efs_fatfs.c] failed to get valid tm_year in timegm!\n");
+        return (long long) -1;
+    }
+
+    /* Days since 1970 is 365 * number of years + number of leap years since 1970 */
+    day = years * 365 + (years + 1) / 4;
+
+    /* After 2100 we have to substract 3 leap years for every 400 years
+     This is not intuitive. Most mktime implementations do not support
+     dates after 2059, anyway, so we might leave this out for it's
+     bloat. */
+    if (years >= 131)
+    {
+        years -= 131;
+        years /= 100;
+        day -= (years >> 2) * 3 + 1;
+        if ((years &= 3) == 3)
+            years--;
+        day -= years;
+    }
+
+    day += t->tm_yday = __spm[t->tm_mon] + t->tm_mday - 1 +
+                        (__isleap(t->tm_year + 1900) & (t->tm_mon > 1));
+
+    /* day is now the number of days since 'Jan 1 1970' */
+    i = 7;
+    t->tm_wday = (int)((day + 4) % i); /* Sunday=0, Monday=1, ..., Saturday=6 */
+
+    i = 24;
+    day *= i;
+    i = 60;
+    return ((day + t->tm_hour) * i + t->tm_min) * i + t->tm_sec;
+}
+
+
+int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat_efs *st)
 {
     FATFS  *f;
     FILINFO file_info;
@@ -823,90 +951,6 @@ int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat *st)
     }
 
     return fatfs_result_to_errno(result);
-}
-
-time_t timegm(struct tm * const t)
-{
-    time_t day;
-    time_t i;
-    time_t years;
-
-    if(t == NULL)
-    {
-        printf('[efs_fatfs.c] failed to get t in timegm!\n');
-        return (time_t)-1;
-    }
-
-    years = (time_t)t->tm_year - 70;
-    if (t->tm_sec > 60)         /* seconds after the minute - [0, 60] including leap second */
-    {
-        t->tm_min += t->tm_sec / 60;
-        t->tm_sec %= 60;
-    }
-    if (t->tm_min >= 60)        /* minutes after the hour - [0, 59] */
-    {
-        t->tm_hour += t->tm_min / 60;
-        t->tm_min %= 60;
-    }
-    if (t->tm_hour >= 24)       /* hours since midnight - [0, 23] */
-    {
-        t->tm_mday += t->tm_hour / 24;
-        t->tm_hour %= 24;
-    }
-    if (t->tm_mon >= 12)        /* months since January - [0, 11] */
-    {
-        t->tm_year += t->tm_mon / 12;
-        t->tm_mon %= 12;
-    }
-    while (t->tm_mday > __spm[1 + t->tm_mon])
-    {
-        if (t->tm_mon == 1 && __isleap(t->tm_year + 1900))
-        {
-            --t->tm_mday;
-        }
-        t->tm_mday -= __spm[t->tm_mon];
-        ++t->tm_mon;
-        if (t->tm_mon > 11)
-        {
-            t->tm_mon = 0;
-            ++t->tm_year;
-        }
-    }
-
-    if (t->tm_year < 70)
-    {
-        printf('[efs_fatfs.c] failed to get valid tm_year in timegm!\n');
-        return (time_t) -1;
-    }
-
-    /* Days since 1970 is 365 * number of years + number of leap years since 1970 */
-    day = years * 365 + (years + 1) / 4;
-
-    /* After 2100 we have to substract 3 leap years for every 400 years
-     This is not intuitive. Most mktime implementations do not support
-     dates after 2059, anyway, so we might leave this out for it's
-     bloat. */
-    if (years >= 131)
-    {
-        years -= 131;
-        years /= 100;
-        day -= (years >> 2) * 3 + 1;
-        if ((years &= 3) == 3)
-            years--;
-        day -= years;
-    }
-
-    day += t->tm_yday = __spm[t->tm_mon] + t->tm_mday - 1 +
-                        (__isleap(t->tm_year + 1900) & (t->tm_mon > 1));
-
-    /* day is now the number of days since 'Jan 1 1970' */
-    i = 7;
-    t->tm_wday = (int)((day + 4) % i); /* Sunday=0, Monday=1, ..., Saturday=6 */
-
-    i = 24;
-    day *= i;
-    i = 60;
-    return ((day + t->tm_hour) * i + t->tm_min) * i + t->tm_sec;
 }
 
 static int __isleap(int year)

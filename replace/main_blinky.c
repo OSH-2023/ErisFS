@@ -221,7 +221,7 @@ void stat_test()
 	printf("\n[Stat Test] START\n");
 	printf("checking /test2.in\n");
 
-	struct stat *buf;
+	struct stat_efs *buf;
 	if (stat("/test2.in", buf) < 0)
         printf("ERROR\n");
     else
@@ -238,7 +238,7 @@ void statfs_test()
 	printf("\n[Statfs Test] START\n");
 	printf("checking /test2.in\n");
 
-	struct stat *buf;
+	struct stat_efs *buf;
 
 	if (statfs("/", buf) < 0)
         printf("ERROR\n");
@@ -350,7 +350,7 @@ void dir_test()
 
 	int fd = 0;
 	fd = efs_open("/test_dir/test.txt", O_CREAT|O_RDWR, 0);
-	struct stat *buf;
+	struct stat_efs *buf;
 	if (mkdir("/test_dir", 0) < 0)
         printf("ERROR\n");
     else

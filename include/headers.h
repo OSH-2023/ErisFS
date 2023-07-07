@@ -13,6 +13,9 @@
     #include "list.h"
     #include "queue.h"
 
+    #include "ff.h"
+    #include "diskio.h"
+
     #include "efs.h"
     #include "efs_device.h"
     #include "efs_util.h"
@@ -21,6 +24,6 @@
     #include "efs_private.h"
     #include "efs_file.h" 
     #include "efs_aes.h"
-
+    #include "efs_fatfs.h"
     #include "efs_ramfs.h"
 #endif /* ifndef PLUS_FAT_H */

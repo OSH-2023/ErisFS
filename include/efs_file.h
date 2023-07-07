@@ -11,6 +11,8 @@
 
 #include "headers.h"
 
+
+
 /* file descriptor */
 #define EFS_FD_MAGIC     0xfdfd
 
@@ -100,7 +102,7 @@ int efs_file_write(struct efs_file * fd, const void * buf, size_t len);
 
 off_t efs_file_lseek(struct efs_file *fd, off_t offset);
 
-int efs_file_stat(const char *path, struct stat *buf);
+int efs_file_stat(const char *path, struct stat_efs *buf);
 
 int efs_file_rename(const char *old_path, const char *new_path);
 

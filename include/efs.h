@@ -1,6 +1,7 @@
+
 #ifndef __EFS_H__
 #define __EFS_H__
-
+#include "headers.h"
 #define EFS_PATH_MAX 256
 #define EFS_MAX_FD 16
 
@@ -93,8 +94,9 @@ typedef unsigned int uid_t;
 typedef unsigned int gid_t;
 typedef long long blkcnt_t;
 typedef int blksize_t;
-
-struct stat {
+typedef signed long off_t;
+typedef long time_t;
+struct stat_efs {
 	dev_t           st_dev;         /* [XSI] ID of device containing file */
 	ino_t           st_ino;         /* [XSI] File serial number */
 	mode_t          st_mode;        /* [XSI] Mode of file (see below) */
@@ -102,20 +104,66 @@ struct stat {
 	uid_t           st_uid;         /* [XSI] User ID of the file */
 	gid_t           st_gid;         /* [XSI] Group ID of the file */
 	dev_t           st_rdev;        /* [XSI] Device ID */
-#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-	struct  timespec st_atimespec;  /* time of last access */
-	struct  timespec st_mtimespec;  /* time of last data modification */
-	struct  timespec st_ctimespec;  /* time of last status change */
-#endif
+    time_t          st_atime;       /* [XSI] Time of last access */
+	long            st_atimensec;   /* nsec of last access */
+	time_t          st_mtime;       /* [XSI] Last data modification time */
+	long            st_mtimensec;   /* last data modification nsec */
+	time_t          st_ctime;       /* [XSI] Time of last status change */
+	long            st_ctimensec;   /* nsec of last status change */
+
 	off_t           st_size;        /* [XSI] file size, in bytes */
 	blkcnt_t        st_blocks;      /* [XSI] blocks allocated for file */
 	blksize_t       st_blksize;     /* [XSI] optimal blocksize for I/O */
-	__uint32_t      st_flags;       /* user defined flags for file */
-	__uint32_t      st_gen;         /* file generation number */
-	__int32_t       st_lspare;      /* RESERVED: DO NOT USE! */
-	__int64_t       st_qspare[2];   /* RESERVED: DO NOT USE! */
+	unsigned int      st_flags;       /* user defined flags for file */
+	unsigned int      st_gen;         /* file generation number */
+	int              st_lspare;      /* RESERVED: DO NOT USE! */
+	long long       st_qspare[2];   /* RESERVED: DO NOT USE! */
 };
 
+
+#define EPERM 1
+#define ENOENT 2
+#define ENOFILE ENOENT
+#define ESRCH 3
+#define EINTR 4
+#define EIO 5
+#define ENXIO 6
+#define E2BIG 7
+#define ENOEXEC 8
+#define EBADF 9
+#define ECHILD 10
+#define EAGAIN 11
+#define ENOMEM 12
+#define EACCES 13
+#define EFAULT 14
+#define EBUSY 16
+#define EEXIST 17
+#define EXDEV 18
+#define ENODEV 19
+#define ENOTDIR 20
+#define EISDIR 21
+#define ENFILE 23
+#define EMFILE 24
+#define ENOTTY 25
+#define EFBIG 27
+#define ENOSPC 28
+#define ESPIPE 29
+#define EROFS 30
+#define EMLINK 31
+#define EPIPE 32
+#define EDOM 33
+#define EDEADLK 36
+#define ENAMETOOLONG 38
+#define ENOLCK 39
+#define ENOSYS 40
+#define ENOTEMPTY 41
+
+#ifndef RC_INVOKED
+#if !defined(_SECURECRT_ERRCODE_VALUES_DEFINED)
+#define _SECURECRT_ERRCODE_VALUES_DEFINED
+#define STRUNCATE 80
+#endif
+#endif
 /*
  * [XSI] The symbolic names for file modes for use as values of mode_t
  * shall be defined as described in <sys/stat.h>

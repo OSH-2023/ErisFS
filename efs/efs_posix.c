@@ -93,7 +93,7 @@ ssize_t write(int fd, const void *buf, size_t len)
     return result;
 }
 
-int fstat_(int fd, struct stat *buf)
+int fstat_(int fd, struct stat_efs *buf)
 {
     if (buf == NULL)
     {
@@ -110,7 +110,7 @@ int fstat_(int fd, struct stat *buf)
         return -1;
     }
 
-    return stat(d->vnode->fullpath, buf);
+    return stat_efs(d->vnode->fullpath, buf);
 }
 
 off_t lseek(int fd, off_t offset, int whence)
@@ -192,7 +192,7 @@ int unlink(const char *pathname)
     return 0;
 }
 
-int stat(const char *file, struct stat *buf)
+int stat_efs(const char *file, struct stat_efs *buf)
 {
     int result;
 
@@ -207,7 +207,7 @@ int stat(const char *file, struct stat *buf)
     return result;
 }
 
-int statfs(const char *path, struct statfs *buf)
+int statfs_efs(const char *path, struct statfs *buf)
 {
     int result;
 
@@ -292,7 +292,7 @@ int decryptSimple(const char * file_path, int key)
 
 int creat(const char *path, mode_t mode)
 {
-    return open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
+    return efs_open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
 }
 
 int ftruncate(int fd, off_t length)
@@ -366,11 +366,11 @@ int rmdir(const char *pathname)
     return 0;
 }
 
-DIR *opendir(const char *name)
+DIRE *opendir(const char *name)
 {
     struct efs_file *d;
     int fd, result;
-    DIR *t;
+    DIRE *t;
 
     t = NULL;
 
@@ -388,7 +388,7 @@ DIR *opendir(const char *name)
     if (result >= 0)
     {
         /* open successfully */
-        t = (DIR *) pvPortMalloc(sizeof(DIR));//potential problem: pvportmalloc or pvportmalloc_efs
+        t = (DIRE *) pvPortMalloc(sizeof(DIRE));//potential problem: pvportmalloc or pvportmalloc_efs
         if (t == NULL)
         {
             efs_file_close(d);
@@ -396,7 +396,7 @@ DIR *opendir(const char *name)
         }
         else
         {
-            memset(t, 0, sizeof(DIR));
+            memset(t, 0, sizeof(DIRE));
             t->fd = fd;
         }
 
@@ -410,7 +410,7 @@ DIR *opendir(const char *name)
     return NULL;
 }
 
-struct dirent *readdir(DIR *d)
+struct dirent *readdir(DIRE *d)
 {
     int result;
     struct efs_file *fd;
@@ -449,7 +449,7 @@ struct dirent *readdir(DIR *d)
     return (struct dirent *)(d->buf + d->cur);
 }
 
-long telldir(DIR *d)
+long telldir(DIRE *d)
 {
     struct efs_file *fd;
     long result;
@@ -467,7 +467,7 @@ long telldir(DIR *d)
     return result;
 }
 
-void seekdir(DIR *d, long offset)
+void seekdir(DIRE *d, long offset)
 {
     struct efs_file *fd;
 
@@ -484,7 +484,7 @@ void seekdir(DIR *d, long offset)
         d->num = d->cur = 0;
 }
 
-void rewinddir(DIR *d)
+void rewinddir(DIRE *d)
 {
     struct efs_file *fd;
 
@@ -501,7 +501,7 @@ void rewinddir(DIR *d)
         d->num = d->cur = 0;
 }
 
-int closedir(DIR *d)
+int closedir(DIRE *d)
 {
     int result;
     struct efs_file *fd;
