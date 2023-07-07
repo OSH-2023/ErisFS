@@ -24,6 +24,7 @@
     #include "task.h"
     #include "list.h"
     #include "queue.h"
+    #include "timers.h"
 
     #include "efs.h"
     #include "efs_device.h"

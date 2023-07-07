@@ -31,10 +31,10 @@ int efs_fatfs_rename(struct efs_filesystem *fs, const char *oldpath, const char 
 
 int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat *st);
 
-static const struct efs_filesystem_ops efs_fat =
+static const struct efs_filesystem_ops efs_fatfs =
 {
     "fatfs",
-    DFS_FS_FLAG_DEFAULT,
+    EFS_FS_FLAG_DEFAULT,
     &efs_fatfs_fops,
 
     efs_fatfs_mount,
@@ -64,7 +64,7 @@ int efs_fatfs_lseek(struct efs_file *file, off_t offset);
 
 int efs_fatfs_getdents(struct efs_file *file, struct dirent *dirp, uint32_t count);
 
-static const struct efs_file_ops efs_fat_fops =
+static const struct efs_file_ops efs_fatfs_fops =
 {
     efs_fatfs_open,
     efs_fatfs_close,

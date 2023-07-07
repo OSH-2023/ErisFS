@@ -63,14 +63,14 @@ DRESULT disk_read (
 )
 {
 	u8 res=0; 
-    if (!count)return RES_PARERR;//count���ܵ���0�����򷵻ز�������		 	 
+    if (!count)return RES_PARERR;		 	 
 	switch(pdrv)
 	{
-		case SD_CARD://SD��
+		case SD_CARD:
 			res=SD_ReadDisk(buff,sector,count);	 
-			while(res)//������
+			while(res)
 			{
-				SD_Init();	//���³�ʼ��SD��
+				SD_Init();	
 				res=SD_ReadDisk(buff,sector,count);	
 				//printf("sd rd error:%d\r\n",res);
 			}
@@ -78,7 +78,6 @@ DRESULT disk_read (
 		default:
 			res=1; 
 	}
-   //��������ֵ����SPI_SD_driver.c�ķ���ֵת��ff.c�ķ���ֵ
     if(res==0x00)return RES_OK;	 
     else return RES_ERROR;	   
 }
@@ -99,12 +98,12 @@ DRESULT disk_write (
 )
 {
 	u8 res=0;  
-    if (!count)return RES_PARERR;//count���ܵ���0�����򷵻ز�������		 	 
+    if (!count)return RES_PARERR;	 	 
 	switch(pdrv)
 	{
-		case SD_CARD://SD��
+		case SD_CARD:
 			res=SD_WriteDisk((u8*)buff,sector,count);
-			while(res)//д����
+			while(res)
 			{
 				SD_Init();	//���³�ʼ��SD��
 				res=SD_WriteDisk((u8*)buff,sector,count);	
@@ -114,7 +113,6 @@ DRESULT disk_write (
 		default:
 			res=1; 
 	}
-    //��������ֵ����SPI_SD_driver.c�ķ���ֵת��ff.c�ķ���ֵ
     if(res == 0x00)return RES_OK;	 
     else return RES_ERROR;	
 } 
@@ -156,7 +154,7 @@ DRESULT res;
 		        res = RES_PARERR;
 		        break;
 	    }
-	}else res=RES_ERROR;//�����Ĳ�֧��
+	}else res=RES_ERROR;
     return res;
 } 
 
