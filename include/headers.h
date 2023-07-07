@@ -1,3 +1,11 @@
+/*
+ * @Description: 
+ * @Version: 
+ * @Author: Tyrion Huu
+ * @Date: 2023-06-09 08:16:17
+ * @LastEditors: Tyrion Huu
+ * @LastEditTime: 2023-07-07 16:02:07
+ */
 #ifndef PLUS_FAT_H
     #define PLUS_FAT_H
 
@@ -7,7 +15,6 @@
     #include <stdlib.h>
     #include <fcntl.h>
     #include <errno.h>
-    #include <timers.h>
 
     #include <sys/stat.h>
     #include <sys/time.h>
