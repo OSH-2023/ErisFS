@@ -417,6 +417,7 @@ void ReadWritePerformanceTest(void)
 	{
 		write(fd, "Test info in /test_dir/performance_test.txt", 45);
 	}
+	
 	xTimerStop(write_timer, 0);
 	time = xTimerGetPeriod(write_timer);
 	printf("Written char count: %d\nTotal time spent: %ld\n", 45000, time);
@@ -445,7 +446,8 @@ void main_blinky( void )
 	stat_test();
 	statfs_test();
 	lseek_test();
-	crypt_test();
+	crypt_test();	
+	ReadWritePerformanceTest();
 	//ftruncate_test();
 	unlink_test();
 	//dir_test();

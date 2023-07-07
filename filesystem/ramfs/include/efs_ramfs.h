@@ -1,11 +1,3 @@
-/*
- * @Description: 
- * @Version: 
- * @Author: Tyrion Huu
- * @Date: 2023-07-07 16:04:57
- * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-07-07 16:43:45
- */
 #ifndef __EFS_RAMFS_H__
 #define __EFS_RAMFS_H__
 

@@ -1,11 +1,3 @@
-/*
- * @Description: 
- * @Version: 
- * @Author: Tyrion Huu
- * @Date: 2023-07-03 20:04:31
- * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-07-04 11:43:20
- */
 #ifndef __EFS_POSIX_H__
 #define __EFS_POSIX_H__
 
