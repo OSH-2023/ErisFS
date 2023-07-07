@@ -6,9 +6,28 @@
 #define device_read     (dev->read)
 #define device_write    (dev->write)
 
+struct eris_device SDcard = {
+    NULL,   /*parent*/
+    eris_Device_Class_Block,    /*device type*/
+    0x000,  /*flag*/
+    0x000,  /*open flag*/
+    0x00,  /*reference count*/
+    0x01,  /*dev_id*/
+    NULL,   /*rx_indicate*/
+    NULL,   /*tx_complete*/
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL    /*user data*/
+};
+
 eris_device_t eris_device_find(const char *name){
-    if (eris_strcmp(name, "Apollo")) return NULL;
-    else return NULL;
+    if (eris_strcmp(name, "Apollo")) {
+        eris_device_t result = &SDcard;
+        return result;
+    } else return NULL;
 }
 
 eris_err_t eris_device_open (eris_device_t dev, uint16_t oflag){

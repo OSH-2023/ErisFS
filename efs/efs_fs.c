@@ -14,7 +14,6 @@
 
 #include "headers.h"
 
-FATFS *fs[1];
 
 // DONE
 int efs_register(struct efs_filesystem_ops *ops)
@@ -180,149 +179,149 @@ int efs_filesystem_get_partition(struct efs_partition *part, uint8_t *buf, uint3
 
 int efs_mount(const char *device_name, const char *path, const char *filesystemtype, unsigned long rwflag, const void *data)
 {
-    fs[0] = pvPortMalloc(sizeof(FATFS));
-    f_mount(fs[0], "0:", 0);
-    //struct efs_filesystem_ops **ops;
-    //struct efs_filesystem *iter;
-    //struct efs_filesystem *fs = NULL;
-    //char *fullpath = NULL;
-    //eris_device_t dev_id;
-//
-    ///* open specific device */
-    //if (device_name == NULL)
-    //{
-    //    /* which is a non-device filesystem mount */
-    //    dev_id = NULL;
-    //} else if ((dev_id = eris_device_find(device_name)) == NULL) {
-    //    printf("[efs_fs.c] no this device\n");
-    //    return -1;
-    //}
-    ///* find out the specific filesystem */
-    //efs_lock();
-//
-    //for (ops = &filesystem_operation_table[0];
-    //        ops < &filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX]; ops++)
-    //{
-    //    if ((*ops != NULL) && (strncmp((*ops)->name, filesystemtype, strlen_efs((*ops)->name)) == 0))
-    //        break;
-    //    printf("filesystem: %s\n", (*ops)->name);
-    //}
-//
-    //efs_unlock();
-//
-    //if (ops == &filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX])
-    //{
-    //    /* can't find filesystem */
-    //    //rt_set_errno(-ENODEV); errno change
-    //    printf("Can't find filesystem.\n");
-    //    return -1;
-    //}
-//
-    ///* check if there is mount implementation */
-    //if ((*ops == NULL) || ((*ops)->mount == NULL))
-    //{
-    //    //rt_set_errno(-ENOSYS); errno change
-    //    printf("mount failed.\n");
-    //    return -1;
-    //}
-//
-    ///* make full path for special file */
-    //fullpath = efs_normalize_path(NULL, path);
-    //if (fullpath == NULL) /* not an abstract path */
-    //{
-    //    //rt_set_errno(-ENOTDIR); errno change
-    //    printf("Fullpath Wrong.\n");
-    //    return -1;
-    //}
-//
-    ///* Check if the path exists or not, raw APIs call, fixme */
-    //if ((strcmp(fullpath, "/") != 0) && (strcmp(fullpath, "/dev") != 0))
-    //{
-    //    struct efs_file fd;
-//
-    //    fd_init(&fd);
-    //    if (efs_file_open(&fd, fullpath, O_RDONLY | O_DIRECTORY) < 0)
-    //    {
-    //        vPortFree(fullpath);
-    //        //rt_set_errno(-ENOTDIR); errno change
-    //        printf("The path does not exist \n");
-    //        return -1;
-    //    }
-    //    efs_file_close(&fd);
-    //}
-//
-    ///* check whether the file system mounted or not  in the filesystem table
-    // * if it is unmounted yet, find out an empty entry */
-    //efs_lock();
-//
-    //for (iter = &filesystem_table[0];
-    //        iter < &filesystem_table[EFS_FILESYSTEMS_MAX]; iter++)
-    //{
-    //    /* check if it is an empty filesystem table entry? if it is, save fs */
-    //    if (iter->ops == NULL)
-    //        (fs == NULL) ? (fs = iter) : 0;
-    //    /* check if the PATH is mounted */
-    //    else if (strcmp(iter->path, path) == 0)
-    //    {
-    //        //rt_set_errno(-EINVAL);  errno change
-    //        printf("The path has been mounted.\n");
-    //        goto err1;
-    //    }
-    //}
-//
-    //if ((fs == NULL) && (iter == &filesystem_table[EFS_FILESYSTEMS_MAX]))
-    //{
-    //    //rt_set_errno(-ENOSPC);  errno change
-    //    printf("There is no space to mount this file system (%s).\n", filesystemtype);
-    //    goto err1;
-    //}
-//
-    ///* register file system */
-    //fs->path   = fullpath;
-    //fs->ops    = *ops;
-    //fs->dev_id = dev_id;
-    ///* For UFS, record the real filesystem name */
-    //fs->data = (void *) filesystemtype;
-//
-    ///* release filesystem_table lock */
-    //efs_unlock();
-//
-    ///* open device, but do not check the status of device */
-    //if (dev_id != NULL)
-    //{
-    //    if (eris_device_open(fs->dev_id,
-    //                        ERIS_DEVICE_OFLAG_RDWR) != ERIS_EOK)
-    //    {
-    //        /* The underlying device has error, clear the entry. */
-    //        efs_lock();
-    //        memset(fs, 0, sizeof(struct efs_filesystem));
-//
-    //        goto err1;
-    //    }
-    //}
-//
-    ///* call mount of this filesystem */
-    //if ((*ops)->mount(fs, rwflag, data) < 0)
-    //{
-    //    /* close device */
-    //    if (dev_id != NULL)
-    //        eris_device_close(fs->dev_id);
-//
-    //    /* mount failed */
-    //    efs_lock();
-    //    /* clear filesystem table entry */
-    //    memset(fs, 0, sizeof(struct efs_filesystem));
-//
-    //    goto err1;
-    //}
-//
+    //fs[0] = pvPortMalloc(sizeof(FATFS));
+    //f_mount(fs[0], "0:", 0);
+    struct efs_filesystem_ops **ops;
+    struct efs_filesystem *iter;
+    struct efs_filesystem *fs = NULL;
+    char *fullpath = NULL;
+    eris_device_t dev_id;
+
+    /* open specific device */
+    if (device_name == NULL)
+    {
+        /* which is a non-device filesystem mount */
+        dev_id = NULL;
+    } else if ((dev_id = eris_device_find(device_name)) == NULL) {
+        printf("[efs_fs.c] no this device\n");
+        return -1;
+    }
+    /* find out the specific filesystem */
+    efs_lock();
+
+    for (ops = &filesystem_operation_table[0];
+            ops < &filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX]; ops++)
+    {
+        if ((*ops != NULL) && (strncmp((*ops)->name, filesystemtype, strlen_efs((*ops)->name)) == 0))
+            break;
+        printf("filesystem: %s\n", (*ops)->name);
+    }
+
+    efs_unlock();
+
+    if (ops == &filesystem_operation_table[EFS_FILESYSTEM_TYPES_MAX])
+    {
+        /* can't find filesystem */
+        //rt_set_errno(-ENODEV); errno change
+        printf("Can't find filesystem.\n");
+        return -1;
+    }
+
+    /* check if there is mount implementation */
+    if ((*ops == NULL) || ((*ops)->mount == NULL))
+    {
+        //rt_set_errno(-ENOSYS); errno change
+        printf("mount failed.\n");
+        return -1;
+    }
+
+    /* make full path for special file */
+    fullpath = efs_normalize_path(NULL, path);
+    if (fullpath == NULL) /* not an abstract path */
+    {
+        //rt_set_errno(-ENOTDIR); errno change
+        printf("Fullpath Wrong.\n");
+        return -1;
+    }
+
+    /* Check if the path exists or not, raw APIs call, fixme */
+    if ((strcmp(fullpath, "/") != 0) && (strcmp(fullpath, "/dev") != 0))
+    {
+        struct efs_file fd;
+
+        fd_init(&fd);
+        if (efs_file_open(&fd, fullpath, O_RDONLY | O_DIRECTORY) < 0)
+        {
+            vPortFree(fullpath);
+            //rt_set_errno(-ENOTDIR); errno change
+            printf("The path does not exist \n");
+            return -1;
+        }
+        efs_file_close(&fd);
+    }
+
+    /* check whether the file system mounted or not  in the filesystem table
+     * if it is unmounted yet, find out an empty entry */
+    efs_lock();
+
+    for (iter = &filesystem_table[0];
+            iter < &filesystem_table[EFS_FILESYSTEMS_MAX]; iter++)
+    {
+        /* check if it is an empty filesystem table entry? if it is, save fs */
+        if (iter->ops == NULL)
+            (fs == NULL) ? (fs = iter) : 0;
+        /* check if the PATH is mounted */
+        else if (strcmp(iter->path, path) == 0)
+        {
+            //rt_set_errno(-EINVAL);  errno change
+            printf("The path has been mounted.\n");
+            goto err1;
+        }
+    }
+
+    if ((fs == NULL) && (iter == &filesystem_table[EFS_FILESYSTEMS_MAX]))
+    {
+        //rt_set_errno(-ENOSPC);  errno change
+        printf("There is no space to mount this file system (%s).\n", filesystemtype);
+        goto err1;
+    }
+
+    /* register file system */
+    fs->path   = fullpath;
+    fs->ops    = *ops;
+    fs->dev_id = dev_id;
+    /* For UFS, record the real filesystem name */
+    fs->data = (void *) filesystemtype;
+
+    /* release filesystem_table lock */
+    efs_unlock();
+
+    /* open device, but do not check the status of device */
+    if (dev_id != NULL)
+    {
+        if (eris_device_open(fs->dev_id,
+                            ERIS_DEVICE_OFLAG_RDWR) != ERIS_EOK)
+        {
+            /* The underlying device has error, clear the entry. */
+            efs_lock();
+            memset(fs, 0, sizeof(struct efs_filesystem));
+
+            goto err1;
+        }
+    }
+
+    /* call mount of this filesystem */
+    if ((*ops)->mount(fs, rwflag, data) < 0)
+    {
+        /* close device */
+        if (dev_id != NULL)
+            eris_device_close(fs->dev_id);
+
+        /* mount failed */
+        efs_lock();
+        /* clear filesystem table entry */
+        memset(fs, 0, sizeof(struct efs_filesystem));
+
+        goto err1;
+    }
+
     return 0;
 
-//err1:
-    //efs_unlock();
-  //  vPortFree(fullpath);
+err1:
+    efs_unlock();
+    vPortFree(fullpath);
 
-    //return -1;
+    return -1;
 }
 
 int efs_unmount(const char *specialfile)
