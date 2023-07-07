@@ -299,7 +299,6 @@ int efs_ramfs_stat(struct efs_filesystem *fs,
                   S_IWUSR | S_IWGRP | S_IWOTH;
 
     st->st_size = dirent->size;
-    st->st_mtime = 0;
 
     return Eris_EOK;
 }

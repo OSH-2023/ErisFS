@@ -20,6 +20,150 @@
 #define EFS_F_EOF               0x04000000
 #define EFS_F_ERR               0x08000000
 
+/* open-only flags */
+#define O_RDONLY        0x0000          /* open for reading only */
+#define O_WRONLY        0x0001          /* open for writing only */
+#define O_RDWR          0x0002          /* open for reading and writing */
+#define O_ACCMODE       0x0003          /* mask for above modes */
+
+/*
+ * Kernel encoding of open mode; separate read and write bits that are
+ * independently testable: 1 greater than the above.
+ *
+ * XXX
+ * FREAD and FWRITE are excluded from the #ifdef KERNEL so that TIOCFLUSH,
+ * which was documented to use FREAD/FWRITE, continues to work.
+ */
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+#define FREAD           0x00000001
+#define FWRITE          0x00000002
+#endif
+#define O_NONBLOCK      0x00000004      /* no delay */
+#define O_APPEND        0x00000008      /* set append mode */
+
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+#define O_SHLOCK        0x00000010      /* open with shared file lock */
+#define O_EXLOCK        0x00000020      /* open with exclusive file lock */
+#define O_ASYNC         0x00000040      /* signal pgrp when data ready */
+#define O_FSYNC         O_SYNC          /* source compatibility: do not use */
+#define O_NOFOLLOW      0x00000100      /* don't follow symlinks */
+#endif /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
+#define O_CREAT         0x00000200      /* create if nonexistant */
+#define O_TRUNC         0x00000400      /* truncate to zero length */
+#define O_EXCL          0x00000800      /* error if already exists */
+
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+#define O_EVTONLY       0x00008000      /* descriptor requested for event notifications only */
+#endif
+
+
+#define O_NOCTTY        0x00020000      /* don't assign controlling terminal */
+
+
+#if __DARWIN_C_LEVEL >= 200809L
+#define O_DIRECTORY     0x00100000
+#endif
+
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+#define O_SYMLINK       0x00200000      /* allow open of a symlink */
+#endif
+
+//      O_DSYNC         0x00400000      /* synch I/O data integrity */
+
+
+#if __DARWIN_C_LEVEL >= 200809L
+#define O_CLOEXEC       0x01000000      /* implicitly set FD_CLOEXEC */
+#endif
+
+
+#if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
+#define O_NOFOLLOW_ANY  0x20000000      /* no symlinks allowed in path */
+#endif
+
+#if __DARWIN_C_LEVEL >= 200809L
+#define O_EXEC          0x40000000               /* open file for execute only */
+#define O_SEARCH        (O_EXEC | O_DIRECTORY)   /* open directory for search only */
+#endif
+
+typedef unsigned short mode_t;
+typedef int dev_t;
+typedef unsigned long long ino_t;
+typedef unsigned short nlink_t;
+typedef unsigned int uid_t;
+typedef unsigned int gid_t;
+typedef long long blkcnt_t;
+typedef int blksize_t;
+
+struct stat {
+	dev_t           st_dev;         /* [XSI] ID of device containing file */
+	ino_t           st_ino;         /* [XSI] File serial number */
+	mode_t          st_mode;        /* [XSI] Mode of file (see below) */
+	nlink_t         st_nlink;       /* [XSI] Number of hard links */
+	uid_t           st_uid;         /* [XSI] User ID of the file */
+	gid_t           st_gid;         /* [XSI] Group ID of the file */
+	dev_t           st_rdev;        /* [XSI] Device ID */
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+	struct  timespec st_atimespec;  /* time of last access */
+	struct  timespec st_mtimespec;  /* time of last data modification */
+	struct  timespec st_ctimespec;  /* time of last status change */
+#endif
+	off_t           st_size;        /* [XSI] file size, in bytes */
+	blkcnt_t        st_blocks;      /* [XSI] blocks allocated for file */
+	blksize_t       st_blksize;     /* [XSI] optimal blocksize for I/O */
+	__uint32_t      st_flags;       /* user defined flags for file */
+	__uint32_t      st_gen;         /* file generation number */
+	__int32_t       st_lspare;      /* RESERVED: DO NOT USE! */
+	__int64_t       st_qspare[2];   /* RESERVED: DO NOT USE! */
+};
+
+/*
+ * [XSI] The symbolic names for file modes for use as values of mode_t
+ * shall be defined as described in <sys/stat.h>
+ */
+#ifndef S_IFMT
+/* File type */
+#define S_IFMT          0170000         /* [XSI] type of file mask */
+#define S_IFIFO         0010000         /* [XSI] named pipe (fifo) */
+#define S_IFCHR         0020000         /* [XSI] character special */
+#define S_IFDIR         0040000         /* [XSI] directory */
+#define S_IFBLK         0060000         /* [XSI] block special */
+#define S_IFREG         0100000         /* [XSI] regular */
+#define S_IFLNK         0120000         /* [XSI] symbolic link */
+#define S_IFSOCK        0140000         /* [XSI] socket */
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+#define S_IFWHT         0160000         /* OBSOLETE: whiteout */
+#endif
+
+/* File mode */
+/* Read, write, execute/search by owner */
+#define S_IRWXU         0000700         /* [XSI] RWX mask for owner */
+#define S_IRUSR         0000400         /* [XSI] R for owner */
+#define S_IWUSR         0000200         /* [XSI] W for owner */
+#define S_IXUSR         0000100         /* [XSI] X for owner */
+/* Read, write, execute/search by group */
+#define S_IRWXG         0000070         /* [XSI] RWX mask for group */
+#define S_IRGRP         0000040         /* [XSI] R for group */
+#define S_IWGRP         0000020         /* [XSI] W for group */
+#define S_IXGRP         0000010         /* [XSI] X for group */
+/* Read, write, execute/search by others */
+#define S_IRWXO         0000007         /* [XSI] RWX mask for other */
+#define S_IROTH         0000004         /* [XSI] R for other */
+#define S_IWOTH         0000002         /* [XSI] W for other */
+#define S_IXOTH         0000001         /* [XSI] X for other */
+
+#define S_ISUID         0004000         /* [XSI] set user id on execution */
+#define S_ISGID         0002000         /* [XSI] set group id on execution */
+#define S_ISVTX         0001000         /* [XSI] directory restrcted delete */
+
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+#define S_ISTXT         S_ISVTX         /* sticky bit: not supported */
+#define S_IREAD         S_IRUSR         /* backward compatability */
+#define S_IWRITE        S_IWUSR         /* backward compatability */
+#define S_IEXEC         S_IXUSR         /* backward compatability */
+#endif
+#endif  /* !S_IFMT */
+
+
 /* */
 #define EFS_FIOFTRUNCATE  0x70820000U //FR
 
