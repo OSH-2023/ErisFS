@@ -242,7 +242,7 @@ int encryptSimple(const char * file_path, int key)
 
     for(int i = 0; i < bytes; i++)
     {
-        if(buffer[i] != EOF)
+        if(buffer[i] != EFS_F_EOF)
             buffer[i] = (buffer[i] + key) % 128;
     }
 
@@ -261,7 +261,7 @@ int decryptSimple(const char * file_path, int key)
     int fd;
     unsigned long int bytes;
     struct efs_file * d;
-    char* buffer;
+    char * buffer;
     buffer = (char *)pvPortMalloc(bytes * sizeof(char));
 
     if(fd = efs_open(file_path, O_RDWR, 0) < 0)
@@ -276,7 +276,7 @@ int decryptSimple(const char * file_path, int key)
 
     for(int i = 0; i < bytes; i++)
     {
-        if(buffer[i] != EOF)
+        if(buffer[i] != EFS_F_EOF)
             buffer[i] = (buffer[i] - key) % 128;
     }
 
