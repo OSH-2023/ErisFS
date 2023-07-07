@@ -414,7 +414,10 @@ int efs_fatfs_getdents(struct efs_file *file, struct dirent *dirp, uint32_t coun
     return index * sizeof(struct dirent);
 }
 
+<<<<<<< HEAD
 //fatfs funtions about fs
+=======
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
 static int get_disk(eris_device_t id)
 {
     int index;
@@ -490,7 +493,11 @@ __err:
     f_mount(NULL, (const TCHAR *)logic_nbr, 1);
     disk[index] = NULL;
     vPortFree(fat);
+<<<<<<< HEAD
     return fatfs_result_to_errno(result);
+=======
+    return fatfs_result_to_efs(result);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
 }
 
 int efs_fatfs_unmount(struct efs_filesystem *fs)
@@ -519,7 +526,11 @@ int efs_fatfs_unmount(struct efs_filesystem *fs)
     logic_nbr[0] = '0' + index;
     result = f_mount(NULL, logic_nbr, (unsigned char)0);
     if (result != FR_OK)
+<<<<<<< HEAD
         return fatfs_result_to_errno(result);
+=======
+        return fatfs_result_to_efs(result);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
 
     fs->data = NULL;
     disk[index] = NULL;
@@ -586,10 +597,17 @@ int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name)
             eris_device_open(dev_id, 3);
 
             /* just fill the FatFs[vol] in ff.c, or mkfs will failded!
+<<<<<<< HEAD
              * consider this condition: you just umount the fatfs fat,
              * then the space in FatFs[index] is released, and now do mkfs
              * on the disk, you will get a failure. so we need f_mount here,
              * just fill the FatFS[index] in fatfs fatfs to make mkfs work.
+=======
+             * consider this condition: you just umount the elm fat,
+             * then the space in FatFs[index] is released, and now do mkfs
+             * on the disk, you will get a failure. so we need f_mount here,
+             * just fill the FatFS[index] in elm fatfs to make mkfs work.
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
              */
             logic_nbr[0] = '0' + index;
             f_mount(fat, logic_nbr, (unsigned char)index);
@@ -623,7 +641,11 @@ int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name)
     if (result != FR_OK)
     {
         printf("[efs_fatfs.c]format error, result=%d\n", result);
+<<<<<<< HEAD
         return fatfs_result_to_errno(result);
+=======
+        return fatfs_result_to_efs(result);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
     }
 
     return 0;
@@ -652,7 +674,11 @@ int efs_fatfs_statfs(struct efs_filesystem *fs, struct statfs *buf)
     printf(driver, sizeof(driver), "%d:", f->pdrv);
     res = f_getfree(driver, &fre_clust, &f);
     if (res)
+<<<<<<< HEAD
         return fatfs_result_to_errno(res);
+=======
+        return fatfs_result_to_efs(res);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
 
     /* Get total sectors and free sectors */
     tot_sect = (f->n_fatent - 2) * f->csize;
@@ -676,9 +702,15 @@ int efs_fatfs_unlink(struct efs_filesystem *fs, const char *path)
 #if FF_VOLUMES > 1
     int vol;
     char *drivers_fn;
+<<<<<<< HEAD
     extern int fatfs_get_vol(FATFS * fat);
 
     /* add path for fatfs FatFS driver support */
+=======
+    extern int elm_get_vol(FATFS * fat);
+
+    /* add path for ELM FatFS driver support */
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
     vol = elm_get_vol((FATFS *)fs->data);
     if (vol < 0)
     {
@@ -701,7 +733,11 @@ int efs_fatfs_unlink(struct efs_filesystem *fs, const char *path)
 #if FF_VOLUMES > 1
     vPortFree(drivers_fn);
 #endif
+<<<<<<< HEAD
     return fatfs_result_to_errno(result);
+=======
+    return fatfs_result_to_efs(result);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
 }
 
 int efs_fatfs_rename(struct efs_filesystem *fs, const char *oldpath, const char *newpath)
@@ -722,7 +758,11 @@ int efs_fatfs_rename(struct efs_filesystem *fs, const char *oldpath, const char 
         return -1;
     }
 
+<<<<<<< HEAD
     drivers_oldfn = (char *)rt_malloc(256);
+=======
+    drivers_oldfn = (char *)pvPortMalloc(256);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
     if (drivers_fn == NULL)
     {
         printf('[efs_fatfs.c] failed to allocate space for drivers_fn in efs_fatfs_rename!\n');
@@ -742,7 +782,11 @@ int efs_fatfs_rename(struct efs_filesystem *fs, const char *oldpath, const char 
 #if FF_VOLUMES > 1
     vPortFree(drivers_oldfn);
 #endif
+<<<<<<< HEAD
     return fatfs_result_to_errno(result);
+=======
+    return fatfs_result_to_efs(result);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
 }
 
 int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat *st)
@@ -765,7 +809,11 @@ int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat *st)
         printf('[efs_fatfs.c] failed to get valid vol in efs_fatfs_stat!\n');
         return -1;
     }
+<<<<<<< HEAD
     drivers_fn = (char *)rt_malloc(256);
+=======
+    drivers_fn = (char *)pvPortMalloc(256);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
     if (drivers_fn == NULL)
     {
         printf('[efs_fatfs.c] failed to allocate space for drivers_fn in efs_fatfs_stat!\n');
@@ -840,7 +888,11 @@ int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat *st)
         } /* get st_mtime. */
     }
 
+<<<<<<< HEAD
     return fatfs_result_to_errno(result);
+=======
+    return fatfs_result_to_efs(result);
+>>>>>>> 464f7466be8e55e60908b6cfdbf279bc59cfaf00
 }
 
 time_t timegm(struct tm * const t)
