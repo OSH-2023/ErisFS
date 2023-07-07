@@ -358,7 +358,7 @@ int efs_unmount(const char *specialfile)
 
     /* close device, but do not check the status of device */
     if (fs->dev_id != NULL)
-        rt_device_close(fs->dev_id);
+        eris_device_close(fs->dev_id);
 
     if (fs->path != NULL)
         vPortFree(fs->path);
