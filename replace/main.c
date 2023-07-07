@@ -47,9 +47,9 @@ int init() {
 
  	while(SD_Init())//检测不到SD卡
 	{
-        printf("SD Card Error!\r\n");
+        printf("SD Card Error!\r\r\n");
 		delay_ms(500);					
-        printf("Please Check!\r\n");
+        printf("Please Check!\r\r\n");
 		delay_ms(500);
 		LED0=!LED0;//DS0闪烁
 	}
@@ -60,62 +60,67 @@ int init() {
     /* 2. filesystem init */
     efs_fatfs_init();
 
-
-
     /* 4. storage device mount */
-	uint8_t *rampool;
 
-	
-	if ((rampool = (uint8_t *)pvPortMalloc(1024)) == NULL)
-	{
-		printf("Failed to allocate memory for ramfs!\n");
-		return -1;
-	}
-	
-
-    if (efs_mount( NULL, "/", "ramfs", 0, efs_ramfs_create(rampool, 512)) != 0) //
+    if (efs_mount( NULL, "/", "fatfs", 0, ) != 0) //
     {
-        printf("File System on ram initialization failed!\n");
-        return -1;
+        printf("FATFS mount failed!\r\n");
+		if(efs_mkfs("fatfs", 0) != 0)
+		{
+			printf("FATFS mkfs failed!\r\n");
+			return -1;
+		}
+		else {
+			printf("FATFS mkfs successed!\r\n");
+			if (efs_mount( NULL, "/", "fatfs", 0, ) != 0)
+			{
+				printf("FATFS mount failed!\r\n");
+				return -1;
+			}
+			else 
+			{
+				printf("FATFS mount successed!\r\n");
+			}
+		}
     }
     else
     {
-        printf("File System on ram initialized!\n");
-        return 0;
+        printf("FATFS mount successed!\r\n");
     } 
+	return 0;
 }
 
 void rw_test() {
     int fd;
-	printf("\n[RW Test] START\n");
+	printf("\r\n[RW Test] START\r\n");
 	// ------- FIRST TEST --------
     // write to file
     fd = efs_open("/test.txt", O_CREAT|O_RDWR, 0);
-	//printf("1\n");
-	//printf("--- open1 finished ---\n");
+	//printf("1\r\n");
+	//printf("--- open1 finished ---\r\n");
     write(fd, "Hello World!", 13);
-	printf("write: Hello World!\n");
-	//printf("--- write1 finished ---\n");
+	printf("write: Hello World!\r\n");
+	//printf("--- write1 finished ---\r\n");
     close(fd);
-	//printf("--- close1 finished ---\n");
+	//printf("--- close1 finished ---\r\n");
 
     // read from file
     fd = efs_open("/test.txt", O_RDWR, 0);
-	//printf("--- open2 finished ---\n");
+	//printf("--- open2 finished ---\r\n");
     char buf[13];
     read(fd, buf, 13);
-	//printf("--- read2 finished ---\n");
+	//printf("--- read2 finished ---\r\n");
 	close(fd);
-	//printf("--- close2 finished ---\n");
+	//printf("--- close2 finished ---\r\n");
 
-	//printf("\n--- OUTPUT ---\n");
-    printf("read: %s\n", buf);
+	//printf("\r\n--- OUTPUT ---\r\n");
+    printf("read: %s\r\n", buf);
 
 	// ------- SECOND TEST --------
 	// write to file
     fd = efs_open("/test1.in", O_CREAT|O_RDWR, 0);
     write(fd, "HELLO WORLD aaaa!", 18);
-	printf("write: HELLO WORLD aaaa!\n");
+	printf("write: HELLO WORLD aaaa!\r\n");
     close(fd);
 
     // read from file
@@ -123,22 +128,22 @@ void rw_test() {
     char buf1[20];
     read(fd, buf1, 18);
 	close(fd);
-    printf("read: %s\n", buf1);
+    printf("read: %s\r\n", buf1);
 
-	printf("[RW Test] END\n");
+	printf("[RW Test] END\r\n");
 }
 
 void rename_test()
 {
-	printf("\n[Rename Test] START\n");
-	printf("/test1.in -> /test2.in\n");
+	printf("\r\n[Rename Test] START\r\n");
+	printf("/test1.in -> /test2.in\r\n");
 	//printf("%d", rename("/test.txt", "/test2.in"));
 	
 	if (rename("/test1.in", "/test2.in") < 0)
-        printf("ERROR\n");
+        printf("ERROR\r\n");
     else
 	{
-		printf("Reading: test2.in\n");
+		printf("Reading: test2.in\r\n");
 		
 		int fd = 0;
 		printf("%d", efs_open("/test2.in", O_RDWR, 0));
@@ -146,50 +151,50 @@ void rename_test()
     	char buf[20];
     	read(fd, buf, 18);
 		close(fd);
-		printf("%s\n", buf);
-		printf("OK\n");
+		printf("%s\r\n", buf);
+		printf("OK\r\n");
 	}
-	printf("[Rename Test] END\n");
+	printf("[Rename Test] END\r\n");
 }
 
 void stat_test()
 {
-	printf("\n[Stat Test] START\n");
-	printf("checking /test2.in\n");
+	printf("\r\n[Stat Test] START\r\n");
+	printf("checking /test2.in\r\n");
 
 	struct stat *buf;
 	if (stat("/test2.in", buf) < 0)
-        printf("ERROR\n");
+        printf("ERROR\r\n");
     else
 	{
-		printf("OK\n");
-		printf("st_size: %d\n", buf->st_size);
-		printf("st_mode: %d\n", buf->st_mode);
+		printf("OK\r\n");
+		printf("st_size: %d\r\n", buf->st_size);
+		printf("st_mode: %d\r\n", buf->st_mode);
 	}
-	printf("[Stat Test] END\n");
+	printf("[Stat Test] END\r\n");
 }
 
 void statfs_test()
 {
-	printf("\n[Statfs Test] START\n");
-	printf("checking /test2.in\n");
+	printf("\r\n[Statfs Test] START\r\n");
+	printf("checking /test2.in\r\n");
 
 	struct stat *buf;
 
 	if (statfs("/", buf) < 0)
-        printf("ERROR\n");
+        printf("ERROR\r\n");
     else
 	{
-		printf("OK\n");
-		printf("st_size: %d\n", buf->st_size);
-		printf("st_blocks: %d\n", buf->st_blocks);
+		printf("OK\r\n");
+		printf("st_size: %d\r\n", buf->st_size);
+		printf("st_blocks: %d\r\n", buf->st_blocks);
 	}
-	printf("[Statfs Test] END\n");
+	printf("[Statfs Test] END\r\n");
 }
 
 void lseek_test()
 {
-	printf("\n[Lseek Test] START\n");
+	printf("\r\n[Lseek Test] START\r\n");
 	int fd = 0;
 	fd = efs_open("/test2.in", O_CREAT|O_RDWR, 0);
 	char buf[20];
@@ -198,40 +203,40 @@ void lseek_test()
 		memset(buf, 0, 20);
 		lseek(fd, i, SEEK_SET);
 		read(fd, buf, 1);
-		printf("%d: %s\n", i, buf);
+		printf("%d: %s\r\n", i, buf);
 	}
 	close(fd);
 
-	printf("[Lseek Test] END\n");
+	printf("[Lseek Test] END\r\n");
 }
 
 void unlink_test()
 {
-	printf("\n[Unlink Test] START\n");
+	printf("\r\n[Unlink Test] START\r\n");
 	if (unlink("/test2.in") < 0)
-        printf("ERROR\n");
+        printf("ERROR\r\n");
     else
 	{
 		int fd = open("/test2.in", O_RDWR, 0);
 		if(fd > 0) 
-			printf("ERROR\n");
+			printf("ERROR\r\n");
 		else
-			printf("OK\n");
+			printf("OK\r\n");
 	}
 
-	printf("[Unlink Test] END\n");
+	printf("[Unlink Test] END\r\n");
 }
 
 void crypt_test()
 {
-	printf("\n[Crypt Test] START\n");
+	printf("\r\n[Crypt Test] START\r\n");
 
 	int fd = 0;
 	fd = efs_open("/test2.in", O_RDWR, 0);
 	char buf[20];
     read(fd, buf, 18);
 	close(fd);
-	printf("original: %s\n", buf);
+	printf("original: %s\r\n", buf);
 
 	encrypt("/test2.in", 7);
 
@@ -239,7 +244,7 @@ void crypt_test()
 	memset(buf, 0, 20);
     read(fd, buf, 18);
 	close(fd);
-	printf("encrypted: %s\n", buf);
+	printf("encrypted: %s\r\n", buf);
 
 	decrypt("/test2.in", 7);
 
@@ -247,64 +252,64 @@ void crypt_test()
 	memset(buf, 0, 20);
     read(fd, buf, 18);
 	close(fd);
-	printf("decrypted: %s\n", buf);
+	printf("decrypted: %s\r\n", buf);
 	
-	printf("[Crypt Test] END\n");
+	printf("[Crypt Test] END\r\n");
 }
 
 //not for ramfs
 void ftruncate_test() 
 {
-	printf("\n[Ftruncate Test] START\n");
+	printf("\r\n[Ftruncate Test] START\r\n");
 
 	int fd = 0;
 	fd = efs_open("/test2.in", O_RDWR, 0);
 	char buf[20];
     read(fd, buf, 18);
-	printf("original: %s\n", buf);
+	printf("original: %s\r\n", buf);
 
 	if(ftruncate(fd, 5) < 0)
 	{
-		printf("ERROR\n");
+		printf("ERROR\r\n");
 	}
 	else 
 	{
-		printf("OK\n");
+		printf("OK\r\n");
 	}
 
 	read(fd, buf, 18);
-	printf("truncated: %s\n", buf);
+	printf("truncated: %s\r\n", buf);
 
 	close(fd);
-	printf("[Ftruncate Test] END\n");
+	printf("[Ftruncate Test] END\r\n");
 }
 
 //not for ramfs
 void dir_test()
 {
-	printf("\n[Directory Test] START\n");
+	printf("\r\n[Directory Test] START\r\n");
 
 	int fd = 0;
 	fd = efs_open("/test_dir/test.txt", O_CREAT|O_RDWR, 0);
 	struct stat *buf;
 	if (mkdir("/test_dir", 0) < 0)
-        printf("ERROR\n");
+        printf("ERROR\r\n");
     else
 	{
     	// write to file
     	fd = efs_open("/test_dir/test.txt", O_CREAT|O_RDWR, 0);
-		//printf("1\n");
-		//printf("--- open1 finished ---\n");
+		//printf("1\r\n");
+		//printf("--- open1 finished ---\r\n");
     	write(fd, "Test info in /test_dir/test.txt", 32);
-		printf("write: Test info in /test_dir/test.txt\n");
+		printf("write: Test info in /test_dir/test.txt\r\n");
 		char buf[40];
     	read(fd, buf, 32);
-		printf("%s\n", buf);
-		printf("OK\n");
+		printf("%s\r\n", buf);
+		printf("OK\r\n");
 		
 	}
 	close(fd);
-	printf("[Stat Test] END\n");
+	printf("[Stat Test] END\r\n");
 }
 
 
@@ -321,14 +326,14 @@ int main(void)
 
 	//检测SD卡成功 		
     for(i=1; i <= 5; i++) {
-        printf("1\r\n");
+        printf("1\r\r\n");
         delay_ms(500);
     }
     //while(SD_Init())//检测不到SD卡
 	//{
-    //    printf("SD Card Error!\r\n");
+    //    printf("SD Card Error!\r\r\n");
 	//	delay_ms(500);					
-    //    printf("Please Check!\r\n");
+    //    printf("Please Check!\r\r\n");
 	//	delay_ms(500);
 	//	LED0=!LED0;//DS0闪烁
 	//}
@@ -407,7 +412,7 @@ void float_task(void *p_arg)
     while(1)
     {
         float_num+=0.01f;
-        printf("float_num 的值为: %.4f\r\n",float_num);
+        printf("float_num 的值为: %.4f\r\r\n",float_num);
         vTaskDelay(1000);
     }
 }

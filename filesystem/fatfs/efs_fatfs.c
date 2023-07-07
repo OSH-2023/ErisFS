@@ -916,3 +916,11 @@ static int __isleap(int year)
     /*  return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)); */
     return (!(year % 4) && ((year % 100) || !(year % 400)));
 }
+
+int efs_fatfs_init(void)
+{
+    /* register fatfs file system */
+    efs_register(&efs_fatfs);
+
+    return 0;
+}

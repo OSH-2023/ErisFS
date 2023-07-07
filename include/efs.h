@@ -31,16 +31,16 @@ struct efs_fdtable
     int used;               /* NEW! for check if full*/
 };
 
-#ifndef HAVE_DIR_STRUCTURE
-#define HAVE_DIR_STRUCTURE
-typedef struct
-{
-    int fd;                         /* directory file */
-    char buf[512];
-    int num;
-    int cur;
-}DIR;
-#endif
+//#ifndef HAVE_DIR_STRUCTURE
+//#define HAVE_DIR_STRUCTURE
+//typedef struct
+//{
+//    int fd;                         /* directory file */
+//    char buf[512];
+//    int num;
+//    int cur;
+//}DIR;
+//#endif
 
 /* Initialization of efs */
 int efs_init(void);
