@@ -24,7 +24,7 @@ struct eris_device SDcard = {
 };
 
 eris_device_t eris_device_find(const char *name){
-    if (eris_strcmp(name, "Apollo")) {
+    if (name != NULL) {
         eris_device_t result = &SDcard;
         return result;
     } else return NULL;
