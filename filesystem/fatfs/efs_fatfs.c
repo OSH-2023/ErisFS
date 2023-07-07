@@ -309,7 +309,14 @@ int efs_fatfs_write(struct efs_file *file, const void *buf, size_t len)
     }
     else 
     {
-        result = f_sync(fd);
+        result = f_write(fd, buf, len, &byte_write);
+        file->pos = fd->fptr;
+        file->vnode->size = f_size(fd);
+        if(result == FR_OK)
+        {
+            printf("FATFS WRITE OK\r\n");
+            return byte_write;
+        }
     }
 
     return fatfs_result_to_errno(result);
