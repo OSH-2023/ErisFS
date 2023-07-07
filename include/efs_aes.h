@@ -4,7 +4,7 @@
  * @Author: Tyrion Huu
  * @Date: 2023-07-05 09:39:28
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-07-05 17:12:25
+ * @LastEditTime: 2023-07-07 16:39:08
  */
 #include "headers.h"
 
@@ -37,7 +37,7 @@
  */
 #define xtime(x)   ((x << 1) ^ (((x >> 7) & 0x01) * 0x1b))
 
-int encryptAES(const char *);
+int decryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key);
 
-int decryptAES(const char *);
+int encryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key);
 

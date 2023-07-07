@@ -297,7 +297,7 @@ void crypt_test()
 	close(fd);
 	printf("original: %s\n", buf);
 
-	encrypt("/test2.in", 7);
+	encryptAES("/test2.in", "/test2_encrypted.in", 128, "keykeykeykeykeyk");
 
 	fd = efs_open("/test2.in", O_RDWR, 0);
 	memset(buf, 0, 20);
@@ -305,9 +305,9 @@ void crypt_test()
 	close(fd);
 	printf("encrypted: %s\n", buf);
 
-	decrypt("/test2.in", 7);
+	decryptAES("/test2_encrypted.in", "/test2_decrypted.in", 128, "keykeykeykeykeyk");
 
-	fd = efs_open("/test2.in", O_RDWR, 0);
+	fd = efs_open("/test2_decrypted.in", O_RDWR, 0);
 	memset(buf, 0, 20);
     read(fd, buf, 18);
 	close(fd);
@@ -418,9 +418,9 @@ void ReadWritePerformanceTest(void)
 		write(fd, "Test info in /test_dir/performance_test.txt", 45);
 	}
 	xTimerStop(write_timer, 0);
-	time = xTimerGetPeriod(TimerHandle_t write_timer);
-	printf("Written char count: %d\nTotal time spent: %d\n", 45000, time);
-	printf("Bits per second: %d bps\n", 45000 / time * 8);
+	time = xTimerGetPeriod(write_timer);
+	printf("Written char count: %d\nTotal time spent: %ld\n", 45000, time);
+	printf("Bits per second: %ld bps\n", 45000 / time * 8);
 	read_timer = xTimerCreate("read_timer", pdMS_TO_TICKS(5000), pdFALSE, (void *)0, vTimerCallback);
 	xTimerStart(read_timer, 0);
 	for (int i = 0; i < 1000; i++)
@@ -429,9 +429,9 @@ void ReadWritePerformanceTest(void)
 		read(fd, buf, 45);
 	}
 	xTimerStop(read_timer, 0);
-	time = xTimerGetPeriod(TimerHandle_t read_timer);
-	printf("Read char count: %d\nTotal time spent: %d\n", 45000, time);
-	printf("Bits per second: %d bps\n", 45000 / time * 8);
+	time = xTimerGetPeriod(read_timer);
+	printf("Read char count: %d\nTotal time spent: %ld\n", 45000, time);
+	printf("Bits per second: %ld bps\n", 45000 / time * 8);
 	close(fd);
 	return;
 }
