@@ -11,7 +11,7 @@ eris_device_t eris_device_find(const char *name){
     else return NULL;
 }
 
-eris_err_t  eris_device_open (eris_device_t dev, uint16_t oflag){
+eris_err_t eris_device_open (eris_device_t dev, uint16_t oflag){
     eris_err_t result = ERIS_EOK;
 
     /* parameter check */
@@ -77,7 +77,7 @@ eris_err_t  eris_device_open (eris_device_t dev, uint16_t oflag){
     return result;
 }
 
-eris_err_t  eris_device_close(eris_device_t dev){
+eris_err_t eris_device_close(eris_device_t dev){
     eris_err_t result = ERIS_EOK;
 
     /* parameter check */

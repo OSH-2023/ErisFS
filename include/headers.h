@@ -4,7 +4,7 @@
  * @Author: Tyrion Huu
  * @Date: 2023-06-09 08:16:17
  * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-07-07 16:02:07
+ * @LastEditTime: 2023-07-07 16:07:08
  */
 #ifndef PLUS_FAT_H
     #define PLUS_FAT_H
@@ -24,7 +24,6 @@
     #include "task.h"
     #include "list.h"
     #include "queue.h"
-    #include "timers.h"
 
     #include "efs.h"
     #include "efs_device.h"
