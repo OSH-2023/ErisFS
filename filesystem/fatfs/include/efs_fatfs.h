@@ -1,17 +1,7 @@
 #ifndef __EFS_FATFS_H__
 #define __EFS_FATFS_H__
 
-#include <headers.h>
-
-/**
- * block device geometry structure
- */
-struct eris_device_blk_geometry
-{
-    uint64_t sector_count;                           /**< count of sectors */
-    uint32_t bytes_per_sector;                       /**< number of bytes per sector */
-    uint32_t block_size;                             /**< number of bytes to erase one block */
-};
+#include "headers.h"
 
 int efs_fatfs_init(void);
 
@@ -29,23 +19,8 @@ int efs_fatfs_unlink(struct efs_filesystem *fs, const char *path);
 
 int efs_fatfs_rename(struct efs_filesystem *fs, const char *oldpath, const char *newpath);
 
-int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat *st);
+int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat_efs *st);
 
-static const struct efs_filesystem_ops efs_fatfs =
-{
-    "fatfs",
-    EFS_FS_FLAG_DEFAULT,
-    &efs_fatfs_fops,
-
-    efs_fatfs_mount,
-    efs_fatfs_unmount,
-    efs_fatfs_mkfs,
-    efs_fatfs_statfs,
-
-    efs_fatfs_unlink,
-    efs_fatfs_stat,
-    efs_fatfs_rename,
-};
 
 int efs_fatfs_open(struct efs_file *file);
 
@@ -64,18 +39,6 @@ int efs_fatfs_lseek(struct efs_file *file, off_t offset);
 
 int efs_fatfs_getdents(struct efs_file *file, struct dirent *dirp, uint32_t count);
 
-static const struct efs_file_ops efs_fatfs_fops =
-{
-    efs_fatfs_open,
-    efs_fatfs_close,
-    efs_fatfs_ioctl,
-    efs_fatfs_read,
-    efs_fatfs_write,
-    NULL, //flush - not used & unsupported
-    efs_fatfs_lseek,
-    efs_fatfs_getdents,
-    NULL, 
-};
 
 /* diskio */
 DSTATUS disk_initialize(BYTE drv);
@@ -89,5 +52,32 @@ DRESULT disk_read(BYTE drv, BYTE *buff, DWORD sector, UINT count);
 DRESULT disk_ioctl(BYTE drv, BYTE ctrl, void *buff);
 
 DWORD get_fattime(void);
+
+static struct efs_file_ops efs_fatfs_fops =
+{
+    efs_fatfs_open,
+    efs_fatfs_close,
+    efs_fatfs_ioctl,
+    efs_fatfs_read,
+    efs_fatfs_write,
+    NULL, //flush - not used & unsupported
+    efs_fatfs_lseek,
+    efs_fatfs_getdents,
+};
+static struct efs_filesystem_ops efs_fatfs =
+{
+    "fatfs",
+    0x00,
+    &efs_fatfs_fops,
+
+    efs_fatfs_mount,
+    efs_fatfs_unmount,
+    efs_fatfs_mkfs,
+    efs_fatfs_statfs,
+
+    efs_fatfs_unlink,
+    efs_fatfs_stat,
+    efs_fatfs_rename,
+};
 
 #endif

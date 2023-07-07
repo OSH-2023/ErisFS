@@ -1,15 +1,20 @@
-/*
- * @Description: 
- * @Version: 
- * @Author: Tyrion Huu
- * @Date: 2023-07-03 20:04:31
- * @LastEditors: Tyrion Huu
- * @LastEditTime: 2023-07-04 11:43:20
- */
 #ifndef __EFS_POSIX_H__
 #define __EFS_POSIX_H__
 
 #include "headers.h"
+
+
+#ifndef HAVE_DIR_STRUCTURE
+#define HAVE_DIR_STRUCTURE
+typedef struct
+{
+    int fd;                         /* directory file */
+    char buf[512];
+    int num;
+    int cur;
+}DIRE;
+#endif
+typedef unsigned short mode_t;
 
 typedef int ssize_t;
 
@@ -21,14 +26,14 @@ ssize_t read(int fd, void *buf, size_t len);
 
 ssize_t write(int fd, const void *buf, size_t len);
 
-int stat(const char *file, struct stat *buf);
+int stat_efs(const char *file, struct stat_efs *buf);
 
-int fstat_(int fd, struct stat *buf);
+int fstat_(int fd, struct stat_efs *buf);
 
 //modes are not used
 int creat(const char *path, mode_t mode);
 
-int statfs(const char *path, struct statfs *buf);
+int statfs_efs(const char *path, struct statfs *buf);
 
 int unlink(const char *pathname);
 
@@ -46,17 +51,17 @@ int mkdir(const char *path, mode_t mode);
 
 int rmdir(const char *pathname);
 
-DIR *opendir(const char *name);
+DIRE *opendir(const char *name);
 
-struct dirent *readdir(DIR *d);
+struct dirent *readdir(DIRE *d);
 
-long telldir(DIR *d);
+long telldir(DIRE *d);
 
-void seekdir(DIR *d, long offset);
+void seekdir(DIRE *d, long offset);
 
-void rewinddir(DIR *d);
+void rewinddir(DIRE *d);
 
-int closedir(DIR *d);
+int closedir(DIRE *d);
 
 
 

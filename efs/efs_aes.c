@@ -75,13 +75,15 @@ void KeyExpansion(void)
 {
     unsigned char temp_byte[4]; // store 4 temp Byte(1 word) when generate subkey
     unsigned char a0;       // temp - store byte when execute RotWord function
+    int i;
+    int j;
     /**
      * First Round subKey = Main/Input key, Divide to {NBK} block (each 32bits) [w0, w1, w2, w3]
      * each block divide to 4 sub_block(8bit)
      * Ex: AES-128, NBK = 4, 4 block W0 ~ W3
      * Ex: AES-256, NBK = 8, 8 block W0 ~ W7
      */
-    for (int i = 0; i < NBK; i++)
+    for (i = 0; i < NBK; i++)
     {
         round_key[i * 4] = key[i * 4];
         round_key[i * 4 + 1] = key[i * 4 + 1];
@@ -93,9 +95,9 @@ void KeyExpansion(void)
      * Ex: AES-128: i= 4 ~ 43, need 11 4block(128bit), need 44 word (W0 ~ W43).
      * Ex: AES-256: i = 8 ~ 59, need 15 4block(128bit), need 60 word (W0~ W59)
      */
-    for (int i = NBK; i < (NB * (NR + 1)); i++)
+    for (i = NBK; i < (NB * (NR + 1)); i++)
     {
-        for (int j = 0; j < 4; j++)
+        for (j = 0; j < 4; j++)
         { 
             // process 4 byte(1 word) at a time
             temp_byte[j] = round_key[(i - 1) * 4 + j];  // need to -1, because round_key[i] is not generated yet

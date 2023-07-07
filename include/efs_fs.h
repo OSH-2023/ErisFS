@@ -32,7 +32,7 @@ struct efs_filesystem_ops
     int (*statfs)   (struct efs_filesystem *fs, struct statfs *buf);
 
     int (*unlink)   (struct efs_filesystem *fs, const char *pathname);
-    int (*stat)     (struct efs_filesystem *fs, const char *filename, struct stat *buf);
+    int (*stat)     (struct efs_filesystem *fs, const char *filename, struct stat_efs *buf);
     int (*rename)   (struct efs_filesystem *fs, const char *oldpath, const char *newpath);
 };
 

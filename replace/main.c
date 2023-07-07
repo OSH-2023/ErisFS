@@ -32,8 +32,6 @@ void led1_task(void *p_arg); //任务函数
 TaskHandle_t FLOATTask_Handler; //任务句柄
 void float_task(void *p_arg); //任务函数
 
-FATFS *fs[1];
-
 int init() {
 
     HAL_Init();                     //初始化HAL库   
@@ -62,55 +60,37 @@ int init() {
 
     /* 4. storage device mount */
 
-    if (efs_mount( NULL, "/", "fatfs", 0, ) != 0) //
-    {
-        printf("FATFS mount failed!\r\n");
-		if(efs_mkfs("fatfs", 0) != 0)
-		{
-			printf("FATFS mkfs failed!\r\n");
-			return -1;
-		}
-		else {
-			printf("FATFS mkfs successed!\r\n");
-			if (efs_mount( NULL, "/", "fatfs", 0, ) != 0)
-			{
-				printf("FATFS mount failed!\r\n");
-				return -1;
-			}
-			else 
-			{
-				printf("FATFS mount successed!\r\n");
-			}
-		}
-    }
-    else
-    {
-        printf("FATFS mount successed!\r\n");
-    } 
 	return 0;
 }
 
 void rw_test() {
     int fd;
 	printf("\r\n[RW Test] START\r\n");
+	printf("fd1 = %d\r\n",fd);
 	// ------- FIRST TEST --------
     // write to file
     fd = efs_open("/test.txt", O_CREAT|O_RDWR, 0);
+	printf("fd2 = %d\r\n",fd);
 	//printf("1\r\n");
 	//printf("--- open1 finished ---\r\n");
     write(fd, "Hello World!", 13);
+	printf("fd3 = %d\r\n",fd);
 	printf("write: Hello World!\r\n");
 	//printf("--- write1 finished ---\r\n");
     close(fd);
+	printf("fd4 = %d\r\n",fd);
 	//printf("--- close1 finished ---\r\n");
 
     // read from file
     fd = efs_open("/test.txt", O_RDWR, 0);
+	printf("fd5 = %d\r\n",fd);
 	//printf("--- open2 finished ---\r\n");
     char buf[13];
     read(fd, buf, 13);
+	printf("fd6 = %d\r\n",fd);
 	//printf("--- read2 finished ---\r\n");
 	close(fd);
+	printf("fd7 = %d\r\n",fd);
 	//printf("--- close2 finished ---\r\n");
 
 	//printf("\r\n--- OUTPUT ---\r\n");
@@ -118,15 +98,21 @@ void rw_test() {
 
 	// ------- SECOND TEST --------
 	// write to file
+	int r;
     fd = efs_open("/test1.in", O_CREAT|O_RDWR, 0);
-    write(fd, "HELLO WORLD aaaa!", 18);
+	printf("fd8 = %d\r\n",fd);
+    r = write(fd, "HELLO WORLD aaaa!", 18);
+	printf("r = %d\r\n",r);
 	printf("write: HELLO WORLD aaaa!\r\n");
     close(fd);
-
+	printf("fd10 = %d\r\n",fd);
     // read from file
     fd = efs_open("/test1.in", O_RDWR, 0);
+	printf("fd11 = %d\r\n",fd);
     char buf1[20];
-    read(fd, buf1, 18);
+    r = read(fd, buf1, 18);
+	printf("r = %d\r\n",r);
+	printf("fd12 = %d\r\n",fd);
 	close(fd);
     printf("read: %s\r\n", buf1);
 
@@ -136,10 +122,10 @@ void rw_test() {
 void rename_test()
 {
 	printf("\r\n[Rename Test] START\r\n");
-	printf("/test1.in -> /test2.in\r\n");
+	printf("/test.txt -> /test2.in\r\n");
 	//printf("%d", rename("/test.txt", "/test2.in"));
 	
-	if (rename("/test1.in", "/test2.in") < 0)
+	if (rename("/test.txt", "/test2.in") < 0)
         printf("ERROR\r\n");
     else
 	{
@@ -162,15 +148,15 @@ void stat_test()
 	printf("\r\n[Stat Test] START\r\n");
 	printf("checking /test2.in\r\n");
 
-	struct stat *buf;
-	if (stat("/test2.in", buf) < 0)
-        printf("ERROR\r\n");
-    else
-	{
-		printf("OK\r\n");
-		printf("st_size: %d\r\n", buf->st_size);
-		printf("st_mode: %d\r\n", buf->st_mode);
-	}
+	struct stat_efs *buf;
+	//if (stat_efs("/test2.in", buf) < 0)
+    //    printf("ERROR\r\n");
+    //else
+	//{
+	//	printf("OK\r\n");
+	//	printf("st_size: %d\r\n", buf->st_size);
+	//	printf("st_mode: %d\r\n", buf->st_mode);
+	//}
 	printf("[Stat Test] END\r\n");
 }
 
@@ -179,16 +165,16 @@ void statfs_test()
 	printf("\r\n[Statfs Test] START\r\n");
 	printf("checking /test2.in\r\n");
 
-	struct stat *buf;
+	struct statfs *buf;
 
-	if (statfs("/", buf) < 0)
-        printf("ERROR\r\n");
-    else
-	{
-		printf("OK\r\n");
-		printf("st_size: %d\r\n", buf->st_size);
-		printf("st_blocks: %d\r\n", buf->st_blocks);
-	}
+	//if (statfs_efs("/", buf) < 0)
+    //    printf("ERROR\r\n");
+    //else
+	//{
+	//	printf("OK\r\n");
+	//	printf("f_bsize: %d\r\n", buf->f_bsize);
+	//	printf("f_blocks: %d\r\n", buf->f_blocks);
+	//}
 	printf("[Statfs Test] END\r\n");
 }
 
@@ -217,7 +203,7 @@ void unlink_test()
         printf("ERROR\r\n");
     else
 	{
-		int fd = open("/test2.in", O_RDWR, 0);
+		int fd = efs_open("/test2.in", O_RDWR, 0);
 		if(fd > 0) 
 			printf("ERROR\r\n");
 		else
@@ -238,7 +224,7 @@ void crypt_test()
 	close(fd);
 	printf("original: %s\r\n", buf);
 
-	encrypt("/test2.in", 7);
+	encryptSimple("/test2.in", 7);
 
 	fd = efs_open("/test2.in", O_RDWR, 0);
 	memset(buf, 0, 20);
@@ -246,7 +232,7 @@ void crypt_test()
 	close(fd);
 	printf("encrypted: %s\r\n", buf);
 
-	decrypt("/test2.in", 7);
+	decryptSimple("/test2.in", 7);
 
 	fd = efs_open("/test2.in", O_RDWR, 0);
 	memset(buf, 0, 20);
@@ -291,7 +277,6 @@ void dir_test()
 
 	int fd = 0;
 	fd = efs_open("/test_dir/test.txt", O_CREAT|O_RDWR, 0);
-	struct stat *buf;
 	if (mkdir("/test_dir", 0) < 0)
         printf("ERROR\r\n");
     else
@@ -315,20 +300,48 @@ void dir_test()
 
 int main(void)
 {
-    FIL *fd = NULL;
-    char buf[13];
-    UINT temp;
     int i;
-    FRESULT result;
-    BYTE work[2048];
 
     init();
+
+
 
 	//检测SD卡成功 		
     for(i=1; i <= 5; i++) {
         printf("1\r\r\n");
         delay_ms(500);
     }
+
+	if(efs_mkfs("fatfs", 0) != 0)
+		{
+			printf("FATFS mkfs failed!\r\n");
+		}
+
+    if (efs_mount(0, "/", "fatfs", 0, 0 ) != 0) //
+    {
+        printf("FATFS mount failed!\r\n");
+		if(efs_mkfs("fatfs", 0) != 0)
+		{
+			efs_mount( NULL, "/", "fatfs", 0, 0);
+			printf("FATFS mkfs failed!\r\n");
+		}
+		else {
+			printf("FATFS mkfs successed!\r\n");
+			if (efs_mount(0, "/", "fatfs", 0, 0) != 0)
+			{
+				printf("FATFS mount failed!\r\n");
+			}
+			else 
+			{
+				printf("FATFS mount successed!\r\n");
+			}
+		}
+    }
+    else
+    {
+        printf("FATFS mount successed!\r\n");
+    } 
+
     //while(SD_Init())//检测不到SD卡
 	//{
     //    printf("SD Card Error!\r\r\n");

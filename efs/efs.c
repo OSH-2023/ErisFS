@@ -367,7 +367,7 @@ void fdt_fd_release(struct efs_fdtable* fdt, int fd)
 void fd_release(int fd) 
 {
     struct efs_fdtable *fdt = efs_fdtable_get();
-    return fdt_fd_release(fdt, fd);
+    fdt_fd_release(fdt, fd);
 }
 
 /* init efs_file */

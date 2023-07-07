@@ -515,17 +515,6 @@ extern "C" {
 #define DT_REG          0x01
 #define DT_DIR          0x02
 
-#ifndef HAVE_DIR_STRUCTURE
-#define HAVE_DIR_STRUCTURE
-typedef struct
-{
-    int fd;                         /* directory file */
-    char buf[512];
-    int num;
-    int cur;
-}DIR;
-#endif
-
 #ifndef HAVE_DIRENT_STRUCTURE
 #define HAVE_DIRENT_STRUCTURE
 
@@ -540,13 +529,6 @@ struct dirent
 };
 #endif
 
-int            closedir(DIR *);
-DIR           *opendir(const char *);
-struct dirent *readdir(DIR *);
-int            readdir_r(DIR *, struct dirent *, struct dirent **);
-void           rewinddir(DIR *);
-void           seekdir(DIR *, long int);
-long           telldir(DIR *);
 
 #ifdef __cplusplus
 }

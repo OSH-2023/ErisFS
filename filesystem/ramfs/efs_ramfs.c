@@ -282,7 +282,7 @@ int efs_ramfs_open(struct efs_file *file)
 
 int efs_ramfs_stat(struct efs_filesystem *fs,
                    const char            *path,
-                   struct stat           *st)
+                   struct stat_efs           *st)
 {
     size_t size;
     struct ramfs_dirent *dirent;
@@ -372,7 +372,7 @@ int efs_ramfs_unlink(struct efs_filesystem *fs, const char *path)
 
 int efs_ramfs_rename(struct efs_filesystem *fs,
                      const char            *oldpath,
-                     const char            *newpath)
+                     char            *newpath)
 {
     struct ramfs_dirent *dirent;
     struct efs_ramfs *ramfs;

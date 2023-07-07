@@ -169,3 +169,4 @@ eris_ssize_t eris_device_write(eris_device_t dev,
                             eris_size_t   size);
 
 #endif
+														
