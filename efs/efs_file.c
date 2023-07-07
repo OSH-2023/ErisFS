@@ -1,5 +1,4 @@
 #include "headers.h"
-#include <unistd.h>
 
 #define EFS_FNODE_HASH_NR 128
 
@@ -528,7 +527,6 @@ int efs_file_stat(const char *path, struct stat *buf)
                         S_IWUSR | S_IWGRP | S_IWOTH;
         buf->st_mode |= S_IFDIR | S_IXUSR | S_IXGRP | S_IXOTH;
         buf->st_size    = 0;
-        buf->st_mtime   = 0;
 
         vPortFree(fullpath);
 
