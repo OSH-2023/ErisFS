@@ -37,6 +37,12 @@
  */
 #define xtime(x)   ((x << 1) ^ (((x >> 7) & 0x01) * 0x1b))
 
+/*
+ *  @param file_path: input file path
+    @param new_file: output file path
+    @param key_size: key size
+    @param input_key: input key
+*/
 int decryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key);
 
 int encryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key);

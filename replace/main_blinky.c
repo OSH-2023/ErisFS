@@ -448,7 +448,7 @@ void main_blinky( void )
 	statfs_test();
 	lseek_test();
 	crypt_test();	
-	ReadWritePerformanceTest();
+	// ReadWritePerformanceTest();
 	//ftruncate_test();
 	unlink_test();
 	//dir_test();

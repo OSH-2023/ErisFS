@@ -210,14 +210,13 @@ void ShiftRows(void)
 }
 
 /** 
- *  MixColumns() 混合行運算函數 
- *  執行4次(4 sub_block) 每次的column執行如下
+ *  MixColumns()
+ *  4 sub_block) 
  *  c0     [2 3 1 1   [b0  
  *  c1      1 2 3 1    b1
  *  c2  =   1 1 2 3    b2
  *  c3      3 1 1 2]   b3]
- * 
- * 此為一線性轉換(linear transform)
+ *  linear transform
  */
 void MixColumns(void)
 {
@@ -344,13 +343,12 @@ void ShiftRowsInverse(void)
 
 /** InvMixColumns()  
  * 
- *  執行4次(4 sub_block) 每次的column執行如下
+ *  4 sub_block
  *  b0     [14 11 13  9   [d0  
  *  b1       9 14 11 13    d1
  *  b2  =   13  9 14 11    d2
  *  b3      11 13  9 14]   d3]
  *  
- *  詳細執行可查看wiki: https://en.wikipedia.org/wiki/Rijndael_MixColumns
  */
 void MixColumnsInverse(void)
 {
@@ -420,10 +418,14 @@ void CipherInverse(void)
     return;
 }
 
-// key_size is 128 or 192 or 256
-// input_key is 16 or 24 or 32 bytes    (char)
-// file_path is input file path
-// new_file is output file path
+/**
+ *  encryptAES()  AES file encryption function
+ *  @param file_path   : file path
+ *  @param new_file    : new file path
+ *  @param key_size    : key size
+ *  @param input_key   : input key
+ *  @return            : 0 success, -1 fail
+ */
 int encryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key)
 {
     int fd0, fd1;                       // file descriptor
@@ -483,9 +485,8 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
     struct efs_file * d = fd_get(fd0);
     unsigned long int bytes = d->vnode->size;
     unsigned long int a = bytes/16;
-    int i=0;
-    //printf("---------------------------------------------\r\n");
-    while(i++<= a)
+    int i = 0;
+    while(i++ <= a)
     {
         /**
          *  read file, read 16 char (1block, 128bit) 
@@ -524,29 +525,23 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
             lseek(fd1, blockNum * 16 + c, SEEK_SET);
             write(fd1, &out[c], 1);
         }
-        
-        // print plaintext(character format) in Integer Format
-        //printf("Block %d(128 bits) - plaintext.txt(Int format) : ", blockNum);
-        //printUnsignedCharArrayToInt(in, 16);    
-        //printf("\r\n");
-        // print Cipher(character format) in Integer Format
-        //printf("Block %d(128 bits) - Cipher(Int format) : ", blockNum); // print ciphertext(char) in integer format
-        //printUnsignedCharArrayToInt(out, 16);
-        //printf("\r\n");
         blockNum++;
     }
     close(fd0);
     lseek(fd1, 0, SEEK_SET);
     close(fd1);
-    //printf("------------------------------------------------\r\n");
-    //printf("Encryption process complete !! \r\n");
     return 0;
 }
 
-// key_size is 128 or 192 or 256
-// input_key is 16 or 24 or 32 bytes    (char)
-// file_path is input file path
-// new_file is output file path
+/**
+ * this function will write some specified length data to file system.
+ *  @param file_path the file path to be written.
+ *  @param new_file the file path to be written.
+ *  @param key_size the key size to be written. (128, 192, 256)
+ *  @param input_key the key to be written. (16, 24, 32 bytes)
+ * 
+ *  @return -1 if an error occurred; 0 otherwise.
+ */
 int decryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key)
 {   
     int fd0, fd1; // file descriptor
@@ -606,9 +601,8 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
     struct efs_file * d = fd_get(fd0);
     unsigned long int bytes = d->vnode->size;
     unsigned long int a = bytes/16;
-    int i=0;
-    // printf("---------------------------------------------\r\n");
-    while(++i<=a)
+    int i = 0;
+    while(++i <= a)
     {
         /**
          *  read file, read 16 char (1block, 128bit) 
@@ -640,23 +634,11 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
             lseek(fd1, blockNum * 16 + c, SEEK_SET);
             write(fd1, &out[c], 1);
         }
-
-        // print Cipher(character format) in Integer Format
-        // print plaintext(character format) in Integer Format
-        // printf("Block %d(128 bits) - plaintext.txt(Int format) : ", blockNum);
-        //printUnsignedCharArrayToInt(in, 16);    
-        // printf("\r\n");
-        // print Decrypted plaintext(character format) in Integer Format
-        // printf("Block %d(128 bits) - Cipher(Int format) : ", blockNum); 
-        //printUnsignedCharArrayToInt(out, 16);
-        // printf("\r\n");
         blockNum++;
     }
 
     close(fd0);
     lseek(fd1, 0, SEEK_SET);
     close(fd1);
-    //printf("------------------------------------------------\r\n");
-    //printf("Decryption process complete !! \r\n");
     return 0;
 }
