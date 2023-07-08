@@ -430,7 +430,7 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
     int EOF_flag = 0;                   // detect end of file flag
     unsigned char plaintext_block[16];  // plaintext, encrypt each block (128bit) once
 
-    printf("----- AES file encryption -----\n");
+    //printf("----- AES file encryption -----\r\n");
 
     NBK = key_size / 32;        // Number of block of key
     NR   = NBK + 6;             // Number of round(NR)
@@ -466,14 +466,14 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
 
     if ((fd0 = efs_open(file_path, O_RDWR, 0)) == -1)
     {
-        printf("Open file Error...\n");
+        printf("Open file Error...\r\n");
         return -1;
     }
 
     /* get output Ciphertext */
     if ((fd1 = efs_open(new_file, O_RDWR | O_CREAT, 0)) == -1)
     {
-        printf("Create file Error...\n");
+        printf("Create file Error...\r\n");
         return -1;
     }
 
@@ -484,7 +484,7 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
     unsigned long int bytes = d->vnode->size;
     unsigned long int a = bytes/16;
     int i=0;
-    printf("---------------------------------------------\n");
+    //printf("---------------------------------------------\r\n");
     while(i++<= a)
     {
         /**
@@ -526,20 +526,20 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
         }
         
         // print plaintext(character format) in Integer Format
-        printf("Block %d(128 bits) - plaintext.txt(Int format) : ", blockNum);
-        printUnsignedCharArrayToInt(in, 16);    
-        printf("\n");
+        //printf("Block %d(128 bits) - plaintext.txt(Int format) : ", blockNum);
+        //printUnsignedCharArrayToInt(in, 16);    
+        //printf("\r\n");
         // print Cipher(character format) in Integer Format
-        printf("Block %d(128 bits) - Cipher(Int format) : ", blockNum); // print ciphertext(char) in integer format
-        printUnsignedCharArrayToInt(out, 16);
-        printf("\n");
+        //printf("Block %d(128 bits) - Cipher(Int format) : ", blockNum); // print ciphertext(char) in integer format
+        //printUnsignedCharArrayToInt(out, 16);
+        //printf("\r\n");
         blockNum++;
     }
     close(fd0);
     lseek(fd1, 0, SEEK_SET);
     close(fd1);
-    printf("------------------------------------------------\n");
-    printf("Encryption process complete !! \n");
+    //printf("------------------------------------------------\r\n");
+    //printf("Encryption process complete !! \r\n");
     return 0;
 }
 
@@ -553,7 +553,7 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
     int EOF_flag = 0; // detect end of file flag
     unsigned char Ciphertext_block[16]; // plaintext, encrypt each block (128bit) once
 
-    printf("*** AES decryption System ***\n");
+    //printf("*** AES decryption System ***\r\n");
 
     NBK = key_size / 32;     // Number of block of key
     NR   = NBK + 6;         // Number of round(NR)
@@ -589,14 +589,14 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
 
     if ((fd0 = efs_open(file_path, O_RDONLY, 0)) == -1)
     {
-        printf("Open file Error...\n");
+        printf("Open file Error...\r\n");
         return -1;
     }
 
     /* get output decrypted plaintext */
     if ((fd1 = efs_open(new_file, O_WRONLY | O_CREAT, 0)) == -1)
     {
-        printf("Create file Error...\n");
+        printf("Create file Error...\r\n");
         return -1;
     }
 
@@ -607,7 +607,7 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
     unsigned long int bytes = d->vnode->size;
     unsigned long int a = bytes/16;
     int i=0;
-    printf("---------------------------------------------\n");
+    // printf("---------------------------------------------\r\n");
     while(++i<=a)
     {
         /**
@@ -643,20 +643,20 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
 
         // print Cipher(character format) in Integer Format
         // print plaintext(character format) in Integer Format
-        printf("Block %d(128 bits) - plaintext.txt(Int format) : ", blockNum);
-        printUnsignedCharArrayToInt(in, 16);    
-        printf("\n");
+        // printf("Block %d(128 bits) - plaintext.txt(Int format) : ", blockNum);
+        //printUnsignedCharArrayToInt(in, 16);    
+        // printf("\r\n");
         // print Decrypted plaintext(character format) in Integer Format
-        printf("Block %d(128 bits) - Cipher(Int format) : ", blockNum); 
-        printUnsignedCharArrayToInt(out, 16);
-        printf("\n");
+        // printf("Block %d(128 bits) - Cipher(Int format) : ", blockNum); 
+        //printUnsignedCharArrayToInt(out, 16);
+        // printf("\r\n");
         blockNum++;
     }
 
     close(fd0);
     lseek(fd1, 0, SEEK_SET);
     close(fd1);
-    printf("------------------------------------------------\n");
-    printf("Decryption process complete !! \n");
+    //printf("------------------------------------------------\r\n");
+    //printf("Decryption process complete !! \r\n");
     return 0;
 }

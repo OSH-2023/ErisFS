@@ -113,7 +113,7 @@ int efs_file_is_open(const char * pathname)
  */
 int efs_file_open(struct efs_file * fd, const char * path, int flags)
 {
-    printf("[efs_file.c] efs_file_open: path: %s\r\n", path);
+    //printf("[efs_file.c] efs_file_open: path: %s\r\n", path);
     struct efs_filesystem * fs;
     char * fullpath;
     int result;
@@ -123,27 +123,23 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     /* parameter check */
     if (fd == NULL)
     {
-        printf("1\r\r\n");
+        //printf("1\r\r\n");
         return -pdFREERTOS_ERRNO_EINVAL;
     }
 
     /* make sure we have an absolute path */
     fullpath = efs_normalize_path(NULL, path);
-    printf("[efs_file.c] efs_file_open: fullpath: %s\r\n", fullpath);
     if (fullpath == NULL)
     {
-         printf("2\r\r\n");
+        //printf("2\r\r\n");
         return -pdFREERTOS_ERRNO_ENOMEM;
     }
-
-    printf("open file: %s \r\n", fullpath);
 
     efs_fm_lock();
     /* vnode find */
     vnode = efs_vnode_find(fullpath, &hash_head);
     if (vnode)
     {
-        //printf("[efs_file.c] efs_file_open: vnode exist");
         vnode->ref_count++;
         fd->pos   = 0;
         fd->vnode = vnode;
@@ -152,7 +148,6 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     }
     else
     {
-        //printf("[efs_file.c] efs_file_open: vnode not exist, creating vnode\r\n");
         /* find filesystem */
         fs = efs_filesystem_lookup(fullpath);
 
@@ -161,12 +156,11 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         {
             efs_fm_unlock();
             vPortFree(fullpath); /* release path */
-            printf("[efs_file.c] efs_file_open: can't find mounted filesystem on this path: %s\r\n", fullpath);
+            //printf("[efs_file.c] efs_file_open: can't find mounted filesystem on this path: %s\r\n", fullpath);
             //printf("3\r\r\n");
             return -pdFREERTOS_ERRNO_ENOENT;
         }
 
-        //vnode = pvPortCalloc(1, sizeof(struct efs_vnode));
         vnode = pvPortMalloc(sizeof(struct efs_vnode));
 
         // not taken
@@ -174,12 +168,10 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
         {
             efs_fm_unlock();
             vPortFree(fullpath); /* release path */
-            printf("[efs_file.c] efs_file_open: can't malloc vnode!\r\n");
-            //printf("4\r\r\n");
+            //printf("[efs_file.c] efs_file_open: can't malloc vnode!\r\n");
             return -pdFREERTOS_ERRNO_ENOMEM;
         }
         vnode->ref_count = 1;
-        //printf("[efs_file.c] efs_file_open: open in filesystem: %s\r\n", fs->ops->name);
         vnode->fs    = fs;             /* set file system */
         vnode->fops  = fs->ops->fops;  /* set file ops */
 
@@ -196,8 +188,6 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             {
                 vnode->path = strdup_efs(efs_subdir(fs->path, fullpath));
             }
-            printf("[efs_file.c] efs_file_open: Actual file path: %s\r\n", vnode->path);
-            //printf("[efs_fs.c] test\r\n");
         }
         else
         {
@@ -215,24 +205,21 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             }
             vPortFree(vnode->path);
             vPortFree(vnode);
-            printf("[efs_file.c] efs_file_open: the filesystem didn't implement this open function");
+            //printf("[efs_file.c] efs_file_open: the filesystem didn't implement this open function");
             return -pdFREERTOS_ERRNO_EINTR;
         }
 
         fd->pos   = 0;
         fd->vnode = vnode;
-        printf("DEBUG 5\r\n");
 
         /* insert vnode to hash */
         eris_list_insert_after(hash_head, &vnode->list);
     }
     fd->flags = flags;
-    printf("DEBUG 6\r\n");
     // not taken
     if ((result = vnode->fops->open(fd)) < 0)
     {
         vnode->ref_count--;
-        printf("DEBUG 8\r\n");
         if (vnode->ref_count == 0)
         {
             /* remove from hash */
@@ -246,18 +233,15 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             fd->vnode = NULL;
             vPortFree(vnode);
         }
-        printf("DEBUG 9\r\n");
-        //printf("[efs_file.c] test\r\n");
         efs_fm_unlock();
-        printf("[efs_file.c] efs_file_open: %s open failed!\r\n", fullpath);
+        //printf("[efs_file.c] efs_file_open: %s open failed!\r\n", fullpath);
 
         return result;
     }
-    printf("DEBUG 7\r\n");
     fd->flags |= EFS_F_OPEN;    // need solving 
     if (flags & O_DIRECTORY)
     {
-        printf("HI\r\n");
+        //printf("HI\r\n");
         fd->vnode->type = FT_DIRECTORY; // need solving 
         fd->flags |= EFS_F_DIRECTORY;   // need solving 
     }
@@ -357,13 +341,13 @@ int efs_file_getdents(struct efs_file * fd, struct dirent * dirp, size_t nbytes)
     /* parameter check */
     if (fd == NULL)
     {
-        printf("[efs_file.c] efs_file_getdents: fd is NULL\r\n");
+        //printf("[efs_file.c] efs_file_getdents: fd is NULL\r\n");
         return -pdFREERTOS_ERRNO_EINVAL;   
     }
 
     if (fd->vnode->type != FT_DIRECTORY)    
     {
-        printf("[efs_file.c] efs_file_getdents: fd is not a dir\r\n");
+        //printf("[efs_file.c] efs_file_getdents: fd is not a dir\r\n");
         return -pdFREERTOS_ERRNO_EINVAL;
     }
 
@@ -373,7 +357,7 @@ int efs_file_getdents(struct efs_file * fd, struct dirent * dirp, size_t nbytes)
     }
     else 
     {
-        printf("[efs_file.c] efs_file_getdents: getdents is NULL\r\n");
+        //printf("[efs_file.c] efs_file_getdents: getdents is NULL\r\n");
     }
 
     return -pdFREERTOS_ERRNO_EINTR;
@@ -391,20 +375,20 @@ int efs_file_unlink(const char * path)
 
     fullpath = efs_normalize_path(NULL, path);
     if (fullpath == NULL)
-    {   printf("[efs_file.c] efs_file_rename: can't normalize path\r\n");
+    {   //printf("[efs_file.c] efs_file_rename: can't normalize path\r\n");
         return -pdFREERTOS_ERRNO_EINVAL;
     }
 
     if (efs_file_is_open(fullpath))
     {
-        printf("[efs_file.c] efs_file_unlink: file is already open\r\n");
+        //printf("[efs_file.c] efs_file_unlink: file is already open\r\n");
         vPortFree(fullpath);
         return -pdFREERTOS_ERRNO_EBUSY;
     }
 
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        printf("[efs_file.c] efs_file_unlink: no corresponding filesystem\r\n");
+        //printf("[efs_file.c] efs_file_unlink: no corresponding filesystem\r\n");
         vPortFree(fullpath);
         return -pdFREERTOS_ERRNO_ENOENT;
     }
@@ -426,7 +410,7 @@ int efs_file_unlink(const char * path)
     }
     else {
         result = -pdFREERTOS_ERRNO_EINTR;
-        printf("[efs_file.c] efs_file_unlink: unlink is NULL\r\n");
+        //printf("[efs_file.c] efs_file_unlink: unlink is NULL\r\n");
     }
 
     vPortFree(fullpath);
@@ -482,13 +466,13 @@ off_t efs_file_lseek(struct efs_file * fd, off_t offset)
 
     if (fd == NULL)
     {
-        printf("[efs_file.c] efs_file_lseek: fd is NULL\r\n");
+        //printf("[efs_file.c] efs_file_lseek: fd is NULL\r\n");
         return -pdFREERTOS_ERRNO_EINVAL;
     }
 
     if (fd->vnode->fops->lseek == NULL)
     {
-        printf("[efs_file.c] efs_file_lseek: lseek is NULL\r\n");
+        //printf("[efs_file.c] efs_file_lseek: lseek is NULL\r\n");
         return -pdFREERTOS_ERRNO_EINTR;
     }
 
@@ -514,13 +498,13 @@ int efs_file_stat(const char *path, struct stat_efs *buf)
     fullpath = efs_normalize_path(NULL, path);
     if (fullpath == NULL)
     {
-        printf("[efs_file.c] efs_file_stat: can't normalize path\r\n");
+        //printf("[efs_file.c] efs_file_stat: can't normalize path\r\n");
         return -1;
     }
 
     if ((fs = efs_filesystem_lookup(fullpath)) == NULL)
     {
-        printf("[efs_file.c] efs_file_stat: no corresponding filesystem\r\n");
+        //printf("[efs_file.c] efs_file_stat: no corresponding filesystem\r\n");
         vPortFree(fullpath);
         return -pdFREERTOS_ERRNO_ENOENT;
     }
@@ -543,7 +527,7 @@ int efs_file_stat(const char *path, struct stat_efs *buf)
         if (fs->ops->stat == NULL)
         {
             vPortFree(fullpath);
-            printf("[efs_file.c] efs_file_stat: stat is NULL\r\n");
+            // printf("[efs_file.c] efs_file_stat: stat is NULL\r\n");
 
             return -pdFREERTOS_ERRNO_EINTR;
         }
@@ -573,14 +557,14 @@ int efs_file_rename(const char * old_path, const char * new_path)
     old_full_path = efs_normalize_path(NULL, old_path);
     if (old_full_path == NULL)
     {
-        printf("[efs_file.c] efs_file_rename: can't normalize old_path\r\n");
+        // printf("[efs_file.c] efs_file_rename: can't normalize old_path\r\n");
         result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
 
     if (efs_file_is_open((const char *)old_full_path))
     {
-        printf("[efs_file.c] efs_file_rename: old_path is opened\r\n");
+        // printf("[efs_file.c] efs_file_rename: old_path is opened\r\n");
         result = -pdFREERTOS_ERRNO_EBUSY;
         goto __exit;
     }
@@ -588,7 +572,7 @@ int efs_file_rename(const char * old_path, const char * new_path)
     new_full_path = efs_normalize_path(NULL, new_path);
     if (new_full_path == NULL)
     {
-        printf("[efs_file.c] efs_file_rename: can't normalize new_path\r\n");
+        // printf("[efs_file.c] efs_file_rename: can't normalize new_path\r\n");
         result = -pdFREERTOS_ERRNO_ENOENT;
         goto __exit;
     }
@@ -600,7 +584,7 @@ int efs_file_rename(const char * old_path, const char * new_path)
     {
         if (old_fs->ops->rename == NULL)
         {
-            printf("[efs_file.c] efs_file_rename: rename is NULL\r\n");
+            // printf("[efs_file.c] efs_file_rename: rename is NULL\r\n");
             result = -pdFREERTOS_ERRNO_EINTR;
         }
         else
@@ -617,7 +601,7 @@ int efs_file_rename(const char * old_path, const char * new_path)
     }
     else
     {
-        printf("[efs_file.c] efs_file_rename: old_path and new_path are not on the same filesystem\r\n");
+        // printf("[efs_file.c] efs_file_rename: old_path and new_path are not on the same filesystem\r\n");
         result = -pdFREERTOS_ERRNO_EXDEV;
     }
 
@@ -639,7 +623,7 @@ int efs_file_ftruncate(struct efs_file *fd, off_t length)
 
     if (fd == NULL || fd->vnode->type != FT_REGULAR || length < 0) 
     {
-        printf("[efs_file.c] efs_file_ftruncate: fd is NULL or not a regular file system fd\r\n");
+        // printf("[efs_file.c] efs_file_ftruncate: fd is NULL or not a regular file system fd\r\n");
         return -EINVAL;
     }
 

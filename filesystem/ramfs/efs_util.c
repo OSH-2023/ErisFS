@@ -17,11 +17,9 @@ void eris_list_init(eris_list_t *l)
  */
 void eris_list_insert_after(eris_list_t *l, eris_list_t *n)
 {
-    printf("l->next = %ld\r\n",l->next);
     l->next->prev = n;
     n->next = l->next;
 
-    printf("n->next = %ld\r\n",n->next);
     l->next = n;
     n->prev = l;
 }

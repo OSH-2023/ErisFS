@@ -108,15 +108,15 @@ int efs_fatfs_open(struct efs_file *file)
         /* creat directory */
         if (file->flags & O_CREAT)
         {
-            printf("[efs_fatfs.c] efs_fatfs_open:creating dir at %s\r\n", drivers_fn);
+            // printf("[efs_fatfs.c] efs_fatfs_open:creating dir at %s\r\n", drivers_fn);
             result = f_mkdir(drivers_fn);
             if (result != FR_OK)
             {
 #if FF_VOLUMES > 1
                 vPortFree(drivers_fn);
 #endif
-                printf("[efs_fatfs.c] efs_fatfs_open: failed to create directory!\r\n");
-                printf("[efs_fatfs.c] efs_fatfs_open mkdir return: %d\r\n", result);
+                // printf("[efs_fatfs.c] efs_fatfs_open: failed to create directory!\r\n");
+                // printf("[efs_fatfs.c] efs_fatfs_open mkdir return: %d\r\n", result);
                 return fatfs_result_to_errno(result);
             }
         }
@@ -128,7 +128,7 @@ int efs_fatfs_open(struct efs_file *file)
 #if FF_VOLUMES > 1
             vPortFree(drivers_fn);
 #endif
-            printf("[efs_fatfs.c] efs_fatfs_open: failed to alloc space for directory entry!\n");
+            // printf("[efs_fatfs.c] efs_fatfs_open: failed to alloc space for directory entry!\r\n");
             return -ENOMEM;
         }
 
@@ -139,7 +139,7 @@ int efs_fatfs_open(struct efs_file *file)
         if (result != FR_OK)
         {
             vPortFree(dir);
-            printf("[efs_fatfs.c] efs_fatfs_open: failed to open the directory!\n");
+            // printf("[efs_fatfs.c] efs_fatfs_open: failed to open the directory!\r\n");
             return fatfs_result_to_errno(result);
         }
 
@@ -175,7 +175,7 @@ int efs_fatfs_open(struct efs_file *file)
 #if FF_VOLUMES > 1
             vPortFree(drivers_fn);
 #endif
-            printf("[fatfs.c] efs_fatfs_open: failed to alloc space for file entry!\n");
+            //printf("[fatfs.c] efs_fatfs_open: failed to alloc space for file entry!\r\n");
             return -ENOMEM;
         }
 
@@ -199,7 +199,7 @@ int efs_fatfs_open(struct efs_file *file)
         else
         {
             vPortFree(fd);
-            printf("[fatfs.c] efs_fatfs_open: failed to open the file!\n");
+            //printf("[fatfs.c] efs_fatfs_open: failed to open the file!\r\n");
             return fatfs_result_to_errno(result);
         }
     }
@@ -223,7 +223,7 @@ int efs_fatfs_close(struct efs_file *file)
         dir = (DIR *)(file->data);
         if(dir == NULL)
         {
-            printf("[fatfs.c] efs_fatfs_close: failed to find the dir!\n");
+            //printf("[fatfs.c] efs_fatfs_close: failed to find the dir!\r\n");
             return fatfs_result_to_errno(FR_NO_PATH);
         }
         else 
@@ -237,7 +237,7 @@ int efs_fatfs_close(struct efs_file *file)
         
         if(fd == NULL)
         {
-            printf("[fatfs.c] efs_fatfs_close: failed to find the file!\n");
+            //printf("[fatfs.c] efs_fatfs_close: failed to find the file!\r\n");
             return fatfs_result_to_errno(FR_NO_FILE);
         }
         else 
@@ -267,14 +267,14 @@ int efs_fatfs_read(struct efs_file *file, void *buf, size_t len)
 
     if (file->vnode->type == FT_DIRECTORY)
     {
-        printf("[fatfs.c] efs_fatfs_read: can't read from a directory.\n");
+        //printf("[fatfs.c] efs_fatfs_read: can't read from a directory.\r\n");
         return -EISDIR;
     }
 
     fd = (FIL *)(file->data);
     if(fd == NULL)
     {
-        printf("[fatfs.c] efs_fatfs_read: failed to find file data!\n");
+        //printf("[fatfs.c] efs_fatfs_read: failed to find file data!\r\n");
         return fatfs_result_to_errno(FR_NO_FILE);
     }
     else 
@@ -298,7 +298,7 @@ int efs_fatfs_write(struct efs_file *file, const void *buf, size_t len)
 
     if (file->vnode->type == FT_DIRECTORY)
     {
-        printf("[fatfs.c] efs_fatfs_write: can't write into a directory.\n");
+        // printf("[fatfs.c] efs_fatfs_write: can't write into a directory.\r\n");
         return -EISDIR;
     }
 
@@ -306,7 +306,7 @@ int efs_fatfs_write(struct efs_file *file, const void *buf, size_t len)
     
     if(fd == NULL)
     {
-        printf("[fatfs.c] efs_fatfs_write: failed to find file data!\n");
+        // printf("[fatfs.c] efs_fatfs_write: failed to find file data!\r\n");
         return fatfs_result_to_errno(FR_NO_FILE);
     }
     else 
@@ -316,7 +316,6 @@ int efs_fatfs_write(struct efs_file *file, const void *buf, size_t len)
         file->vnode->size = f_size(fd);
         if(result == FR_OK)
         {
-            printf("FATFS WRITE OK\r\n");
             return byte_write;
         }
     }
@@ -333,7 +332,7 @@ int efs_fatfs_flush(struct efs_file *file)
     fd = (FIL *)(file->data);
     if(fd == NULL)
     {
-        printf("[fatfs.c] efs_fatfs_flush: failed to find file data!\n")
+        printf("[fatfs.c] efs_fatfs_flush: failed to find file data!\r\n")
         return fatfs_result_to_errno(FR_NO_FILE);
     }
     else 
@@ -363,7 +362,7 @@ int efs_fatfs_lseek(struct efs_file *file, off_t offset)
         fd = (FIL *)(file->data);
         if(fd == NULL)
         {
-            printf("[fatfs.c] efs_fatfs_lseek: failed to find file data!\n");
+            // printf("[fatfs.c] efs_fatfs_lseek: failed to find file data!\r\n");
             return fatfs_result_to_errno(FR_NO_FILE);
         }
         else 
@@ -383,12 +382,12 @@ int efs_fatfs_lseek(struct efs_file *file, off_t offset)
         dir = (DIR *)(file->data);
         if(dir == NULL)
         {
-            printf("[fatfs.c] efs_fatfs_lseek: failed to find dir data!\n");
+            // printf("[fatfs.c] efs_fatfs_lseek: failed to find dir data!\r\n");
             return fatfs_result_to_errno(FR_NO_PATH);
         }
         else 
         {
-            printf("[fatfs.c] efs_fatfs_lseek: no seekdir\r\n");
+            // printf("[fatfs.c] efs_fatfs_lseek: no seekdir\r\n");
             return (-1);
             //result = f_seekdir(dir, offset / sizeof(struct dirent));
             //if (result == FR_OK)
@@ -414,7 +413,7 @@ int efs_fatfs_getdents(struct efs_file *file, struct dirent *dirp, uint32_t coun
     dir = (DIR *)(file->data);
     if(dir == NULL)
     {
-        printf("[fatfs.c] efs_fatfs_getdents: failed to find dir data!\n");
+        // printf("[fatfs.c] efs_fatfs_getdents: failed to find dir data!\r\n");
         return fatfs_result_to_errno(FR_NO_PATH);
     }
 
@@ -422,7 +421,7 @@ int efs_fatfs_getdents(struct efs_file *file, struct dirent *dirp, uint32_t coun
     count = (count / sizeof(struct dirent)) * sizeof(struct dirent);
     if (count == 0)
     {
-        printf("[efs_fatfs.c] efs_fatfs_getdents: read count is zero!\n");
+        // printf("[efs_fatfs.c] efs_fatfs_getdents: read count is zero!\r\n");
         return -EINVAL;
     }
 
@@ -460,7 +459,7 @@ int efs_fatfs_getdents(struct efs_file *file, struct dirent *dirp, uint32_t coun
 
     if (index == 0)
     {
-        printf("[efs_fatfs.c] efs_fatfs_getdents: failed while iterating through directory.\n");
+        // printf("[efs_fatfs.c] efs_fatfs_getdents: failed while iterating through directory.\r\n");
     }
 
     file->pos += index * sizeof(struct dirent);
@@ -492,7 +491,7 @@ int efs_fatfs_mount(struct efs_filesystem *fs, unsigned long rwflag, const void 
     index = get_disk(NULL);
     if (index == -1)
     {
-        printf("[efs_fatfs.c] failed to get disk in efs_fatfs_mount!\n");
+        // printf("[efs_fatfs.c] failed to get disk in efs_fatfs_mount!\r\n");
         return -1;
     }
         
@@ -505,7 +504,7 @@ int efs_fatfs_mount(struct efs_filesystem *fs, unsigned long rwflag, const void 
     if (fat == NULL)
     {
         disk[index] = NULL;
-        printf("[efs_fatfs.c] failed to allocate space for fat in efs_fatfs_mount!\n");
+        // printf("[efs_fatfs.c] failed to allocate space for fat in efs_fatfs_mount!\r\n");
         return -1;
     }
 
@@ -523,7 +522,7 @@ int efs_fatfs_mount(struct efs_filesystem *fs, unsigned long rwflag, const void 
             f_mount(NULL, (const TCHAR *)logic_nbr, 1);
             disk[index] = NULL;
             vPortFree(fat);
-            printf("[efs_fatfs.c] failed to allocate space for dir in efs_fatfs_mount!\n");
+            // printf("[efs_fatfs.c] failed to allocate space for dir in efs_fatfs_mount!\r\n");
             return -1;
         }
 
@@ -556,7 +555,7 @@ int efs_fatfs_unmount(struct efs_filesystem *fs)
 
     if (fat == NULL)
     {
-        printf("[efs_fatfs.c] failed to fetch fat in efs_fatfs_unmount!\n");
+        // printf("[efs_fatfs.c] failed to fetch fat in efs_fatfs_unmount!\r\n");
         return -1;
     }
 
@@ -564,7 +563,7 @@ int efs_fatfs_unmount(struct efs_filesystem *fs)
     index = get_disk(fs->dev_id);
     if (index == -1) /* not found */
     {
-        printf("[efs_fatfs.c] failed to get disk in efs_fatfs_unmount!\n");
+        // printf("[efs_fatfs.c] failed to get disk in efs_fatfs_unmount!\r\n");
         return -1;
     }
 
@@ -594,7 +593,7 @@ int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name)
 
     work = pvPortMalloc(FF_MAX_SS);
     if(NULL == work) {
-        printf("[efs_fatfs.c] failed to allocate space for work in efs_fatfs_mkfs!\n");
+        // printf("[efs_fatfs.c] failed to allocate space for work in efs_fatfs_mkfs!\r\n");
         return -1;
     }
 
@@ -617,7 +616,7 @@ int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name)
         if (index == -1)
         {
             /* no space to store an temp driver */
-            printf("[efs_fatfs.c]sorry, there is no space to do mkfs! \n");
+            // printf("[efs_fatfs.c]sorry, there is no space to do mkfs! \r\n");
             vPortFree(work); /* release memory */
             return -9;
         }
@@ -627,7 +626,7 @@ int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name)
             if (fat == NULL)
             {
                 vPortFree(work); /* release memory */
-                printf("[efs_fatfs.c] failed to allocate space for fat in efs_fatfs_mkfs!\n");
+                // printf("[efs_fatfs.c] failed to allocate space for fat in efs_fatfs_mkfs!\r\n");
                 return -1;
             }
 
@@ -674,7 +673,7 @@ int efs_fatfs_mkfs(eris_device_t dev_id, const char *fs_name)
 
     if (result != FR_OK)
     {
-        printf("[efs_fatfs.c]format error, result=%d\n", result);
+        // printf("[efs_fatfs.c]format error, result=%d\r\n", result);
         return fatfs_result_to_errno(result);
     }
 
@@ -690,12 +689,12 @@ int efs_fatfs_statfs(struct efs_filesystem *fs, struct statfs *buf)
 
     if (fs == NULL)
     {
-        printf("[efs_fatfs.c] failed to get valid fs in efs_fatfs_statfs!\n");
+        // printf("[efs_fatfs.c] failed to get valid fs in efs_fatfs_statfs!\r\n");
         return -1;
     }
     if (buf == NULL)
     {
-        printf("[efs_fatfs.c] failed to get valid buf in efs_fatfs_statfs!\n");
+        // printf("[efs_fatfs.c] failed to get valid buf in efs_fatfs_statfs!\r\n");
         return -1;
     }
 
@@ -734,10 +733,10 @@ int efs_fatfs_unlink(struct efs_filesystem *fs, const char *path)
     drivers_fn = (char *)pvPortMalloc(256);
     if (drivers_fn == NULL)
     {
-        printf('[efs_fatfs.c] failed to allocate space for drivers_fn in efs_fatfs_unlink!\n');
+        // printf('[efs_fatfs.c] failed to allocate space for drivers_fn in efs_fatfs_unlink!\r\n');
         return -1;
     }
-    printf("unlink:%d,%s", vol, path);
+    // printf("unlink:%d,%s", vol, path);
 #else
     const char *drivers_fn;
     drivers_fn = path;
@@ -765,12 +764,12 @@ int efs_fatfs_rename(struct efs_filesystem *fs, const char *oldpath, const char 
     drivers_oldfn = (char *)rt_malloc(256);
     if (drivers_fn == NULL)
     {
-        printf('[efs_fatfs.c] failed to allocate space for drivers_fn in efs_fatfs_rename!\n');
+        // printf('[efs_fatfs.c] failed to allocate space for drivers_fn in efs_fatfs_rename!\r\n');
         return -1;
     }
     drivers_newfn = newpath;
 
-    printf("rename:%d,%s", vol, oldpath);
+    // printf("rename:%d,%s", vol, oldpath);
 #else
     const char *drivers_oldfn, *drivers_newfn;
 
@@ -793,7 +792,7 @@ long long timegm(struct tm * const t)
 
     if(t == NULL)
     {
-        printf("[efs_fatfs.c] failed to get t in timegm!\n");
+        // printf("[efs_fatfs.c] failed to get t in timegm!\r\n");
         return (long long)-1;
     }
 
@@ -835,7 +834,7 @@ long long timegm(struct tm * const t)
 
     if (t->tm_year < 70)
     {
-        printf("[efs_fatfs.c] failed to get valid tm_year in timegm!\n");
+        // printf("[efs_fatfs.c] failed to get valid tm_year in timegm!\r\n");
         return (long long) -1;
     }
 
@@ -887,11 +886,11 @@ int efs_fatfs_stat(struct efs_filesystem *fs, const char *path, struct stat_efs 
     drivers_fn = (char *)rt_malloc(256);
     if (drivers_fn == NULL)
     {
-        printf('[efs_fatfs.c] failed to allocate space for drivers_fn in efs_fatfs_stat!\n');
+        // printf('[efs_fatfs.c] failed to allocate space for drivers_fn in efs_fatfs_stat!\r\n');
         return -1;
     }
 
-    printf("stat:%d,%s", vol, path);
+    // printf("stat:%d,%s", vol, path);
 #else
     const char *drivers_fn;
     drivers_fn = path;

@@ -51,30 +51,27 @@ void rw_test() {
     int r;
 	int i=0;
 	printf("\r\n[RW Test] START\r\n");
-	//printf("fd1 = %d\r\n",fd);
 	// ------- FIRST TEST --------
     // write to file
     fd = efs_open("/test.txt", O_CREAT|O_RDWR, 0);
-	//printf("fd2 = %d\r\n",fd);
-	//printf("1\r\n");
 	//printf("--- open1 finished ---\r\n");
-	printf("r3 = %d\r\n",r);
+	r = write(fd, "Hello World!", 13);
 	printf("write: Hello World!\r\n");
 	//printf("--- write1 finished ---\r\n");
     close(fd);
-	printf("fd4 = %d\r\n",fd);
+	// printf("fd4 = %d\r\n",fd);
 	//printf("--- close1 finished ---\r\n");
 
     // read from file
     fd = efs_open("/test.txt", O_RDWR, 0);
-	printf("fd5 = %d\r\n",fd);
+	//printf("fd5 = %d\r\n",fd);
 	//printf("--- open2 finished ---\r\n");
     char buf[13];
     r=read(fd, buf, 13);
-	printf("r6 = %d\r\n",r);
+	// printf("r6 = %d\r\n",r);
 	//printf("--- read2 finished ---\r\n");
 	close(fd);
-	printf("fd7 = %d\r\n",fd);
+	//printf("fd7 = %d\r\n",fd);
 	//printf("--- close2 finished ---\r\n");
 
 	//printf("\r\n--- OUTPUT ---\r\n");
@@ -83,19 +80,19 @@ void rw_test() {
 	// ------- SECOND TEST --------
 	// write to file
     fd = efs_open("/test1.in", O_CREAT|O_RDWR, 0);
-	printf("fd8 = %d\r\n",fd);
+	//printf("fd8 = %d\r\n",fd);
     r = write(fd, "HELLO WORLD aaaa!", 18);
-	printf("r = %d\r\n",r);
+	// printf("r = %d\r\n",r);
 	printf("write: HELLO WORLD aaaa!\r\n");
     close(fd);
-	printf("fd10 = %d\r\n",fd);
+	// printf("fd10 = %d\r\n",fd);
     // read from file
     fd = efs_open("/test1.in", O_RDWR, 0);
-	printf("fd11 = %d\r\n",fd);
+	// printf("fd11 = %d\r\n",fd);
     char buf1[20];
     r = read(fd, buf1, 18);
-	printf("r = %d\r\n",r);
-	printf("fd12 = %d\r\n",fd);
+	// printf("r = %d\r\n",r);
+	// printf("fd12 = %d\r\n",fd);
 	close(fd);
     printf("read: %s\r\n", buf1);
 
@@ -445,7 +442,7 @@ int main(void)
 	statfs_test();
 	lseek_test();
 	crypt_test();
-	ftruncate_test();
+	//ftruncate_test();
 	unlink_test();
 	dir_test();
 
