@@ -70,6 +70,7 @@
 #include <efs_posix.h>
 #include <efs_ramfs.h>
 #include <efs_fs.h>
+#include "efs_aes.h"
 
 /* std */
 #include <fcntl.h>
