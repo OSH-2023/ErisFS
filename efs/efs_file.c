@@ -216,23 +216,23 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             vPortFree(vnode->path);
             vPortFree(vnode);
             printf("[efs_file.c] efs_file_open: the filesystem didn't implement this open function");
-            //printf("5\r\r\n");
             return -pdFREERTOS_ERRNO_EINTR;
         }
 
         fd->pos   = 0;
         fd->vnode = vnode;
-
+        printf("DEBUG 5\r\n");
 
         /* insert vnode to hash */
         eris_list_insert_after(hash_head, &vnode->list);
     }
     fd->flags = flags;
-
+    printf("DEBUG 6\r\n");
     // not taken
     if ((result = vnode->fops->open(fd)) < 0)
     {
         vnode->ref_count--;
+        printf("DEBUG 8\r\n");
         if (vnode->ref_count == 0)
         {
             /* remove from hash */
@@ -246,13 +246,14 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             fd->vnode = NULL;
             vPortFree(vnode);
         }
+        printf("DEBUG 9\r\n");
         //printf("[efs_file.c] test\r\n");
         efs_fm_unlock();
         printf("[efs_file.c] efs_file_open: %s open failed!\r\n", fullpath);
 
         return result;
     }
-
+    printf("DEBUG 7\r\n");
     fd->flags |= EFS_F_OPEN;    // need solving 
     if (flags & O_DIRECTORY)
     {

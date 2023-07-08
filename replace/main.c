@@ -14,6 +14,7 @@
 #include <efs_posix.h>
 #include <efs_ramfs.h>
 #include <efs_fs.h>
+#include "efs_aes.h"
 
 #define START_TASK_PRIO 1 //任务优先级
 #define START_STK_SIZE 128 //任务堆栈大小
@@ -42,39 +43,21 @@ int init() {
     LED_Init();                     //初始化LED 
     SDRAM_Init();                   //SDRAM初始化
     //创建开始任务
-
- 	while(SD_Init())//检测不到SD卡
-	{
-        printf("SD Card Error!\r\r\n");
-		delay_ms(500);					
-        printf("Please Check!\r\r\n");
-		delay_ms(500);
-		LED0=!LED0;//DS0闪烁
-	}
-
-    /* 1. efs init */
-    efs_init();
-
-    /* 2. filesystem init */
-    efs_fatfs_init();
-
-    /* 4. storage device mount */
-
 	return 0;
 }
 
 void rw_test() {
     int fd;
     int r;
+	int i=0;
 	printf("\r\n[RW Test] START\r\n");
-	printf("fd1 = %d\r\n",fd);
+	//printf("fd1 = %d\r\n",fd);
 	// ------- FIRST TEST --------
     // write to file
     fd = efs_open("/test.txt", O_CREAT|O_RDWR, 0);
-	printf("fd2 = %d\r\n",fd);
+	//printf("fd2 = %d\r\n",fd);
 	//printf("1\r\n");
 	//printf("--- open1 finished ---\r\n");
-    r=write(fd, "Hello World!", 13);
 	printf("r3 = %d\r\n",r);
 	printf("write: Hello World!\r\n");
 	//printf("--- write1 finished ---\r\n");
@@ -224,17 +207,17 @@ void crypt_test()
 	close(fd);
 	printf("original: %s\r\n", buf);
 
-	encryptSimple("/test2.in", 7);
+	encryptAES("/test2.in","/test3.in",128,"qwertyuiopasdf1");
 
-	fd = efs_open("/test2.in", O_RDWR, 0);
+	fd = efs_open("/test3.in", O_RDWR, 0);
 	memset(buf, 0, 20);
     read(fd, buf, 18);
 	close(fd);
 	printf("encrypted: %s\r\n", buf);
 
-	decryptSimple("/test2.in", 7);
+	decryptAES("/test3.in","/test4.in",128,"qwertyuiopasdf1");
 
-	fd = efs_open("/test2.in", O_RDWR, 0);
+	fd = efs_open("/test4.in", O_RDWR, 0);
 	memset(buf, 0, 20);
     read(fd, buf, 18);
 	close(fd);
@@ -299,21 +282,13 @@ void dir_test()
 	printf("[Stat Test] END\r\n");
 }
 
-
-int main(void)
+void sd_mount()
 {
-    int i;
 	int fd;
 	const char sd[20] = "SDCard";
-    init();
-
 
 
 	//检测SD卡成功 		
-    for(i=1; i <= 5; i++) {
-        printf("1\r\n");
-        delay_ms(500);
-    }
 
 	if(fd = efs_mkfs("fatfs", sd) != 0)
 		{
@@ -347,15 +322,123 @@ int main(void)
     {
         printf("FATFS mount successed!\r\n");
     } 
+}
 
-    //while(SD_Init())//检测不到SD卡
-	//{
-    //    printf("SD Card Error!\r\r\n");
-	//	delay_ms(500);					
-    //    printf("Please Check!\r\r\n");
-	//	delay_ms(500);
-	//	LED0=!LED0;//DS0闪烁
-	//}
+int ramfstest() 
+{
+    /* 2. filesystem init */
+    efs_ramfs_init();
+
+    /* 3. storage device init */
+
+
+    /* 4. storage device mount */
+	uint8_t *rampool;
+
+	
+	if ((rampool = (uint8_t *)pvPortMalloc(1024)) == NULL)
+	{
+		printf("Failed to allocate memory for ramfs!\r\n");
+		return -1;
+	}
+	
+
+    if (efs_mount( NULL, "/", "ramfs", 0, efs_ramfs_create(rampool, 1024)) != 0) //
+    {
+        printf("File System on ram initialization failed!\r\n");
+        return -1;
+    }
+    else
+    {
+        printf("File System on ram initialized!\r\n");
+        return 0;
+    } 
+
+	int fd;
+
+    // write to file
+    fd = efs_open("/test.txt", O_CREAT|O_RDWR, 0);
+	printf("--- open1 finished ---\r\n");
+
+    write(fd, "Hello World!", 12);
+	printf("--- write1 finished ---\r\n");
+
+    close(fd);
+	printf("--- close1 finished ---\r\n");
+
+    // read from file
+    fd = efs_open("/test.txt", O_RDWR, 0);
+	printf("--- open2 finished ---\r\n");
+    char buf[12];
+    read(fd, buf, 12);
+    printf("%s\n", buf);
+    close(fd);
+}
+
+int ramfs_init() {
+    /* 1. efs init */
+    efs_init();
+
+    /* 2. filesystem init */
+    efs_ramfs_init();
+
+    /* 3. storage device init */
+
+
+    /* 4. storage device mount */
+	uint8_t *rampool;
+
+	
+	if ((rampool = (uint8_t *)pvPortMalloc(1024)) == NULL)
+	{
+		printf("Failed to allocate memory for ramfs!\n");
+		return -1;
+	}
+	
+
+    if (efs_mount( NULL, "/", "ramfs", 0, efs_ramfs_create(rampool, 512)) != 0) //
+    {
+        printf("File System on ram initialization failed!\n");
+        return -1;
+    }
+    else
+    {
+        printf("File System on ram initialized!\n");
+        return 0;
+    } 
+}
+
+void fatfs_init(){
+	while(SD_Init())//检测不到SD卡
+	{
+        printf("SD Card Error!\r\r\n");
+		delay_ms(500);					
+        printf("Please Check!\r\r\n");
+		delay_ms(500);
+		LED0=!LED0;//DS0闪烁
+	}
+
+    /* 1. efs init */
+    efs_init();
+
+    /* 2. filesystem init */
+    efs_fatfs_init();
+
+    /* 4. storage device mount */
+}
+
+int main(void)
+{
+    
+	int i;
+    init();
+	for(i=1; i <= 5; i++) {
+        printf("1\r\n");
+        delay_ms(500);
+    }
+    //ramfs_init();
+	fatfs_init();
+	sd_mount();
 	rw_test();
 	rename_test();
 	stat_test();

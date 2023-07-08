@@ -427,7 +427,6 @@ void CipherInverse(void)
 int encryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key)
 {
     int fd0, fd1;                       // file descriptor
-    int i;
     int EOF_flag = 0;                   // detect end of file flag
     unsigned char plaintext_block[16];  // plaintext, encrypt each block (128bit) once
 
@@ -481,8 +480,12 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
     int blockNum = 0; // record processing block number(128 bit)
     char ch;
     EOF_flag = 1;
+    struct efs_file * d = fd_get(fd0);
+    unsigned long int bytes = d->vnode->size;
+    unsigned long int a = bytes/16;
+    int i=0;
     printf("---------------------------------------------\n");
-    while(EOF_flag == 1)
+    while(i++<= a)
     {
         /**
          *  read file, read 16 char (1block, 128bit) 
@@ -491,10 +494,9 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
         for (int c = 0; c < 16; c++)
         {
             lseek(fd0, blockNum * 16 + c, SEEK_SET);
-            read(fd0, &i, 4);
             read(fd0, &ch, 1);
             plaintext_block[c] = ch;
-            if (i == EOF)
+            if (ch == EOF)
             {
                 for (int padding = c; padding < 16; padding++)
                 {
@@ -532,12 +534,6 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
         printUnsignedCharArrayToInt(out, 16);
         printf("\n");
         blockNum++;
-
-        read(fd0, &i, 1);      // read next character, if read EOF, EOF_flag = 0 (end of file
-        if (i == EOF)
-        {
-            EOF_flag = 0;
-        }
     }
     close(fd0);
     lseek(fd1, 0, SEEK_SET);
@@ -554,7 +550,6 @@ int encryptAES(const char * file_path, const char * new_file, const int key_size
 int decryptAES(const char * file_path, const char * new_file, const int key_size, const char * input_key)
 {   
     int fd0, fd1; // file descriptor
-    int i;
     int EOF_flag = 0; // detect end of file flag
     unsigned char Ciphertext_block[16]; // plaintext, encrypt each block (128bit) once
 
@@ -608,8 +603,12 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
     int blockNum = 0; // record processing block number(128 bit)
     char ch;
     EOF_flag = 1;
+    struct efs_file * d = fd_get(fd0);
+    unsigned long int bytes = d->vnode->size;
+    unsigned long int a = bytes/16;
+    int i=0;
     printf("---------------------------------------------\n");
-    while(EOF_flag == 1)
+    while(++i<=a)
     {
         /**
          *  read file, read 16 char (1block, 128bit) 
@@ -652,13 +651,8 @@ int decryptAES(const char * file_path, const char * new_file, const int key_size
         printUnsignedCharArrayToInt(out, 16);
         printf("\n");
         blockNum++;
-
-        read(fd0, &i, 4);      // read next character, if read EOF, EOF_flag = 0 (end of file
-        if (i == EOF)
-        {
-            EOF_flag = 0;
-        }
     }
+
     close(fd0);
     lseek(fd1, 0, SEEK_SET);
     close(fd1);

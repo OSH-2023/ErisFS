@@ -72,6 +72,7 @@ struct ramfs_dirent *efs_ramfs_lookup(struct efs_ramfs *ramfs,
 {
     const char *subpath;
     struct ramfs_dirent *dirent;
+    int i=0;
 
     subpath = path;
     while (*subpath == '/' && *subpath)
@@ -83,10 +84,15 @@ struct ramfs_dirent *efs_ramfs_lookup(struct efs_ramfs *ramfs,
         return &(ramfs->root);
     }
 
+    printf("ramfs->root.list = %ld\r\n", ramfs->root.list);
+    printf("ramfs->root = %ld\r\n", &ramfs->root);
+    printf("ramfs = %ld\r\n", ramfs);
     for (dirent = eris_list_entry(ramfs->root.list.next, struct ramfs_dirent, list);
          dirent != &(ramfs->root);
          dirent = eris_list_entry(dirent->list.next, struct ramfs_dirent, list))
     {
+        printf("[loop] %d\r\n",++i);
+        printf("dirent = %ld \r\n",dirent);
         //printf("DEBUG: dirent->name: %s\n", dirent->name);
         //printf("DEBUG: subpath: %s\n", subpath);
         if (eris_strcmp(dirent->name, subpath) == 0)
@@ -96,6 +102,7 @@ struct ramfs_dirent *efs_ramfs_lookup(struct efs_ramfs *ramfs,
             return dirent;
         }
     }
+    printf("[ramfs] after loop dirent = %ld\r\n", dirent);
 
     /* not found */
     return NULL;
@@ -186,6 +193,7 @@ int efs_ramfs_open(struct efs_file *file)
 
     ramfs = (struct efs_ramfs *)fs->data;
     Eris_ASSERT(ramfs != NULL);
+    printf("[ramfs.c] DEBUG 1\r\n");
     if (file->flags & O_DIRECTORY)
     {
         if (file->flags & O_CREAT)
@@ -207,18 +215,20 @@ int efs_ramfs_open(struct efs_file *file)
         file->vnode->type = FT_DIRECTORY;
     }
     else
-    {
+    {   
+        printf("[ramfs.c] DEBUG 2\r\n");
         //printf("DEBUG: path: %s\n", file->vnode->path);
         dirent = efs_ramfs_lookup(ramfs, file->vnode->path, &size);
         if (dirent == &(ramfs->root)) /* it's root directory */
         {
             return -ENOENT;
         }
-
+        printf("[ramfs.c] DEBUG 3\r\n");
         if (dirent == NULL)
         {
             if (file->flags & O_CREAT || file->flags & O_WRONLY)
             {
+                printf("[ramfs.c] DEBUG 4\r\n");
                 char *name_ptr;
 
                 /* create a file entry */
@@ -228,7 +238,7 @@ int efs_ramfs_open(struct efs_file *file)
                 {
                     return -ENOMEM;
                 }
-
+                printf("[ramfs.c] DEBUG 5\r\n");
                 /* remove '/' separator */
                 name_ptr = file->vnode->path;
                 while (*name_ptr == '/' && *name_ptr)
@@ -242,9 +252,16 @@ int efs_ramfs_open(struct efs_file *file)
                 dirent->size = 0;
                 dirent->fs = ramfs;
                 file->vnode->type = FT_REGULAR; //regular file
-
+                printf("[ramfs.c] DEBUG 6\r\n");
                 /* add to the root directory */
+                
+                printf("[ramfs_open] ramfs->root.list = %ld\r\n", &(ramfs->root.list) );
+                printf("[ramfs_open] ramfs->root.list.next = %ld\r\n", ramfs->root.list.next );
+                printf("[ramfs_open] ramfs->root.list = %ld\r\n", ramfs->root.list.next->next );
                 eris_list_insert_after(&(ramfs->root.list), &(dirent->list));
+                printf("[ramfs_open] ramfs->root.list = %ld\r\n", &(ramfs->root.list) );
+                printf("[ramfs_open] ramfs->root.list.next = %ld\r\n", ramfs->root.list.next );
+                printf("[ramfs_open] ramfs->root.list = %ld\r\n", ramfs->root.list.next->next );
             }
             else
             {
@@ -252,7 +269,7 @@ int efs_ramfs_open(struct efs_file *file)
                 return -ENOENT;
             }
         }
-
+        
         /* Creates a new file.
          * If the file is existing, it is truncated and overwritten.
          */
@@ -266,6 +283,8 @@ int efs_ramfs_open(struct efs_file *file)
             }
         }
     }
+    
+    printf("[ramfs.c] DEBUG 4\r\n");
     file->vnode->data = dirent;
     file->vnode->size = dirent->size;
     if (file->flags & O_APPEND)

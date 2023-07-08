@@ -17,7 +17,7 @@ int efs_open(const char *file, int flags, ...)
     {
         fd_release(fd);
         printf("[efs_posix.c]failed to open a file in efs_posix_efs_file_open!\n");
-
+ 
         return -1;
     }
 
