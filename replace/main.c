@@ -65,6 +65,7 @@ int init() {
 
 void rw_test() {
     int fd;
+    int r;
 	printf("\r\n[RW Test] START\r\n");
 	printf("fd1 = %d\r\n",fd);
 	// ------- FIRST TEST --------
@@ -73,8 +74,8 @@ void rw_test() {
 	printf("fd2 = %d\r\n",fd);
 	//printf("1\r\n");
 	//printf("--- open1 finished ---\r\n");
-    write(fd, "Hello World!", 13);
-	printf("fd3 = %d\r\n",fd);
+    r=write(fd, "Hello World!", 13);
+	printf("r3 = %d\r\n",r);
 	printf("write: Hello World!\r\n");
 	//printf("--- write1 finished ---\r\n");
     close(fd);
@@ -86,8 +87,8 @@ void rw_test() {
 	printf("fd5 = %d\r\n",fd);
 	//printf("--- open2 finished ---\r\n");
     char buf[13];
-    read(fd, buf, 13);
-	printf("fd6 = %d\r\n",fd);
+    r=read(fd, buf, 13);
+	printf("r6 = %d\r\n",r);
 	//printf("--- read2 finished ---\r\n");
 	close(fd);
 	printf("fd7 = %d\r\n",fd);
@@ -98,7 +99,6 @@ void rw_test() {
 
 	// ------- SECOND TEST --------
 	// write to file
-	int r;
     fd = efs_open("/test1.in", O_CREAT|O_RDWR, 0);
 	printf("fd8 = %d\r\n",fd);
     r = write(fd, "HELLO WORLD aaaa!", 18);
@@ -122,10 +122,10 @@ void rw_test() {
 void rename_test()
 {
 	printf("\r\n[Rename Test] START\r\n");
-	printf("/test.txt -> /test2.in\r\n");
+	printf("/test1.in -> /test2.in\r\n");
 	//printf("%d", rename("/test.txt", "/test2.in"));
 	
-	if (rename("/test.txt", "/test2.in") < 0)
+	if (rename("/test1.in", "/test2.in") < 0)
         printf("ERROR\r\n");
     else
 	{
@@ -204,7 +204,7 @@ void unlink_test()
     else
 	{
 		int fd = efs_open("/test2.in", O_RDWR, 0);
-		if(fd > 0) 
+		if(fd >= 0) 
 			printf("ERROR\r\n");
 		else
 			printf("OK\r\n");
@@ -277,6 +277,7 @@ void dir_test()
 
 	int fd = 0;
 	fd = efs_open("/test_dir/test.txt", O_CREAT|O_RDWR, 0);
+	rmdir("/test_dir");
 	if (mkdir("/test_dir", 0) < 0)
         printf("ERROR\r\n");
     else
@@ -288,8 +289,9 @@ void dir_test()
     	write(fd, "Test info in /test_dir/test.txt", 32);
 		printf("write: Test info in /test_dir/test.txt\r\n");
 		char buf[40];
+		lseek(fd, 0, SEEK_SET);
     	read(fd, buf, 32);
-		printf("%s\r\n", buf);
+		printf("read: %s\r\n", buf);
 		printf("OK\r\n");
 		
 	}
@@ -301,35 +303,39 @@ void dir_test()
 int main(void)
 {
     int i;
-
+	int fd;
+	const char sd[20] = "SDCard";
     init();
 
 
 
 	//检测SD卡成功 		
     for(i=1; i <= 5; i++) {
-        printf("1\r\r\n");
+        printf("1\r\n");
         delay_ms(500);
     }
 
-	if(efs_mkfs("fatfs", 0) != 0)
+	if(fd = efs_mkfs("fatfs", sd) != 0)
 		{
 			printf("FATFS mkfs failed!\r\n");
+			printf("[mkfs]: fd = %d\r\n",fd);
 		}
 
-    if (efs_mount(0, "/", "fatfs", 0, 0 ) != 0) //
+    if (fd = efs_mount(sd, "/", "fatfs", 0, 0 ) != 0) //
     {
         printf("FATFS mount failed!\r\n");
-		if(efs_mkfs("fatfs", 0) != 0)
+			printf("[mount]: fd = %d\r\n",fd);
+		if(fd=efs_mkfs("fatfs", 0) != 0)
 		{
-			efs_mount( NULL, "/", "fatfs", 0, 0);
 			printf("FATFS mkfs failed!\r\n");
+			printf("[mkfs]: fd = %d\r\n",fd);
 		}
 		else {
 			printf("FATFS mkfs successed!\r\n");
-			if (efs_mount(0, "/", "fatfs", 0, 0) != 0)
+			if (fd = efs_mount(sd, "/", "fatfs", 0, 0) != 0)
 			{
 				printf("FATFS mount failed!\r\n");
+				printf("[mount]: fd = %d\r\n",fd);
 			}
 			else 
 			{
@@ -356,9 +362,9 @@ int main(void)
 	statfs_test();
 	lseek_test();
 	crypt_test();
-	//ftruncate_test();
+	ftruncate_test();
 	unlink_test();
-	//dir_test();
+	dir_test();
 
     xTaskCreate((TaskFunction_t )start_task, //任务函数
                 (const char* )"start_task", //任务名称

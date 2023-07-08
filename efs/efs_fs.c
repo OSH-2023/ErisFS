@@ -394,7 +394,7 @@ int efs_mkfs(const char *fs_name, const char *device_name)
     if (dev_id == NULL)
     {
         //rt_set_errno(-ENODEV);
-        printf("Device (%s) was not found\n", device_name);
+        printf("Device (%s) was not found\r\n", device_name);
         return -1;
     }
 

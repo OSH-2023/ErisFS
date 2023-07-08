@@ -108,13 +108,15 @@ int efs_fatfs_open(struct efs_file *file)
         /* creat directory */
         if (file->flags & O_CREAT)
         {
+            printf("[efs_fatfs.c] efs_fatfs_open:creating dir at %s\r\n", drivers_fn);
             result = f_mkdir(drivers_fn);
             if (result != FR_OK)
             {
 #if FF_VOLUMES > 1
                 vPortFree(drivers_fn);
 #endif
-                printf("[efs_fatfs.c] efs_fatfs_open: failed to create directory!\n");
+                printf("[efs_fatfs.c] efs_fatfs_open: failed to create directory!\r\n");
+                printf("[efs_fatfs.c] efs_fatfs_open mkdir return: %d\r\n", result);
                 return fatfs_result_to_errno(result);
             }
         }
@@ -219,7 +221,7 @@ int efs_fatfs_close(struct efs_file *file)
         // A directory's data is pointed to the DIR entry, free it.
         DIR *dir = NULL;
         dir = (DIR *)(file->data);
-        if(dir != NULL)
+        if(dir == NULL)
         {
             printf("[fatfs.c] efs_fatfs_close: failed to find the dir!\n");
             return fatfs_result_to_errno(FR_NO_PATH);

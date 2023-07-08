@@ -18,7 +18,7 @@
 /* File flags */
 #define EFS_F_OPEN              0x01000000
 #define EFS_F_DIRECTORY         0x02000000
-#define EFS_F_EOF               0x04000000
+#define EFS_F_EOF               0x00000000
 #define EFS_F_ERR               0x08000000
 
 /* open-only flags */

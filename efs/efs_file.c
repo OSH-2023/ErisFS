@@ -143,7 +143,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     vnode = efs_vnode_find(fullpath, &hash_head);
     if (vnode)
     {
-        printf("[efs_file.c] efs_file_open: vnode exist");
+        //printf("[efs_file.c] efs_file_open: vnode exist");
         vnode->ref_count++;
         fd->pos   = 0;
         fd->vnode = vnode;
@@ -152,7 +152,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
     }
     else
     {
-        printf("[efs_file.c] efs_file_open: vnode not exist, creating vnode\r\n");
+        //printf("[efs_file.c] efs_file_open: vnode not exist, creating vnode\r\n");
         /* find filesystem */
         fs = efs_filesystem_lookup(fullpath);
 
@@ -162,7 +162,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             efs_fm_unlock();
             vPortFree(fullpath); /* release path */
             printf("[efs_file.c] efs_file_open: can't find mounted filesystem on this path: %s\r\n", fullpath);
-             printf("3\r\r\n");
+            //printf("3\r\r\n");
             return -pdFREERTOS_ERRNO_ENOENT;
         }
 
@@ -175,11 +175,11 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             efs_fm_unlock();
             vPortFree(fullpath); /* release path */
             printf("[efs_file.c] efs_file_open: can't malloc vnode!\r\n");
-             printf("4\r\r\n");
+            //printf("4\r\r\n");
             return -pdFREERTOS_ERRNO_ENOMEM;
         }
         vnode->ref_count = 1;
-        printf("[efs_file.c] efs_file_open: open in filesystem: %s\r\n", fs->ops->name);
+        //printf("[efs_file.c] efs_file_open: open in filesystem: %s\r\n", fs->ops->name);
         vnode->fs    = fs;             /* set file system */
         vnode->fops  = fs->ops->fops;  /* set file ops */
 
@@ -216,7 +216,7 @@ int efs_file_open(struct efs_file * fd, const char * path, int flags)
             vPortFree(vnode->path);
             vPortFree(vnode);
             printf("[efs_file.c] efs_file_open: the filesystem didn't implement this open function");
-             printf("5\r\r\n");
+            //printf("5\r\r\n");
             return -pdFREERTOS_ERRNO_EINTR;
         }
 

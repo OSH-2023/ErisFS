@@ -9,7 +9,6 @@ int efs_open(const char *file, int flags, ...)
     if (fd < 0)
     {
         printf("[efs_posix.c]failed to open a file in efs_posix_fd_new!\n");
-
         return -1;
     }
     d = fd_get(fd);
@@ -228,7 +227,6 @@ int encryptSimple(const char * file_path, int key)
     unsigned long int bytes;
     struct efs_file * d;
     char* buffer;
-    buffer = (char *)pvPortMalloc(bytes * sizeof(char));
 
     if(fd = efs_open(file_path, O_RDWR, 0) < 0)
     {
@@ -237,6 +235,7 @@ int encryptSimple(const char * file_path, int key)
     d = fd_get(fd);
     bytes = d->vnode->size;
 
+    buffer = (char *)pvPortMalloc(bytes * sizeof(char));
     lseek(fd, 0, SEEK_SET);
     read(fd, buffer, bytes);
 
@@ -245,6 +244,7 @@ int encryptSimple(const char * file_path, int key)
         if(buffer[i] != EFS_F_EOF)
             buffer[i] = (buffer[i] + key) % 128;
     }
+    buffer[bytes - 1] = 0;
 
     lseek(fd, 0, SEEK_SET);
     write(fd, buffer, bytes);
@@ -262,7 +262,6 @@ int decryptSimple(const char * file_path, int key)
     unsigned long int bytes;
     struct efs_file * d;
     char * buffer;
-    buffer = (char *)pvPortMalloc(bytes * sizeof(char));
 
     if(fd = efs_open(file_path, O_RDWR, 0) < 0)
     {
@@ -271,6 +270,7 @@ int decryptSimple(const char * file_path, int key)
     d = fd_get(fd);
     bytes = d->vnode->size;
 
+    buffer = (char *)pvPortMalloc(bytes * sizeof(char));
     lseek(fd, 0, SEEK_SET);
     read(fd, buffer, bytes);
 
@@ -279,6 +279,7 @@ int decryptSimple(const char * file_path, int key)
         if(buffer[i] != EFS_F_EOF)
             buffer[i] = (buffer[i] - key) % 128;
     }
+    buffer[bytes - 1] = 0;
 
     lseek(fd, 0, SEEK_SET);
     write(fd, buffer, bytes);
