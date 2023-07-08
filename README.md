@@ -26,6 +26,17 @@ ErisFS
     └─── ramfs
 ```
 
+## Supported
+**Posix File APIs:**
+* open, close, read, write, rename, unlink, stat, fstat, creat, lseek, ftruncate ...
+* mount, unmount, mkfs, statfs ...
+* mkdir, rmdir ...
+
+**Filesystems:**
+* ramfs
+* fatfs (with STM32F429IGT6)
+
+
 ## Usage
 Please check the template file in ```replace```, which shows some basic usage of ErisFS (almost same with POSIX API).
 
