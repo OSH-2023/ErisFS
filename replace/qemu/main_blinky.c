@@ -71,8 +71,6 @@
 #include <efs_ramfs.h>
 #include <efs_fs.h>
 
-/* std */
-#include <fcntl.h>
 
 /* Priorities at which the tasks are created. */
 #define mainQUEUE_RECEIVE_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
@@ -218,39 +216,38 @@ void rename_test()
 
 void stat_test()
 {
-	printf("\n[Stat Test] START\n");
-	printf("checking /test2.in\n");
+	printf("\r\n[Stat Test] START\r\n");
+	printf("checking /test2.in\r\n");
 
 	struct stat_efs *buf;
-	if (stat("/test2.in", buf) < 0)
-        printf("ERROR\n");
+	if (stat_efs("/test2.in", buf) < 0)
+        printf("ERROR\r\n");
     else
 	{
-		printf("OK\n");
-		printf("st_size: %d\n", buf->st_size);
-		printf("st_mode: %d\n", buf->st_mode);
+		printf("OK\r\n");
+		printf("st_size: %d\r\n", buf->st_size);
+		printf("st_mode: %d\r\n", buf->st_mode);
 	}
-	printf("[Stat Test] END\n");
+	printf("[Stat Test] END\r\n");
 }
 
 void statfs_test()
 {
-	printf("\n[Statfs Test] START\n");
-	printf("checking /test2.in\n");
+	printf("\r\n[Statfs Test] START\r\n");
+	printf("checking /test2.in\r\n");
 
-	struct stat_efs *buf;
+	struct statfs *buf;
 
-	if (statfs("/", buf) < 0)
-        printf("ERROR\n");
+	if (statfs_efs("/", buf) < 0)
+        printf("ERROR\r\n");
     else
 	{
-		printf("OK\n");
-		printf("st_size: %d\n", buf->st_size);
-		printf("st_blocks: %d\n", buf->st_blocks);
+		printf("OK\r\n");
+		printf("f_bsize: %d\r\n", buf->f_bsize);
+		printf("f_blocks: %d\r\n", buf->f_blocks);
 	}
-	printf("[Statfs Test] END\n");
+	printf("[Statfs Test] END\r\n");
 }
-
 void lseek_test()
 {
 	printf("\n[Lseek Test] START\n");
@@ -297,7 +294,7 @@ void crypt_test()
 	close(fd);
 	printf("original: %s\n", buf);
 
-	encryptAES("/test2.in", "/test2_encrypted.in", 128, "keykeykeykeykeyk");
+	encryptSimple("/test2.in", 7);
 
 	fd = efs_open("/test2.in", O_RDWR, 0);
 	memset(buf, 0, 20);
@@ -305,9 +302,9 @@ void crypt_test()
 	close(fd);
 	printf("encrypted: %s\n", buf);
 
-	decryptAES("/test2_encrypted.in", "/test2_decrypted.in", 128, "keykeykeykeykeyk");
+	decryptSimple("/test2.in", 7);
 
-	fd = efs_open("/test2_decrypted.in", O_RDWR, 0);
+	fd = efs_open("/test2.in", O_RDWR, 0);
 	memset(buf, 0, 20);
     read(fd, buf, 18);
 	close(fd);
@@ -350,7 +347,7 @@ void dir_test()
 
 	int fd = 0;
 	fd = efs_open("/test_dir/test.txt", O_CREAT|O_RDWR, 0);
-	struct stat_efs *buf;
+	struct stat *buf;
 	if (mkdir("/test_dir", 0) < 0)
         printf("ERROR\n");
     else
@@ -372,70 +369,6 @@ void dir_test()
 }
 
 
-/* Define a callback function that will be used by multiple timer
-instances.  The callback function does nothing but count the number
-of times the associated timer expires, and stop the timer once the
-timer has expired 10 times.  The count is saved as the ID of the
-timer. */
-void vTimerCallback( TimerHandle_t xTimer)
-{
-	const uint32_t ulMaxExpiryCountBeforeStopping = 10;
-	uint32_t ulCount;
-
-    /* Optionally do something if the pxTimer parameter is NULL. */
-    configASSERT( xTimer );
-
-    /* The number of times this timer has expired is saved as the timer's ID.  Obtain the count. */
-    ulCount = ( uint32_t ) pvTimerGetTimerID( xTimer );
-
-    /* Increment the count, then test to see if the timer has expired ulMaxExpiryCountBeforeStopping yet. */
-    ulCount++;
-
-    /* If the timer has expired 10 times then stop it from running. */
-    if( ulCount >= ulMaxExpiryCountBeforeStopping )
-    {
-        /* Do not use a block time if calling a timer API function from a timer callback function, as doing so could cause a deadlock! */
-        xTimerStop( xTimer, 0 );
-    }
-    else
-    {
-       	/* Store the incremented count back into the timer's ID field so it can be read back again the next time this software timer expires. */
-       	vTimerSetTimerID( xTimer, ( void * ) ulCount );
-    }
-	return;
-}
-
-void ReadWritePerformanceTest(void)
-{
-	TickType_t time = 0;
-	int fd = 0;
-	TimerHandle_t write_timer = NULL, read_timer = NULL;
-	fd = efs_open("/test_dir/performance_test.txt", O_CREAT|O_RDWR, 0);
-	write_timer = xTimerCreate("write_timer", pdMS_TO_TICKS(5000), pdFALSE, (void *)0, vTimerCallback);
-	xTimerStart(write_timer, 0);
-	for (int i = 0; i < 1000; i++)
-	{
-		write(fd, "Test info in /test_dir/performance_test.txt", 45);
-	}
-	
-	xTimerStop(write_timer, 0);
-	time = xTimerGetPeriod(write_timer);
-	printf("Written char count: %d\nTotal time spent: %ld\n", 45000, time);
-	printf("Bits per second: %ld bps\n", 45000 / time * 8);
-	read_timer = xTimerCreate("read_timer", pdMS_TO_TICKS(5000), pdFALSE, (void *)0, vTimerCallback);
-	xTimerStart(read_timer, 0);
-	for (int i = 0; i < 1000; i++)
-	{
-		char buf[45];
-		read(fd, buf, 45);
-	}
-	xTimerStop(read_timer, 0);
-	time = xTimerGetPeriod(read_timer);
-	printf("Read char count: %d\nTotal time spent: %ld\n", 45000, time);
-	printf("Bits per second: %ld bps\n", 45000 / time * 8);
-	close(fd);
-	return;
-}
 /*-----------------------------------------------------------*/
 
 void main_blinky( void )
@@ -446,8 +379,7 @@ void main_blinky( void )
 	stat_test();
 	statfs_test();
 	lseek_test();
-	crypt_test();	
-	ReadWritePerformanceTest();
+	crypt_test();
 	//ftruncate_test();
 	unlink_test();
 	//dir_test();
