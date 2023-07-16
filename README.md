@@ -1,7 +1,11 @@
 # ErisFS
 A comprehensive virtual filesystem for FreeRTOS, build by x-Eris group.
 
-## Sturcture
+## Component Structure
+![structure](assets/efs.png)
+
+
+## Code Structure
 ```
 ErisFS
 ├── include
