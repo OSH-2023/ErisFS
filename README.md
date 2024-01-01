@@ -2,6 +2,10 @@
 A comprehensive virtual filesystem for FreeRTOS, build by x-Eris group.
 
 ## Component Structure
+* POSIX standard layer
+* ErisFS Virtual Layer
+* Baisc Filesystem Layer (FATFS, RAMFS, ...)
+* Storage Write / Read Layer (SD Card, RAM, ...)
 ![structure](assets/efs.png)
 
 
